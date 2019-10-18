@@ -218,6 +218,11 @@ subroutine LIS_lsm_plugin
    use summa1_lsmMod,  only : summa1_lsm_ini
 #endif
 
+#if ( defined SM_Crocus_8_1 )
+   use Crocus81_lsmMod, only : Crocus81_ini
+#endif
+
+
 #if ( defined SM_LSM_TEMPLATE )
    external template_main
    external template_setup
@@ -464,6 +469,17 @@ subroutine LIS_lsm_plugin
    external summa1_writerst
    external summa1_finalize
 #endif
+
+#if ( defined SM_Crocus_8_1 )
+   external Crocus81_main
+   external Crocus81_setup
+   external Crocus81_readrst
+   external Crocus81_f2t
+   external Crocus81_dynsetup
+   external Crocus81_writerst
+   external Crocus81_finalize
+#endif
+
 
 #if ( defined SM_LSM_TEMPLATE )
    call registerlsminit(trim(LIS_templateLSMId)//char(0),template_lsm_ini)
@@ -800,6 +816,22 @@ subroutine LIS_lsm_plugin
    call registerlsmf2t(trim(LIS_summa1Id)//"+"//&
         trim(LIS_retroId)//char(0),summa1_f2t)
 #endif
+
+#if ( defined SM_Crocus_8_1 )
+   call registerlsminit(trim(LIS_Crocus81Id)//char(0),Crocus81_ini)
+   call registerlsmsetup(trim(LIS_Crocus81Id)//char(0),Crocus81_setup)
+   call registerlsmf2t(trim(LIS_Crocus81Id)//"+"//&
+        trim(LIS_retroId)//char(0),Crocus81_f2t)
+   call registerlsmf2t(trim(LIS_Crocus81Id)//"+"//&
+        trim(LIS_agrmetrunId)//char(0),Crocus81_f2t)
+   call registerlsmrun(trim(LIS_Crocus81Id)//char(0),Crocus81_main)
+   call registerlsmrestart(trim(LIS_Crocus81Id)//char(0),Crocus81_readrst)
+   call registerlsmdynsetup(trim(LIS_Crocus81Id)//char(0),Crocus81_dynsetup)
+   call registerlsmwrst(trim(LIS_Crocus81Id)//char(0),Crocus81_writerst)
+   call registerlsmfinalize(trim(LIS_Crocus81Id)//char(0),Crocus81_finalize)
+#endif
+
+
 
 end subroutine LIS_lsm_plugin
 end module LIS_lsm_pluginMod

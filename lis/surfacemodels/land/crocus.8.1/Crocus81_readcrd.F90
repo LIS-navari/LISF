@@ -340,12 +340,12 @@ subroutine Crocus81_readcrd()
     ! The following lines hard code the LDT NetCDF variable names. 
     do n=1, LIS_rc%nnest
         CROCUS81_struc(n)%LDT_ncvar_GLACIER_BOOL = 'CROCUS81_GLACIER_BOOL'
-        CROCUS81_struc(n)%LDT_ncvar_TG       = 'CROCUS81_TG'
-        CROCUS81_struc(n)%LDT_ncvar_SLOPE    = 'CROCUS81_SLOPE'
-        CROCUS81_struc(n)%LDT_ncvar_ALB      = 'CROCUS81_ALB'
+        CROCUS81_struc(n)%LDT_ncvar_TG       = 'CROCUS_TG' !'CROCUS81_TG'
+        CROCUS81_struc(n)%LDT_ncvar_SLOPE    = 'SLOPE' !'CROCUS81_SLOPE'
+        CROCUS81_struc(n)%LDT_ncvar_ALB      = 'ALBEDO'
         CROCUS81_struc(n)%LDT_ncvar_SOILCOND = 'CROCUS81_SOILCOND'
         CROCUS81_struc(n)%LDT_ncvar_PERMSNOWFRAC = 'CROCUS81_PERMSNOWFRAC'
-        CROCUS81_struc(n)%LDT_ncvar_SLOPE_DIR = 'CROCUS81_SLOPE_DIR'
+        CROCUS81_struc(n)%LDT_ncvar_SLOPE_DIR = 'ASPECT'   ! 'CROCUS81_SLOPE_DIR'
     enddo
 
     ! set default restart format to netcdf

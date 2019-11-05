@@ -38,7 +38,7 @@ module LIS_histDataMod
 !                 106 and 114 in place for 112 (some variables left alone) 
 !  01 Jun 2017    Augusto Getirana: Add/update HyMAP2 outputs [SWS, differetial and 
 !                      potential evaporation and deep water infiltration (DWI)]
-!  
+! 18 Oct 2019  Mahdi Navari: Updated for Corcus forcing    
 !  
 !EOP
   use ESMF
@@ -177,6 +177,8 @@ module LIS_histDataMod
   public :: LIS_MOC_VAPORPRESSDEFICITFORC
   public :: LIS_MOC_ARESIST
 !</for vic>
+! MN : Crocus 
+  public :: LIS_MOC_WIND_DIRFORC
 
   public :: LIS_MOC_LANDMASK  
   public :: LIS_MOC_LANDCOVER 
@@ -598,6 +600,9 @@ public ::   LIS_MOC_SNOWSURFACEQ
    ! CLSM FORCING VARIABLES
    integer :: LIS_MOC_PARDRFORC  = -9999
    integer :: LIS_MOC_PARDFFORC  = -9999
+
+   ! MN : Crocus
+   integer :: LIS_MOC_WIND_DIRFORC   = -9999   
 
    ! PARAMETER OUTPUT - EXPERIMENTAL (USE W/WRF-WPS)
    integer :: LIS_MOC_LANDMASK   = -9999
@@ -2726,6 +2731,19 @@ contains
        call register_dataEntry(LIS_MOC_LSM_COUNT,LIS_MOC_PARDFFORC,&
             LIS_histData(n)%head_lsm_list,&
             n,1,ntiles,(/"W/m2"/),1,(/"DN"/),2,1,1,&
+            model_patch=.true.)
+    endif
+
+! MN : Crocus 
+    call ESMF_ConfigFindLabel(modelSpecConfig,"Wind_Dir_f:",rc=rc)
+    call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
+         "Wind_Dir_f",&
+         "wind_direction",&
+         "wind direction",rc)
+    if ( rc == 1 ) then
+       call register_dataEntry(LIS_MOC_LSM_COUNT,LIS_MOC_WIND_DIRFORC,&
+            LIS_histData(n)%head_lsm_list,n,1,&
+            ntiles,(/"deg"/),1,(/"-"/),1,1,1,&
             model_patch=.true.)
     endif
 

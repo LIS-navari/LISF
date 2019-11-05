@@ -28,6 +28,7 @@ module LIS_pluginIndices
 !  27 Jan 2014: Shugong Wang, added HRAP projection
 !   4 Nov 2014: Jonathan Case, added support for daily NESDIS/VIIRS GVF for Noah
 !  16 Aug 2016: Mahdi Navari, added PILDAS  
+!   18 Oct 2019: Mahdi Navari : Updated for Corcus forcing (ColdePorte)  
 !
 !EOP
   PRIVATE
@@ -174,6 +175,7 @@ module LIS_pluginIndices
    character*50, public,  parameter :: LIS_AWAPforcId        = "AWAP"
    character*50, public,  parameter :: LIS_HiMATGMUforcId    = "HiMAT GMU"
    character*50, public,  parameter :: LIS_mrmsId            = "MRMS"
+   character*50, public,  parameter :: LIS_ColdePorteId          = "Col de Porte"
 !-------------------------------------------------------------------------
 ! land surface parameters
 !-------------------------------------------------------------------------

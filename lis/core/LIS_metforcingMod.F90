@@ -59,6 +59,7 @@ module LIS_metforcingMod
 !                              Moved CRainf (convective rainfall forcing)
 !                                 from LIS_MOC_RAINFCONV to LIS_MOC_CRAINFFORC.
 !                              Added units of [kg/m^2] for PET and CRainf.
+! 18 Oct 2019  Mahdi Navari: Updated for Corcus forcing    
 ! 
   use ESMF
   use LIS_FORC_AttributesMod
@@ -464,6 +465,12 @@ contains
          "Wind Speed", tnvars,status)
 !</for vic>
 
+! <MN: Crocus>
+    call ESMF_ConfigFindLabel(forcConfig,"WindDirection:",rc=status)
+    call get_forcingvar_attributes(forcConfig,LIS_FORC_WIND_DIR,&
+         "Wind Direction", tnvars,status)
+! <Crocus>
+
     if(tnvars.gt.LIS_rc%nf) then
        LIS_rc%nf = tnvars
     endif
@@ -697,6 +704,12 @@ contains
          "Wind Speed", tnvars,status)
 !</for vic>
 
+! <MN: Crocus>
+    call ESMF_ConfigFindLabel(forcConfig,"WindDirection:",rc=status)
+    call get_forcingvar_attributes(forcConfig,LIS_FORC_WIND_DIR,&
+         "Wind Direction", tnvars,status)
+! <Crocus>
+
     if(tnvars.gt.LIS_rc%nf) then 
        LIS_rc%nf = tnvars
     endif
@@ -812,6 +825,9 @@ contains
             LIS_FORC_Base_State(n,:),LIS_FORC_RefET)
        call add_forcing_fields(n,LIS_FORC_State(n),&
             LIS_FORC_Base_State(n,:),LIS_FORC_CAPE)
+!<MN: Crocus>
+       call add_forcing_fields(n,LIS_FORC_State(n),&
+            LIS_FORC_Base_State(n,:),LIS_FORC_WIND_DIR)
     enddo
     
     call ESMF_ConfigDestroy(forcConfig)
@@ -2254,7 +2270,7 @@ contains
 
              do t=1,LIS_rc%ntiles(n)
                 call LIS_diagnoseSurfaceOutputVar(n, t,LIS_MOC_WINDFORC,value=&
-                                     tempPtr(t),vlevel=k,unit="-",direction="-")
+                                     tempPtr(t),vlevel=k,unit="m/s",direction="-")
              enddo
           enddo
        endif
@@ -2307,6 +2323,22 @@ contains
              do t=1,LIS_rc%ntiles(n)
                 call LIS_diagnoseSurfaceOutputVar(n, t,LIS_MOC_CAPEFORC,value=&
                      tempPtr(t),vlevel=k,unit="J kg-1",direction="-")
+             enddo
+          enddo
+       endif
+
+       if(LIS_FORC_WIND_DIR%selectOpt.eq.1) then
+          do k=1,LIS_FORC_WIND_DIR%vlevels
+             call ESMF_StateGet(LIS_FORC_State(n),(LIS_FORC_WIND_DIR%varname(k)),&
+                  tempField, rc=status)
+             call LIS_verify(status)         
+             
+             call ESMF_FieldGet(tempField, localDE=0, farrayPtr=tempPtr,rc=status)
+             call LIS_verify(status)
+
+             do t=1,LIS_rc%ntiles(n)
+                call LIS_diagnoseSurfaceOutputVar(n, t,LIS_MOC_WIND_DIRFORC,value=&
+                                     tempPtr(t),vlevel=k,unit="-",direction="-")
              enddo
           enddo
        endif

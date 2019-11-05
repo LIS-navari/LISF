@@ -20,6 +20,7 @@ module LIS_metforcing_pluginMod
 ! !REVISION HISTORY: 
 !  11 Dec 2003   Sujay Kumar:  Initial Specification
 !  11 Oct 2014   K. Arsenault: Reorganzed for syncing with LDT
+!  18 Oct 2019  Mahdi Navari: Updated for Corcus forcing (ColdePorte)   
 ! 
 !EOP  
   implicit none
@@ -324,6 +325,10 @@ subroutine LIS_metforcing_plugin
 
 #if ( defined MF_MRMS )
    use mrms_grib_forcingMod
+#endif
+
+#if ( defined MF_ColdePorte )
+   use Col_de_Porte_forcingMod
 #endif
 
 #if ( defined MF_MET_TEMPLATE )
@@ -705,6 +710,13 @@ subroutine LIS_metforcing_plugin
    external finalize_mrms_grib
    external reset_mrms_grib
 #endif
+
+#if ( defined MF_ColdePorte )
+   external get_Col_de_Porte
+   external timeinterp_Col_de_Porte
+   external finalize_Col_de_Porte
+#endif
+
 
 #if ( defined MF_MET_TEMPLATE )
 ! - Meteorological Forcing Template:
@@ -1283,6 +1295,16 @@ subroutine LIS_metforcing_plugin
    call registerfinalmetforc(trim(LIS_mrmsId)//char(0),finalize_mrms_grib)
    call registerresetmetforc(trim(LIS_mrmsId)//char(0),reset_mrms_grib)
 #endif
+
+#if ( defined MF_ColdePorte )
+! -Crocus Col de Porte test case
+   call registerinitmetforc(trim(LIS_ColdePorteId)//char(0),init_Col_de_Porte)
+   call registerretrievemetforc(trim(LIS_ColdePorteId)//char(0),get_Col_de_Porte)
+   call registertimeinterpmetforc(trim(LIS_ColdePorteId)//char(0), &
+                                  timeinterp_Col_de_Porte)
+   call registerfinalmetforc(trim(LIS_ColdePorteId)//char(0),finalize_Col_de_Porte)
+#endif
+
 end subroutine LIS_metforcing_plugin
 
 end module LIS_metforcing_pluginMod

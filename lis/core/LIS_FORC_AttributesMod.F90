@@ -84,6 +84,8 @@ module LIS_FORC_AttributesMod
 !ccc - for CABLE
   public :: LIS_FORC_CO2
   
+  public :: LIS_FORC_WIND_DIR  
+
 !EOP
 
   type, public :: forc_attrib_type
@@ -148,6 +150,8 @@ module LIS_FORC_AttributesMod
   type(forc_attrib_type)   :: LIS_FORC_Z0
 !ccc - for CABLE
   type(forc_attrib_type)   :: LIS_FORC_CO2
+
+  type(forc_attrib_type)   :: LIS_FORC_WIND_DIR
 
 end module LIS_FORC_AttributesMod
 

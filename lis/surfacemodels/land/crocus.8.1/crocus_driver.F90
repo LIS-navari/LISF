@@ -433,7 +433,7 @@ REAL, DIMENSION(1,nsnow)   :: SNOWDZout 		! SNOWDZ   = Snow layer(s) thickness (
 REAL, DIMENSION(1,nsnow)   :: SNOWTEMPinout ! SNOWTEMP = Snow layer(s) temperature (m)
 REAL, DIMENSION(1)                       :: THRUFALout	! THRUFAL  = rate that liquid water leaves snow pack:
 !                                                  paritioned into soil infiltration/runoff by ISBA [kg/(m2 s)]
-REAL, allocatable, DIMENSION(:)                       :: GRNDFLUXinout 
+REAL,DIMENSION(1)                       :: GRNDFLUXinout !REAL, allocatable, DIMENSION(:)                       :: GRNDFLUXinout 
 !					GRNDFLUX = soil/snow interface heat flux (W/m2)
 REAL, DIMENSION(1)                       :: ZP_EVAPCORout	! ZP_EVAPCOR  = evaporation/sublimation correction term:
 !                                                  extract any evaporation exceeding the
@@ -454,7 +454,7 @@ REAL, DIMENSION(1)                       :: ZP_LWNETSNOWout
 ! 					ZP_LWNETSNOW = net longwave radiation entering top of snowpack 
 !                                                  (W m-2) Imposed if MEB=T, diagnosed herein if MEB=F
 REAL, DIMENSION(1)                       :: ZP_RNSNOWout	! ZP_RNSNOW     = net radiative flux from snow (W/m2)
-REAL, allocatable, DIMENSION(:)                       :: ZP_HSNOWout	! ZP_HSNOW      = sensible heat flux from snow (W/m2)
+REAL, DIMENSION(1)                       :: ZP_HSNOWout! REAL, allocatable, DIMENSION(:)                       :: ZP_HSNOWout	! ZP_HSNOW      = sensible heat flux from snow (W/m2)
 REAL, DIMENSION(1)                       :: ZP_GFLUXSNOWout	! ZP_GFLUXSNOW  = net heat flux from snow (W/m2)
 REAL, DIMENSION(1)                       :: ZP_HPSNOWout	! ZP_HPSNOW     = heat release from rainfall (W/m2)
 REAL, DIMENSION(1)                       :: ZP_LES3Lout 		! ZP_LES3L      = sublimation (W/m2) 
@@ -528,8 +528,8 @@ REAL, DIMENSION(1)                     :: ZP_CDN!		 neutral drag coefficient for
 REAL, DIMENSION(1)                     :: ZP_AC! 		aerodynamical resistance(not used)
 REAL, DIMENSION(1)                     :: ZP_RA! 		aerodynamical resistance(not used)
 
-allocate(GRNDFLUXinout (2))
-allocate(ZP_HSNOWout (2))
+!allocate(GRNDFLUXinout (2))
+!allocate(ZP_HSNOWout (2))
 
 XP00 = 1013.25E+02  ! see SURFEX/ini_csts.F90
 XBOLTZ      = 1.380658E-23
@@ -896,8 +896,8 @@ QS         = QSout(1)
 !IMPWET 		= IMPWETin(1,nimpur) 
 !IMPDRY 		= IMPDRYin(1,nimpur)  ! Dry and wet deposit coefficient from Forcing File(g/m²/s)
 !SNOWMAK_dz 		= SNOWMAK_dzin(1,1)
-deallocate(GRNDFLUXinout)
-deallocate(ZP_HSNOWout)
+!deallocate(GRNDFLUXinout)
+!deallocate(ZP_HSNOWout)
 END SUBROUTINE crocus_driver
 
 

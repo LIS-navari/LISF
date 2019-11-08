@@ -82,13 +82,13 @@ module Crocus81_lsmMod
         !-------------------------------------------------------------------------
         ! Parameter file names
         !-------------------------------------------------------------------------
-        character*128      :: LDT_ncvar_GLACIER_BOOL
-        character*128      :: LDT_ncvar_TG
-        character*128      :: LDT_ncvar_SLOPE
-        character*128      :: LDT_ncvar_ALB
-        character*128      :: LDT_ncvar_SOILCOND
-        character*128      :: LDT_ncvar_PERMSNOWFRAC
-        character*128      :: LDT_ncvar_SLOPE_DIR
+        !character*128      :: LDT_ncvar_GLACIER_BOOL
+        !character*128      :: LDT_ncvar_TG
+        !character*128      :: LDT_ncvar_SLOPE
+        !character*128      :: LDT_ncvar_ALB
+        !character*128      :: LDT_ncvar_SOILCOND
+        !character*128      :: LDT_ncvar_PERMSNOWFRAC
+        !character*128      :: LDT_ncvar_SLOPE_DIR
         !-------------------------------------------------------------------------
         ! ts, Count, rstInterval, outInterval
         !-------------------------------------------------------------------------
@@ -97,6 +97,7 @@ module Crocus81_lsmMod
         real               :: rstInterval
         integer            :: outInterval
         integer            :: forc_count
+        integer            :: isba_param_count ! MN added to read parameter file isba
         !-------------------------------------------------------------------------
         ! Initial Model State for cold start
         !-------------------------------------------------------------------------
@@ -125,14 +126,20 @@ module Crocus81_lsmMod
         integer            :: nimpur
         CHARACTER(len=3)   :: SNOWRES_opt
         LOGICAL            :: OMEB_BOOL
+        LOGICAL         :: GLACIER_BOOL    
         CHARACTER(len=3)   :: HIMPLICIT_WIND_opt
         REAL               :: PTSTEP
+        REAL            :: TG
         REAL               :: UREF
+        REAL            :: SLOPE  
         REAL               :: ZREF
         REAL               :: Z0NAT
         REAL               :: Z0EFF
         REAL               :: Z0HNAT
+        REAL            :: ALB
+        REAL            :: SOILCOND
         REAL               :: D_G
+        REAL             :: PERMSNOWFRAC          
         CHARACTER(len=4)   :: SNOWDRIFT_opt
         LOGICAL            :: SNOWDRIFT_SUBLIM_BOOL
         LOGICAL            :: SNOW_ABS_ZENITH_BOOL
@@ -152,6 +159,7 @@ module Crocus81_lsmMod
         LOGICAL            :: SELF_PROD_BOOL
         LOGICAL            :: SNOWMAK_PROP_BOOL
         LOGICAL            :: PRODSNOWMAK_BOOL
+        REAL               :: SLOPE_DIR  
         type(Crocus81dec), pointer :: crocus81(:)
     end type Crocus81_type_dec
 
@@ -186,6 +194,7 @@ contains
 !EOP
         implicit none        
         integer  :: n, t     
+        character*3             :: fnest  !MN  Bug in the toolkit 
         integer  :: status   
 
         ! allocate memory for nest 
@@ -218,14 +227,16 @@ contains
             ! Model timestep Alarm
             !------------------------------------------------------------------------
             CROCUS81_struc(n)%forc_count = 0
+            CROCUS81_struc(n)%isba_param_count = 1 ! MN  isba
 
             call LIS_update_timestep(LIS_rc, n, CROCUS81_struc(n)%ts)
 
-            call LIS_registerAlarm("CROCUS81 model alarm",&
+            write(fnest,'(i3.3)') n !MN  Bug in the toolkit 
+            call LIS_registerAlarm("CROCUS81 model alarm "//trim(fnest),&
                                    CROCUS81_struc(n)%ts, &
                                    CROCUS81_struc(n)%ts)
 
-            call LIS_registerAlarm("CROCUS81 restart alarm", &
+            call LIS_registerAlarm("CROCUS81 restart alarm "//trim(fnest),&
                                    CROCUS81_struc(n)%ts,&
                                    CROCUS81_struc(n)%rstInterval)
 ! MN: ?

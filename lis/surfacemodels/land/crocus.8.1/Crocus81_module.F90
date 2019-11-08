@@ -206,11 +206,11 @@ module Crocus81_module
         !-------------------------------------------------------------------------
         ! spatial parameter
         !-------------------------------------------------------------------------
-        logical            :: GLACIER_BOOL
+        !logical            :: GLACIER_BOOL
         real               :: SLOPE
         real               :: SOILCOND
-        real               :: PERMSNOWFRAC
-        real               :: SLOPE_DIR
+        !real               :: PERMSNOWFRAC
+        !real               :: SLOPE_DIR
         !-------------------------------------------------------------------------
         ! multilevel spatial parameter
         !-------------------------------------------------------------------------

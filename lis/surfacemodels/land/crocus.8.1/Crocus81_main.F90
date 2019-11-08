@@ -82,7 +82,7 @@ subroutine Crocus81_main(n)
     REAL                 :: tmp_SRSNOW             ! snow rate (SWE) [kg/(m2 s)] [kg/(m2 s)]
     REAL                 :: tmp_RRSNOW             ! rain rate [kg/(m2 s)] [kg/(m2 s)]
     REAL                 :: tmp_TA                 ! atmospheric temperature at level za (K) [K]
-    REAL, allocatable    :: tmp_TG(:)              ! Surface soil temperature (effective temperature the of layer lying below snow) (K)  (for snowcro.F90 we only use the surface layer ZP_TG(:,1))  (#nsoil depends on 2-L, 3-L DIF) [K]
+    REAL                 :: tmp_TG !(:)              ! Surface soil temperature (effective temperature the of layer lying below snow) (K)  (for snowcro.F90 we only use the surface layer ZP_TG(:,1))  (#nsoil depends on 2-L, 3-L DIF) [K]
     REAL                 :: tmp_SW_RAD             ! incoming solar radiation (W/m2) [W/m2]
     REAL                 :: tmp_QA                 ! atmospheric specific humidity at level za [-]
     REAL                 :: tmp_Wind_E             ! Eastward Wind [m/s]
@@ -94,7 +94,7 @@ subroutine Crocus81_main(n)
     REAL                 :: tmp_Z0NAT              ! grid box average roughness length (m) (roughness length for momentum) [m]
     REAL                 :: tmp_Z0EFF              ! roughness length for momentum (modd_diagn.F90 effective roughness length for heat(!?)) [m]
     REAL                 :: tmp_Z0HNAT             ! grid box average roughness length for heat [m]
-    REAL, allocatable    :: tmp_ALB(:)             ! soil/vegetation albedo [-]
+    REAL                 :: tmp_ALB !(:)             ! soil/vegetation albedo [-]
     REAL                 :: tmp_SOILCOND           ! soil thermal conductivity (W m-1 K-1) [W /(m K)]
     REAL                 :: tmp_D_G                ! !Assumed first soil layer thickness (m)
 !Used to calculate ground/snow heat flux   (D_G(:,1)) [m]
@@ -140,6 +140,14 @@ subroutine Crocus81_main(n)
     LOGICAL              :: tmp_SNOWMAK_PROP_BOOL  ! Snowmaking and Grooming options [-]
     LOGICAL              :: tmp_PRODSNOWMAK_BOOL   ! Snowmaking and Grooming options [-]
     REAL                 :: tmp_SLOPE_DIR          ! !Typical slope aspect in the grid  (deg from N clockwise) [degrees]
+   ! Bug in toolkit
+    character*3        :: fnest
+! MN isba  
+    logical :: file_exists
+    character*80       :: isba_filename
+    character*3       ::var1
+    integer              ::err , ii , var2, var3, var4
+    real                 :: var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16   
 
     allocate( tmp_SNOWSWE( CROCUS81_struc(n)%nsnow ) )
     allocate( tmp_SNOWRHO( CROCUS81_struc(n)%nsnow ) )
@@ -148,8 +156,8 @@ subroutine Crocus81_main(n)
     allocate( tmp_SNOWGRAN2( CROCUS81_struc(n)%nsnow ) )
     allocate( tmp_SNOWHIST( CROCUS81_struc(n)%nsnow ) )
     allocate( tmp_SNOWAGE( CROCUS81_struc(n)%nsnow ) )
-    allocate( tmp_TG( 12 ) )
-    allocate( tmp_ALB( 12 ) )
+!    allocate( tmp_TG( 12 ) )
+!    allocate( tmp_ALB( 12 ) )
     allocate( tmp_SNOWLIQ( CROCUS81_struc(n)%nsnow ) )
     allocate( tmp_SNOWTEMP( CROCUS81_struc(n)%nsnow ) )
     allocate( tmp_SNOWDZ( CROCUS81_struc(n)%nsnow ) )
@@ -157,9 +165,12 @@ subroutine Crocus81_main(n)
     allocate( tmp_IMPDRY( CROCUS81_struc(n)%nimpur ) )
 
     ! check Crocus81 alarm. If alarm is ring, run model. 
-    alarmCheck = LIS_isAlarmRinging(LIS_rc, "Crocus81 model alarm")
+     write(fnest,'(i3.3)') n  !MN  Bug in the toolkit 
+    alarmCheck = LIS_isAlarmRinging(LIS_rc, "CROCUS81 model alarm "// trim(fnest)) !MN  Bug in the toolkit 
     if (alarmCheck) Then
-        do t = 1, LIS_rc%npatch(n, LIS_rc%lsm_index)
+!        do t = 1, LIS_rc%npatch(n, LIS_rc%lsm_index)
+        do t = 1, 1  ! MN : to read test case  isba 
+
             dt = LIS_rc%ts
             row = LIS_surface(n, LIS_rc%lsm_index)%tile(t)%row
             col = LIS_surface(n, LIS_rc%lsm_index)%tile(t)%col
@@ -250,6 +261,8 @@ subroutine Crocus81_main(n)
                 call LIS_endrun()
             endif
             ! 
+            tmp_LAT  = lat
+            tmp_LON = lon
             tmp_year   = LIS_rc%yr
             tmp_month  = LIS_rc%mo
             tmp_day    = LIS_rc%da
@@ -261,20 +274,22 @@ subroutine Crocus81_main(n)
             tmp_nimpur                              = CROCUS81_struc(n)%nimpur                          
             tmp_SNOWRES_opt                         = CROCUS81_struc(n)%SNOWRES_opt                     
             tmp_OMEB_BOOL                           = CROCUS81_struc(n)%OMEB_BOOL                       
-            tmp_GLACIER_BOOL                        = CROCUS81_struc(n)%crocus81(t)%GLACIER_BOOL                    
+            tmp_GLACIER_BOOL                        =  CROCUS81_struc(n)%GLACIER_BOOL     !CROCUS81_struc(n)%crocus81(t)%GLACIER_BOOL                    
             tmp_HIMPLICIT_WIND_opt                  = CROCUS81_struc(n)%HIMPLICIT_WIND_opt              
             tmp_PTSTEP                              = CROCUS81_struc(n)%PTSTEP                          
-            tmp_TG(:)                               = CROCUS81_struc(n)%crocus81(t)%TG(:)                              
+            !tmp_TG(:)                               = CROCUS81_struc(n)%crocus81(t)%TG(:)   
+            tmp_TG                               = CROCUS81_struc(n)%TG                              
             tmp_UREF                                = CROCUS81_struc(n)%UREF                            
-            tmp_SLOPE                               = CROCUS81_struc(n)%crocus81(t)%SLOPE                           
+            tmp_SLOPE                               = CROCUS81_struc(n)%SLOPE  ! CROCUS81_struc(n)%crocus81(t)%SLOPE                                 
             tmp_ZREF                                = CROCUS81_struc(n)%ZREF                            
             tmp_Z0NAT                               = CROCUS81_struc(n)%Z0NAT                           
             tmp_Z0EFF                               = CROCUS81_struc(n)%Z0EFF                           
             tmp_Z0HNAT                              = CROCUS81_struc(n)%Z0HNAT                          
-            tmp_ALB(:)                              = CROCUS81_struc(n)%crocus81(t)%ALB(:)                             
-            tmp_SOILCOND                            = CROCUS81_struc(n)%crocus81(t)%SOILCOND                        
+           ! tmp_ALB(:)                              = CROCUS81_struc(n)%crocus81(t)%ALB(:)  
+            tmp_ALB                             = CROCUS81_struc(n)%ALB                                                        
+            tmp_SOILCOND                     = CROCUS81_struc(n)%SOILCOND  !CROCUS81_struc(n)%crocus81(t)%SOILCOND                                    
             tmp_D_G                                 = CROCUS81_struc(n)%D_G                             
-            tmp_PERMSNOWFRAC                        = CROCUS81_struc(n)%crocus81(t)%PERMSNOWFRAC                    
+            tmp_PERMSNOWFRAC                        = CROCUS81_struc(n)%PERMSNOWFRAC    ! CROCUS81_struc(n)%crocus81(t)%PERMSNOWFRAC                  
             tmp_SNOWDRIFT_opt                       = CROCUS81_struc(n)%SNOWDRIFT_opt                   
             tmp_SNOWDRIFT_SUBLIM_BOOL               = CROCUS81_struc(n)%SNOWDRIFT_SUBLIM_BOOL           
             tmp_SNOW_ABS_ZENITH_BOOL                = CROCUS81_struc(n)%SNOW_ABS_ZENITH_BOOL            
@@ -294,7 +309,7 @@ subroutine Crocus81_main(n)
             tmp_SELF_PROD_BOOL                      = CROCUS81_struc(n)%SELF_PROD_BOOL                  
             tmp_SNOWMAK_PROP_BOOL                   = CROCUS81_struc(n)%SNOWMAK_PROP_BOOL               
             tmp_PRODSNOWMAK_BOOL                    = CROCUS81_struc(n)%PRODSNOWMAK_BOOL                
-            tmp_SLOPE_DIR                           = CROCUS81_struc(n)%crocus81(t)%SLOPE_DIR                       
+            tmp_SLOPE_DIR                           = CROCUS81_struc(n)%SLOPE_DIR   ! CROCUS81_struc(n)%crocus81(t)%SLOPE_DIR                         
  
             ! get state variables
             tmp_SNOWSWE(:)    = CROCUS81_struc(n)%crocus81(t)%SNOWSWE(:)   
@@ -316,6 +331,19 @@ subroutine Crocus81_main(n)
             tmp_CHSNOW        = CROCUS81_struc(n)%crocus81(t)%CHSNOW    
             tmp_SNOWMAK_dz    = CROCUS81_struc(n)%crocus81(t)%SNOWMAK_dz
  
+
+          ! MN isba 
+           INQUIRE(File="surfex_param_final.txt", Exist=file_exists)
+           if (file_exists) then
+              OPEN(UNIT=99,FILE="surfex_param_final.txt", &
+                           FORM="FORMATTED",STATUS="OLD",ACTION="READ")
+              do ii = 1 , CROCUS81_struc(n)%isba_param_count 
+                 read ( 99,*) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
+                 150 format(A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 11(F10.6,1x) )
+                 write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
+              enddo
+              CLOSE(UNIT=99 )
+           endif
 
             ! call model physics 
             call crocus_driver(tmp_n                 , & ! IN    - nest id [-]
@@ -554,6 +582,7 @@ subroutine Crocus81_main(n)
         enddo ! end of tile (t) loop
         ! reset forcing counter to be zero
         CROCUS81_struc(n)%forc_count = 0 
+        CROCUS81_struc(n)%isba_param_count  =  CROCUS81_struc(n)%isba_param_count + 1  ! MN isba 
     endif ! end of alarmCheck loop 
     
     deallocate( tmp_SNOWSWE )
@@ -563,8 +592,8 @@ subroutine Crocus81_main(n)
     deallocate( tmp_SNOWGRAN2 )
     deallocate( tmp_SNOWHIST )
     deallocate( tmp_SNOWAGE )
-    deallocate( tmp_TG )
-    deallocate( tmp_ALB )
+!    deallocate( tmp_TG )
+!    deallocate( tmp_ALB )
     deallocate( tmp_SNOWLIQ )
     deallocate( tmp_SNOWTEMP )
     deallocate( tmp_SNOWDZ )

@@ -137,7 +137,8 @@ SUBROUTINE crocus_driver(n,		&
   !USEe LIS_timeMgrMod, only : LIS_date2time, LIS_tick
  USE MODD_TYPE_DATE_SURF, ONLY: DATE_TIME! MN: declaration of temporal types.  DATE_TIME%.... (YEAR, MONTH, DAY)
  USE MODD_CSTS,         ONLY : XRD, XP00, XCPD, XG, XBOLTZ, &
-								XAVOGADRO, XMD,XMV,XRD,XRV,XPI 
+								XAVOGADRO, XMD,XMV,XRD,XRV,XPI, &
+                                                        XDAY, XKARMAN 
  USE modi_surface_cd ! for drag coefficient for momentum 
  USE modi_surface_aero_cond  ! for drag coefficient for heat 
 
@@ -432,7 +433,7 @@ REAL, DIMENSION(1,nsnow)   :: SNOWDZout 		! SNOWDZ   = Snow layer(s) thickness (
 REAL, DIMENSION(1,nsnow)   :: SNOWTEMPinout ! SNOWTEMP = Snow layer(s) temperature (m)
 REAL, DIMENSION(1)                       :: THRUFALout	! THRUFAL  = rate that liquid water leaves snow pack:
 !                                                  paritioned into soil infiltration/runoff by ISBA [kg/(m2 s)]
-REAL, DIMENSION(1)                       :: GRNDFLUXinout 
+REAL, allocatable, DIMENSION(:)                       :: GRNDFLUXinout 
 !					GRNDFLUX = soil/snow interface heat flux (W/m2)
 REAL, DIMENSION(1)                       :: ZP_EVAPCORout	! ZP_EVAPCOR  = evaporation/sublimation correction term:
 !                                                  extract any evaporation exceeding the
@@ -453,7 +454,7 @@ REAL, DIMENSION(1)                       :: ZP_LWNETSNOWout
 ! 					ZP_LWNETSNOW = net longwave radiation entering top of snowpack 
 !                                                  (W m-2) Imposed if MEB=T, diagnosed herein if MEB=F
 REAL, DIMENSION(1)                       :: ZP_RNSNOWout	! ZP_RNSNOW     = net radiative flux from snow (W/m2)
-REAL, DIMENSION(1)                       :: ZP_HSNOWout	! ZP_HSNOW      = sensible heat flux from snow (W/m2)
+REAL, allocatable, DIMENSION(:)                       :: ZP_HSNOWout	! ZP_HSNOW      = sensible heat flux from snow (W/m2)
 REAL, DIMENSION(1)                       :: ZP_GFLUXSNOWout	! ZP_GFLUXSNOW  = net heat flux from snow (W/m2)
 REAL, DIMENSION(1)                       :: ZP_HPSNOWout	! ZP_HPSNOW     = heat release from rainfall (W/m2)
 REAL, DIMENSION(1)                       :: ZP_LES3Lout 		! ZP_LES3L      = sublimation (W/m2) 
@@ -527,8 +528,10 @@ REAL, DIMENSION(1)                     :: ZP_CDN!		 neutral drag coefficient for
 REAL, DIMENSION(1)                     :: ZP_AC! 		aerodynamical resistance(not used)
 REAL, DIMENSION(1)                     :: ZP_RA! 		aerodynamical resistance(not used)
 
+allocate(GRNDFLUXinout (2))
+allocate(ZP_HSNOWout (2))
 
-XP00 = 1013.25E+02
+XP00 = 1013.25E+02  ! see SURFEX/ini_csts.F90
 XBOLTZ      = 1.380658E-23
 XAVOGADRO   = 6.0221367E+23
 XMD    = 28.9644E-3
@@ -540,8 +543,8 @@ EMISNOW = 0.99 ! see ini_surf_csts.F90
 USTARSNOW = 0 ! it has not been initialized  in the CALL_MODEL 
 CHSNOW = 0 ! it has not been initialized  in the CALL_MODEL
 SNOWHMASS = 0 ! it has not been initialized  in the CALL_MODEL
-
-
+XDAY   = 86400.
+XKARMAN     = 0.4
 ! ***************************************************************************
 ! Set up local variables for dimension match
 ! ***************************************************************************
@@ -586,12 +589,12 @@ SNOWTEMPinout (1,:) 	= SNOWTEMP
 THRUFALout 			= THRUFAL
 ZP_EVAPCORout 			= ZP_EVAPCOR
 ZP_GFLXCORout 			= ZP_GFLXCOR
-GRNDFLUXinout 		= GRNDFLUX
+GRNDFLUXinout(1)		= GRNDFLUX
 ZP_SWNETSNOWout	 	= ZP_SWNETSNOW
 ZP_SWNETSNOWSout 		= ZP_SWNETSNOWS
 ZP_LWNETSNOWout	 	= ZP_LWNETSNOW
 ZP_RNSNOWout   			= ZP_RNSNOW
-ZP_HSNOWout 			= ZP_HSNOW
+ZP_HSNOWout(1) 			= ZP_HSNOW
 ZP_GFLUXSNOWout 		= ZP_GFLUXSNOW
 ZP_HPSNOWout 			= ZP_HPSNOW
 ZP_LES3Lout 				= ZP_LES3L
@@ -608,8 +611,8 @@ QSout 				       = QS
 PERMSNOWFRACin  	= PERMSNOWFRAC
 !ZP_ZENITHin (1,1) 			= ZP_ZENITH
 !ZP_ANGL_ILLUMin (1,1) 		= ZP_ANGL_ILLUM
-LATin 				       = LAT
-LONin 				= LON
+LATin 			       = LAT
+LONin				= LON
 
 ! T17 --> 186 band , B92 --> the direct-diffuse partition is not used, a 3 band spectral fixed repartition
 !  is used from the global radiation as detailed in Vionnet et al 2012. 
@@ -641,7 +644,9 @@ ZP_DIRCOSZWin = COS(SLOPEin)
 
 ! Compute the snow fraction 
 ! -------------------------------------------------------
-ZP_PSN3Lin= SRSNOWin /(SRSNOWin +RRSNOWin)
+if (SRSNOWin(1) /= 0. ) then 
+   ZP_PSN3Lin= SRSNOWin /(SRSNOWin +RRSNOWin)
+endif
 
 ! Compute air density
 ! -----------------------------------------
@@ -652,6 +657,7 @@ ZP_RHOAin = PPSin / (XRD * TAin * ( 1.+((XRV/XRD)-1.)*QAin ) + XG * ZREFin )
 
 ! Compute the Exner functions
 ! -------------------------------------------------------------
+XCPD   = 7.* XRD /2.
 ZP_EXNSin = (PPSin/XP00)**(XRD/XCPD) ! Exner function at surface 
 
 ! For ZP_EXNAin we need pressure at lowest atmos. level
@@ -890,7 +896,8 @@ QS         = QSout(1)
 !IMPWET 		= IMPWETin(1,nimpur) 
 !IMPDRY 		= IMPDRYin(1,nimpur)  ! Dry and wet deposit coefficient from Forcing File(g/m²/s)
 !SNOWMAK_dz 		= SNOWMAK_dzin(1,1)
-
+deallocate(GRNDFLUXinout)
+deallocate(ZP_HSNOWout)
 END SUBROUTINE crocus_driver
 
 

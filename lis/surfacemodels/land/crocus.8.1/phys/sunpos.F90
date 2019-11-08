@@ -75,12 +75,12 @@ INTEGER,                      INTENT(IN)   :: KYEAR      ! current year
 INTEGER,                      INTENT(IN)   :: KMONTH     ! current month                        
 INTEGER,                      INTENT(IN)   :: KDAY       ! current day                        
 REAL,                         INTENT(IN)   :: PTIME      ! current time                        
-REAL, DIMENSION(:),           INTENT(IN)   :: PLON       ! longitude
-REAL, DIMENSION(:),           INTENT(IN)   :: PLAT       ! latutude
+REAL, DIMENSION(1),           INTENT(IN)   :: PLON       ! longitude   ! MN: For the next 5 variables dimension changed from (:) to (1)
+REAL, DIMENSION(1),           INTENT(IN)   :: PLAT       ! latutude
 !
-REAL, DIMENSION(:),           INTENT(OUT)  :: PZENITH    ! Solar zenithal angle
-REAL, DIMENSION(:),           INTENT(OUT)  :: PAZIMSOL   ! Solar azimuthal angle
-REAL, DIMENSION(:),           INTENT(OUT)  :: PTSUN      ! Solar time
+REAL, DIMENSION(1),           INTENT(OUT)  :: PZENITH    ! Solar zenithal angle
+REAL, DIMENSION(1),           INTENT(OUT)  :: PAZIMSOL   ! Solar azimuthal angle
+REAL, DIMENSION(1),           INTENT(OUT)  :: PTSUN      ! Solar time
 !
 !*       0.2   declarations of local variables
 !

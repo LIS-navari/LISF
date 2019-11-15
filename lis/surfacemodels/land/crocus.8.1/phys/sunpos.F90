@@ -75,12 +75,12 @@ INTEGER,                      INTENT(IN)   :: KYEAR      ! current year
 INTEGER,                      INTENT(IN)   :: KMONTH     ! current month                        
 INTEGER,                      INTENT(IN)   :: KDAY       ! current day                        
 REAL,                         INTENT(IN)   :: PTIME      ! current time                        
-REAL, DIMENSION(1),           INTENT(IN)   :: PLON       ! longitude   ! MN: For the next 5 variables dimension changed from (:) to (1)
-REAL, DIMENSION(1),           INTENT(IN)   :: PLAT       ! latutude
+REAL, DIMENSION(2),           INTENT(IN)   :: PLON       ! longitude   ! MN: For the next 5 variables dimension changed from (:) to (2)
+REAL, DIMENSION(2),           INTENT(IN)   :: PLAT       ! latutude
 !
-REAL, DIMENSION(1),           INTENT(OUT)  :: PZENITH    ! Solar zenithal angle
-REAL, DIMENSION(1),           INTENT(OUT)  :: PAZIMSOL   ! Solar azimuthal angle
-REAL, DIMENSION(1),           INTENT(OUT)  :: PTSUN      ! Solar time
+REAL, DIMENSION(2),           INTENT(OUT)  :: PZENITH    ! Solar zenithal angle
+REAL, DIMENSION(2),           INTENT(OUT)  :: PAZIMSOL   ! Solar azimuthal angle
+REAL, DIMENSION(2),           INTENT(OUT)  :: PTSUN      ! Solar time
 !
 !*       0.2   declarations of local variables
 !
@@ -152,7 +152,7 @@ IF (LHOOK) CALL DR_HOOK('SUNPOS_1',1,ZHOOK_HANDLE)
 !$OMP PARALLEL PRIVATE(ZHOOK_HANDLE_OMP) 
 IF (LHOOK) CALL DR_HOOK('SUNPOS_2',0,ZHOOK_HANDLE_OMP)
 !$OMP DO PRIVATE(JJ)
-DO JJ = 1,SIZE(PLAT)
+DO JJ = 1,   1 ! SIZE(PLAT)  ! MN size set to 1 we need the first memeber of the array the rest is dummy 
 !
 !*       3.    LOADS THE ZLAT, ZLON ARRAYS
 !              ---------------------------

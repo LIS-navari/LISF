@@ -107,7 +107,7 @@ PM    (X) = 0.5233 - 0.0815*X + 0.0135*X*X - 0.0010*X*X*X
 
 !
 IF (LHOOK) CALL DR_HOOK('SURFACE_CD',0,ZHOOK_HANDLE)
-DO JJ=1,SIZE(PRI)
+DO JJ=1,1 ! SIZE(PRI) we need the first memeber of the array the rest is dummy 
   ZZ0EFF = MIN(PZ0EFF(JJ),PUREF(JJ)*0.5)
   ZZ0H   = MIN(ZZ0EFF,PZ0H(JJ))
 !

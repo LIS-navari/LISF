@@ -3,29 +3,104 @@
 !SFX_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !SFX_LIC for details. version 1.
 !     ##########################################################################
-      SUBROUTINE SNOWCRO(HSNOWRES, TPTIME, OMEB, OGLACIER, HIMPLICIT_WIND,      &
-                      PPEW_A_COEF, PPEW_B_COEF,                                 &
-                      PPET_A_COEF, PPEQ_A_COEF, PPET_B_COEF, PPEQ_B_COEF,       &
-                      PSNOWSWE,PSNOWRHO,PSNOWHEAT,PSNOWALB,                     &
-                      PSNOWGRAN1,PSNOWGRAN2,PSNOWHIST,PSNOWAGE, PSNOWIMPUR,     &
-                      PTSTEP,PPS,PSR,PRR,PPSN3L,                                &
-                      PTA,PTG,PSW_RAD,PQA,PVMOD,PLW_RAD, PRHOA,                 &
-                      PUREF,PEXNS,PEXNA,PDIRCOSZW,                              &
-                      PZREF,PZ0,PZ0EFF,PZ0H,PALB,                               &
-                      PSOILCOND,PD_G,                                           &
-                      PSNOWLIQ,PSNOWTEMP,PSNOWDZ,                               &
-                      PTHRUFAL,PGRNDFLUX,PEVAPCOR, PGFLXCOR,                    &
-                      PSWNETSNOW,PSWNETSNOWS,PLWNETSNOW,                        &
-                      PRNSNOW,PHSNOW,PGFLUXSNOW,                                &
-                      PHPSNOW,PLES3L,PLEL3L,PEVAP,PSNDRIFT,PRI,                 &
-                      PEMISNOW,PCDSNOW,PUSTAR,PCHSNOW,PSNOWHMASS,PQS,           &
-                      PPERMSNOWFRAC,PZENITH,PANGL_ILLUM,PXLAT,PXLON,PBLOWSNW,   &
-                      HSNOWDRIFT,OSNOWDRIFT_SUBLIM,OSNOW_ABS_ZENITH,            &
-                      HSNOWMETAMO,HSNOWRAD,OATMORAD,P_DIR_SW, P_SCA_SW,         &
-                      PSPEC_ALB, PDIFF_RATIO,PIMPWET,PIMPDRY, HSNOWFALL,        &
-                      HSNOWCOND, HSNOWHOLD,HSNOWCOMP,HSNOWZREF,                 &
-                      PSNOWMAK, OSNOWCOMPACT_BOOL, OSNOWMAK_BOOL, OSNOWTILLER,  &
-                      OSELF_PROD, OSNOWMAK_PROP, OPRODSNOWMAK )
+      SUBROUTINE SNOWCRO(HSNOWRES,  &
+                      TPTIME, &
+                      OMEB, &
+                      OGLACIER, & 
+                      HIMPLICIT_WIND, &
+                      PPEW_A_COEF, &
+                      PPEW_B_COEF, &                              
+                      PPET_A_COEF, &                               
+                      PPEQ_A_COEF, &                                
+                      PPET_B_COEF, &                               
+                      PPEQ_B_COEF, &
+                      PSNOWSWE,&                   
+                      PSNOWRHO,&                           
+                      PSNOWHEAT,&                         
+                      PSNOWALB,  &
+                      PSNOWGRAN1,&                                
+                      PSNOWGRAN2,&                               
+                      PSNOWHIST,&                               
+                      PSNOWAGE, &                               
+                      PSNOWIMPUR, &
+                      PTSTEP,&                               
+                      PPS,&                                
+                      PSR,&                                
+                      PRR,&                                
+                      PPSN3L,  &
+                      PTA,&                                
+                      PTG,&                               
+                      PSW_RAD,&                                
+                      PQA,&                                
+                      PVMOD,&                                
+                      PLW_RAD, &                               
+                      PRHOA, &
+                      PUREF,&                                
+                      PEXNS,&                               
+                      PEXNA,&                               
+                      PDIRCOSZW,  &
+                      PZREF,&  
+                      PZ0,&     
+                      PZ0EFF,&           
+                      PZ0H,&                    
+                      PALB, &                    
+                      PSOILCOND,&    
+                      PD_G,  &
+                      PSNOWLIQ,&                              
+                      PSNOWTEMP,&                              
+                      PSNOWDZ, &
+                      PTHRUFAL,&                          
+                      PGRNDFLUX,&                               
+                      PEVAPCOR, &                                
+                      PGFLXCOR,  &
+                      PSWNETSNOW,&                             
+                      PSWNETSNOWS,&                                
+                      PLWNETSNOW, &
+                      PRNSNOW,&                               
+                      PHSNOW,&                              
+                      PGFLUXSNOW,  &
+                      PHPSNOW,&                                
+                      PLES3L,&                               
+                      PLEL3L,&                                
+                      PEVAP,&                                
+                      PSNDRIFT,&                                
+                      PRI,  &
+                      PEMISNOW,&                                
+                      PCDSNOW,&                                
+                      PUSTAR,&                                
+                      PCHSNOW,&                               
+                      PSNOWHMASS,&                               
+                      PQS, &
+                      PPERMSNOWFRAC,&                             
+                      PZENITH,&                               
+                      PANGL_ILLUM,&                                
+                      PXLAT,&                               
+                      PXLON,&                               
+                      PBLOWSNW,   &
+                      HSNOWDRIFT,&                                
+                      OSNOWDRIFT_SUBLIM, &                                
+                      OSNOW_ABS_ZENITH,  &
+                      HSNOWMETAMO,&                               
+                      HSNOWRAD,&                             
+                      OATMORAD,&                               
+                      P_DIR_SW, &                              
+                      P_SCA_SW,  &
+                      PSPEC_ALB, &                                
+                      PDIFF_RATIO,&                               
+                      PIMPWET,&                              
+                      PIMPDRY, &                                
+                      HSNOWFALL,  &
+                      HSNOWCOND, &                                
+                      HSNOWHOLD,&                               
+                      HSNOWCOMP,&                                
+                      HSNOWZREF,   &
+                      PSNOWMAK, &                                
+                      OSNOWCOMPACT_BOOL, &                               
+                      OSNOWMAK_BOOL, &                                
+                      OSNOWTILLER,  &
+                      OSELF_PROD, &                               
+                      OSNOWMAK_PROP, &                                
+                      OPRODSNOWMAK )
 
 !     ##########################################################################
 !

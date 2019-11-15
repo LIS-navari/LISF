@@ -116,7 +116,7 @@ PH    (X) = 0.5802 - 0.1571*X + 0.0327*X*X - 0.0026*X*X*X
 IF (LHOOK) CALL DR_HOOK('SURFACE_AERO_COND',0,ZHOOK_HANDLE)
 ZVMOD(:) = WIND_THRESHOLD(PVMOD(:),PUREF(:))
 !
-DO JJ=1,SIZE(PRI)
+DO JJ=1,1 ! SIZE(PRI) we need the first memeber of the array the rest is dummy 
   ZZ0(JJ)  = MIN(PZ0(JJ),PUREF(JJ)*0.5)
   ZZ0H(JJ) = MIN(ZZ0(JJ),PZ0H(JJ))
   ZZ0H(JJ) = MIN(ZZ0H(JJ),PZREF(JJ)*0.5)

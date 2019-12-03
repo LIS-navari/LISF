@@ -7,9 +7,6 @@
 !-------------------------END NOTICE -- DO NOT EDIT-----------------------
 ! July 17 2019 Mahdi Navari started for implementing Crocus 
 !
-!1- define dimension for variables
-!2- use xls tool to generate LIS related files 
-
 
 SUBROUTINE crocus_driver(n,		&
 			nsnow,				& 
@@ -357,10 +354,6 @@ LOGICAL, INTENT(INOUT)		:: PRODSNOWMAK_BOOL
 REAL, INTENT(IN)			:: SLOPE_DIR  ! typical slope aspect in the grid 
 
 
-! ***************************************************************************
-! Local variable 
-! ***************************************************************************
-
 !REAL :: ZP_PEW_A_COEF(1) = 0  ! coefficients for atmospheric coupling. In offline mode, they are all equal to 0!
 !REAL :: ZP_PEW_B_COEF(1) = 0
 !REAL :: ZP_PET_A_COEF(1) = 0
@@ -379,117 +372,160 @@ REAL :: ZP_LEL3L = 0
 REAL :: ZP_EVAP = 0
 REAL :: ZP_EVAPCOR = 0 ! it has not been initialized  in the CALL_MODEL
 REAL :: ZP_GFLXCOR = 0 ! it has not been initialized  in the CALL_MODEL
+REAL, PARAMETER       :: XRHOSMAX_ES = 750.  ! (kg m-3)
+REAL, PARAMETER      :: XSNOWDMIN = 0.000001  ! (m)
+! ***************************************************************************
+! Local variable 
+! ***************************************************************************
 
-REAL, allocatable, DIMENSION(:)  :: ZP_PEW_A_COEF
-REAL, allocatable, DIMENSION(:)  :: ZP_PEW_B_COEF
-REAL, allocatable, DIMENSION(:)  :: ZP_PET_A_COEF
-REAL, allocatable, DIMENSION(:)  :: ZP_PEQ_A_COEF
-REAL, allocatable, DIMENSION(:)  :: ZP_PET_B_COEF
-REAL, allocatable, DIMENSION(:)  :: ZP_PEQ_B_COEF
 
-REAL, allocatable, DIMENSION(:,:)  :: SNOWSWEinout
+!KSIZE4 = 1  !SIZE(ZP_DIR_SW,2)
+
+! === Only call snow model when there is snow on the surface
+!              exceeding a minimum threshold OR if the equivalent
+!              snow depth falling during the current time step exceeds 
+!              this limit.
+INTEGER   :: JWRK
+REAL       :: ZSNOW, ZSNOWFALL
+!                                      ZSNOW        = snow depth (m) 
+!                                      ZSNOWFALL    = minimum equivalent snow depth
+!                                                     for snow falling during the
+!                                                     current time step (m)
+
+ZSNOW  =  0.
+ZSNOWFALL  =  0.0
+
+  DO JWRK=1,SIZE(SNOWSWE) 
+           ZSNOW = ZSNOW  + SNOWSWE( JWRK)/SNOWRHO( JWRK)
+    END DO
+ ZSNOWFALL  = SRSNOW*PTSTEP/XRHOSMAX_ES    ! maximum possible snowfall depth (m)
+
+
+IF (ZSNOW >= XSNOWDMIN .OR. ZSNOWFALL >= XSNOWDMIN) THEN
+ CALL  CALL_MODEL(1, nsnow, 1)
+ENDIF
+
+ CONTAINS
+!
+!================================================================
+SUBROUTINE CALL_MODEL(KSIZE1,KSIZE2,KSIZE4)
+!
+IMPLICIT NONE
+!
+INTEGER, INTENT(IN) :: KSIZE1
+INTEGER, INTENT(IN) :: KSIZE2
+INTEGER, INTENT(IN) :: KSIZE4
+
+REAL, DIMENSION(1:KSIZE1)  :: ZP_PEW_A_COEF
+REAL, DIMENSION(1:KSIZE1)  :: ZP_PEW_B_COEF
+REAL, DIMENSION(1:KSIZE1)  :: ZP_PET_A_COEF
+REAL, DIMENSION(1:KSIZE1)  :: ZP_PEQ_A_COEF
+REAL, DIMENSION(1:KSIZE1)  :: ZP_PET_B_COEF
+REAL, DIMENSION(1:KSIZE1)  :: ZP_PEQ_B_COEF
+
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2)  :: SNOWSWEinout
 !  Z_PSNOWSWE  = Snow layer(s) liquid Water Equivalent (SWE:kg m-2)
-REAL, allocatable, DIMENSION(:,:)  :: SNOWRHOinout
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2)  :: SNOWRHOinout
 !  SNOWRHO  = Snow layer(s) averaged density (kg/m3)
-REAL, allocatable, DIMENSION(:,:)  :: SNOWHEATinout
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2)  :: SNOWHEATinout
 !  SNOWHEAT = Snow layer(s) heat content (J/m2)
-REAL, DIMENSION(1)  :: SNOWALBinout
+REAL, DIMENSION(1:KSIZE1)  :: SNOWALBinout
 !  SNOWALB = Prognostic surface snow albedo
 ! (does not include anything but
 ! the actual snow cover)
-REAL, allocatable, DIMENSION(:,:)  :: SNOWGRAN1inout
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2)  :: SNOWGRAN1inout
 !  SNOWGRAN1 = Snow layers grain feature 1
-REAL, allocatable, DIMENSION(:,:)  :: SNOWGRAN2inout
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2)  :: SNOWGRAN2inout
 !  SNOWGRAN2 = Snow layer grain feature 2
-REAL, allocatable, DIMENSION(:,:)  :: SNOWHISTinout
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2)  :: SNOWHISTinout
 !  SNOWHIST  = Snow layer grain historical
 ! parameter (only for non
 ! dendritic snow)
-REAL, allocatable, DIMENSION(:,:)  :: SNOWAGEinout  ! Snow grain age
-REAL, allocatable, DIMENSION(:,:,:)  :: ZP_SNOWIMPURinout  
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2)  :: SNOWAGEinout  ! Snow grain age
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2,1:nimpur)  :: ZP_SNOWIMPURinout  
 ! 					Snow impurity content (g) (LOCATION,LAYER,NIMPUR)) Impur type :1/BC 2/Dust
 !REAL, INTENT(IN) :: PTSTEP 		! PTSTEP  = time step of the integration
-REAL, allocatable, DIMENSION(:)  :: PPSin			! ZP_PS = surface pressure
-REAL, allocatable, DIMENSION(:)  :: ZP_PAin		! pressure at lowest atmos. level
-REAL, allocatable, DIMENSION(:)  :: SRSNOWin 	! ZP_SRSNOW  = snow rate (SWE) [kg/(m2 s)]
-REAL, allocatable, DIMENSION(:)  :: RRSNOWin	! ZP_RRSNOW = rain rate [kg/(m2 s)]
-REAL, allocatable, DIMENSION(:)  :: ZP_PSN3Lin		! ZP_PSN3L = snow fraction
-REAL, allocatable, DIMENSION(:)  :: TAin			! ZP_TA  = atmospheric temperature at level za (K)
-REAL, allocatable, DIMENSION(:) :: TGin			! ZP_TG  = Surface soil temperature (effective
+REAL, DIMENSION(1:KSIZE1) :: PPSin			! ZP_PS = surface pressure
+REAL, DIMENSION(1:KSIZE1) :: ZP_PAin		! pressure at lowest atmos. level
+REAL, DIMENSION(1:KSIZE1) :: SRSNOWin 	! ZP_SRSNOW  = snow rate (SWE) [kg/(m2 s)]
+REAL, DIMENSION(1:KSIZE1) :: RRSNOWin	! ZP_RRSNOW = rain rate [kg/(m2 s)]
+REAL, DIMENSION(1:KSIZE1) :: ZP_PSN3Lin		! ZP_PSN3L = snow fraction
+REAL, DIMENSION(1:KSIZE1) :: TAin			! ZP_TA  = atmospheric temperature at level za (K)
+REAL, DIMENSION(1:KSIZE1) :: TGin			! ZP_TG  = Surface soil temperature (effective
 ! temperature the of layer lying below snow)
-REAL, allocatable, DIMENSION(:) :: SW_RADin	! ZP_SW_RAD = incoming solar radiation (W/m2)
-REAL, allocatable, DIMENSION(:)  :: QAin		!Z_PQA = atmospheric specific humidity at level za 
-REAL, allocatable, DIMENSION(:)  :: ZP_VMODin	! ZP_VMOD = modulus of the wind parallel to the orography (m/s)
-REAL, allocatable, DIMENSION(:) :: Wind_Ein
-REAL, allocatable, DIMENSION(:)  :: Wind_Nin
-REAL, allocatable, DIMENSION(:)  :: LW_RADin	! ZP_LW_RAD = atmospheric infrared radiation (W/m2)
-REAL, allocatable, DIMENSION(:)  :: ZP_RHOAin		! ZP_RHOA  = air density
-REAL, allocatable, DIMENSION(:)  :: UREFin 		! ZP_UREF  = reference height of the wind
-REAL, allocatable, DIMENSION(:)  :: ZP_EXNSin		! ZP_EXNS  = Exner function at surface
-REAL, allocatable, DIMENSION(:)  :: ZP_EXNAin		! ZP_EXNA  = Exner function at lowest atmos level
-REAL, allocatable, DIMENSION(:)  :: ZP_DIRCOSZWin ! ZP_DIRCOSZW = Cosinus of the angle between the
+REAL, DIMENSION(1:KSIZE1) :: SW_RADin	! ZP_SW_RAD = incoming solar radiation (W/m2)
+REAL, DIMENSION(1:KSIZE1) :: QAin		!Z_PQA = atmospheric specific humidity at level za 
+REAL, DIMENSION(1:KSIZE1) :: ZP_VMODin	! ZP_VMOD = modulus of the wind parallel to the orography (m/s)
+REAL, DIMENSION(1:KSIZE1) :: Wind_Ein
+REAL, DIMENSION(1:KSIZE1) :: Wind_Nin
+REAL, DIMENSION(1:KSIZE1) :: LW_RADin	! ZP_LW_RAD = atmospheric infrared radiation (W/m2)
+REAL, DIMENSION(1:KSIZE1) :: ZP_RHOAin		! ZP_RHOA  = air density
+REAL, DIMENSION(1:KSIZE1) :: UREFin 		! ZP_UREF  = reference height of the wind
+REAL, DIMENSION(1:KSIZE1) :: ZP_EXNSin		! ZP_EXNS  = Exner function at surface
+REAL, DIMENSION(1:KSIZE1) :: ZP_EXNAin		! ZP_EXNA  = Exner function at lowest atmos level
+REAL, DIMENSION(1:KSIZE1) :: ZP_DIRCOSZWin ! ZP_DIRCOSZW = Cosinus of the angle between the
 !  normal to the surface and the vertical
-REAL, allocatable, DIMENSION(:)  :: SLOPEin ! 	ZP_SLOPE  = Slope (degree, from LDT )
-REAL, allocatable, DIMENSION(:) :: ZREFin		! ZP_ZREF  = reference height of the first atmospheric level
-REAL, allocatable, DIMENSION(:) :: Z0NATin 		! Z0NAT (PZ0) = grid box average roughness length
-REAL, allocatable, DIMENSION(:) :: Z0EFFin		! Z0EFF  = roughness length for momentum
-REAL, allocatable, DIMENSION(:)  :: Z0HNATin 	! Z0HNAT (PZOH)  = grid box average roughness length for heat  					 
-REAL, allocatable, DIMENSION(:) :: ALBin 		! ALB  = soil/vegetation albedo
-REAL, allocatable, DIMENSION(:) :: SOILCONDin! SOILCOND = soil thermal conductivity [W/(m K)]
-REAL, allocatable, DIMENSION(:) :: D_Gin 		! D_G  = Assumed first soil layer thickness (m)
+REAL, DIMENSION(1:KSIZE1) :: SLOPEin ! 	ZP_SLOPE  = Slope (degree, from LDT )
+REAL, DIMENSION(1:KSIZE1) :: ZREFin		! ZP_ZREF  = reference height of the first atmospheric level
+REAL, DIMENSION(1:KSIZE1) :: Z0NATin 		! Z0NAT (PZ0) = grid box average roughness length
+REAL, DIMENSION(1:KSIZE1) :: Z0EFFin		! Z0EFF  = roughness length for momentum
+REAL, DIMENSION(1:KSIZE1) :: Z0HNATin 	! Z0HNAT (PZOH)  = grid box average roughness length for heat  					 
+REAL, DIMENSION(1:KSIZE1) :: ALBin 		! ALB  = soil/vegetation albedo
+REAL, DIMENSION(1:KSIZE1) :: SOILCONDin! SOILCOND = soil thermal conductivity [W/(m K)]
+REAL, DIMENSION(1:KSIZE1) :: D_Gin 		! D_G  = Assumed first soil layer thickness (m)
 !  Used to calculate ground/snow heat flux
-REAL, allocatable, DIMENSION(:,:) :: SNOWLIQout	! SNOWLIQ  = Snow layer(s) liquid water content (m)
-REAL, allocatable, DIMENSION(:,:) :: SNOWDZout 		! SNOWDZ = Snow layer(s) thickness (m)
-REAL, allocatable, DIMENSION(:,:) :: SNOWTEMPinout ! SNOWTEMP = Snow layer(s) temperature (m)
-REAL, allocatable, DIMENSION(:) :: THRUFALout	! THRUFAL  = rate that liquid water leaves snow pack:
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2) :: SNOWLIQout	! SNOWLIQ  = Snow layer(s) liquid water content (m)
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2) :: SNOWDZout 		! SNOWDZ = Snow layer(s) thickness (m)
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2) :: SNOWTEMPinout ! SNOWTEMP = Snow layer(s) temperature (m)
+REAL, DIMENSION(1:KSIZE1) :: THRUFALout	! THRUFAL  = rate that liquid water leaves snow pack:
 !  paritioned into soil infiltration/runoff by ISBA [kg/(m2 s)]
-REAL, allocatable,DIMENSION(:) :: GRNDFLUXinout !REAL, allocatable, DIMENSION(:) :: GRNDFLUXinout 
+REAL,DIMENSION(1:KSIZE1) :: GRNDFLUXinout !REAL, DIMENSION(1:KSIZE1) :: GRNDFLUXinout 
 !					GRNDFLUX = soil/snow interface heat flux (W/m2)
-REAL, allocatable, DIMENSION(:) :: ZP_EVAPCORout	! ZP_EVAPCOR  = evaporation/sublimation correction term:
+REAL, DIMENSION(1:KSIZE1) :: ZP_EVAPCORout	! ZP_EVAPCOR  = evaporation/sublimation correction term:
 !  extract any evaporation exceeding the
 !  actual snow cover (as snow vanishes)
 !  and apply it as a surface soil water
 !  sink. [kg/(m2 s)]
-REAL, allocatable, DIMENSION(:) :: ZP_GFLXCORout
+REAL, DIMENSION(1:KSIZE1) :: ZP_GFLXCORout
 ! 					ZP_GFLXCOR  = flux correction to underlying soil for vanishing snowpack
 !  (to put any energy excess from snow to soil) (W/m2)  
-REAL, allocatable, DIMENSION(:) :: ZP_SWNETSNOWout
+REAL, DIMENSION(1:KSIZE1) :: ZP_SWNETSNOWout
 !					ZP_SWNETSNOW = net shortwave radiation entering top of snowpack 
 !  (W m-2) Imposed if MEB=T, diagnosed herein if MEB=F
-REAL, allocatable, DIMENSION(:)  :: ZP_SWNETSNOWSout
+REAL, DIMENSION(1:KSIZE1) :: ZP_SWNETSNOWSout
 !					ZP_SWNETSNOWS= net shortwave radiation in uppermost layer of snowpack 
 !  (W m-2) Imposed if MEB=T, diagnosed herein if MEB=F
 ! Used for surface energy budget diagnostics
-REAL, allocatable, DIMENSION(:) :: ZP_LWNETSNOWout
+REAL, DIMENSION(1:KSIZE1) :: ZP_LWNETSNOWout
 ! 					ZP_LWNETSNOW = net longwave radiation entering top of snowpack 
 !  (W m-2) Imposed if MEB=T, diagnosed herein if MEB=F
-REAL, allocatable, DIMENSION(:) :: ZP_RNSNOWout	! ZP_RNSNOW = net radiative flux from snow (W/m2)
-REAL, allocatable, DIMENSION(:) :: ZP_HSNOWout! REAL, allocatable, DIMENSION(:) :: ZP_HSNOWout	! ZP_HSNOW  = sensible heat flux from snow (W/m2)
-REAL, allocatable, DIMENSION(:) :: ZP_GFLUXSNOWout	! ZP_GFLUXSNOW  = net heat flux from snow (W/m2)
-REAL, allocatable, DIMENSION(:) :: ZP_HPSNOWout	! ZP_HPSNOW = heat release from rainfall (W/m2)
-REAL, allocatable, DIMENSION(:) :: ZP_LES3Lout 		! ZP_LES3L  = sublimation (W/m2) 
-REAL, allocatable, DIMENSION(:) :: ZP_LEL3Lout	! ZP_LEL3L  = evaporation heat flux from snow (W/m2)
-REAL, allocatable, DIMENSION(:) :: ZP_EVAPout	! ZP_EVAP = total evaporative flux (kg/m2/s)
-REAL, allocatable, DIMENSION(:) :: SNDRIFTout	! SNDRIFT  = blowing snow sublimation (kg/m2/s)
-REAL, allocatable, DIMENSION(:) :: RI_nout		! RI_n = Ridcharson number
-REAL, allocatable, DIMENSION(:) :: EMISNOWout	! EMISNOW  = snow surface emissivity
-REAL, allocatable, DIMENSION(:) :: CDSNOWout	! CDSNOW = drag coefficient for momentum over snow
-REAL, allocatable, DIMENSION(:) :: USTARSNOWout	! USTARSNOW  = friction velocity over snow (m/s)
-REAL, allocatable, DIMENSION(:)  :: CHSNOWout	! CHSNOW = drag coefficient for heat over snow
-REAL, allocatable, DIMENSION(:)  :: SNOWHMASSout 
+REAL, DIMENSION(1:KSIZE1) :: ZP_RNSNOWout	! ZP_RNSNOW = net radiative flux from snow (W/m2)
+REAL, DIMENSION(1:KSIZE1) :: ZP_HSNOWout! REAL, DIMENSION(1:KSIZE1) :: ZP_HSNOWout	! ZP_HSNOW  = sensible heat flux from snow (W/m2)
+REAL, DIMENSION(1:KSIZE1) :: ZP_GFLUXSNOWout	! ZP_GFLUXSNOW  = net heat flux from snow (W/m2)
+REAL, DIMENSION(1:KSIZE1) :: ZP_HPSNOWout	! ZP_HPSNOW = heat release from rainfall (W/m2)
+REAL, DIMENSION(1:KSIZE1) :: ZP_LES3Lout 		! ZP_LES3L  = sublimation (W/m2) 
+REAL, DIMENSION(1:KSIZE1) :: ZP_LEL3Lout	! ZP_LEL3L  = evaporation heat flux from snow (W/m2)
+REAL, DIMENSION(1:KSIZE1) :: ZP_EVAPout	! ZP_EVAP = total evaporative flux (kg/m2/s)
+REAL, DIMENSION(1:KSIZE1) :: SNDRIFTout	! SNDRIFT  = blowing snow sublimation (kg/m2/s)
+REAL, DIMENSION(1:KSIZE1) :: RI_nout		! RI_n = Ridcharson number
+REAL, DIMENSION(1:KSIZE1) :: EMISNOWout	! EMISNOW  = snow surface emissivity
+REAL, DIMENSION(1:KSIZE1) :: CDSNOWout	! CDSNOW = drag coefficient for momentum over snow
+REAL, DIMENSION(1:KSIZE1) :: USTARSNOWout	! USTARSNOW  = friction velocity over snow (m/s)
+REAL, DIMENSION(1:KSIZE1) :: CHSNOWout	! CHSNOW = drag coefficient for heat over snow
+REAL, DIMENSION(1:KSIZE1) :: SNOWHMASSout 
 !					SNOWHMASS  = heat content change due to mass
 !  changes in snowpack (J/m2): for budget
 !  calculations only.
-REAL, allocatable, DIMENSION(:) :: QSout		! QS = surface humidity
-REAL, allocatable, DIMENSION(:) :: PERMSNOWFRACin 
+REAL, DIMENSION(1:KSIZE1) :: QSout		! QS = surface humidity
+REAL, DIMENSION(1:KSIZE1) :: PERMSNOWFRACin 
 !					PPERMSNOWFRAC  = fraction of permanet snow/ice
-REAL, allocatable, DIMENSION(:) :: ZP_ZENITHin	! solar zenith angle
-REAL, allocatable, DIMENSION(:) :: ZP_ANGL_ILLUMin
+REAL, DIMENSION(1:KSIZE1) :: ZP_ZENITHin	! solar zenith angle
+REAL, DIMENSION(1:KSIZE1) :: ZP_ANGL_ILLUMin
 !					Effective illumination angle, Angle between the sun and the 
 ! 					normal to the ground (=zenith if no slope) used in TARTES
-REAL, allocatable, DIMENSION(:) :: LATin
-REAL, allocatable, DIMENSION(:) :: LONin
-REAL, allocatable, DIMENSION(:,:)	:: ZP_BLOWSNWin 
+REAL, DIMENSION(1:KSIZE1) :: LATin
+REAL, DIMENSION(1:KSIZE1) :: LONin
+REAL, DIMENSION(1:KSIZE1,1:4)	:: ZP_BLOWSNWin 
 !					Properties of deposited blowing snow (from Sytron or Meso-NH/Crocus)
 ! 					1 : Deposition flux (kg/m2/s)
 ! 					2 : Density of deposited snow (kg/m3)
@@ -503,129 +539,39 @@ REAL, allocatable, DIMENSION(:,:)	:: ZP_BLOWSNWin
   !  'DFLT': falling snow falls as purely dendritic
   !  'GA01': Gallee et al 2001
   !  'VI13': Vionnet et al 2013
-!LOGICAL		:: SNOWDRIFT_SUBLIM_BOOLin !	activate sublimation during drift
-!LOGICAL		:: SNOW_ABS_ZENITH_BOOLin 
+!LOGICAL :: SNOWDRIFT_SUBLIM_BOOLin !	activate sublimation during drift
+!LOGICAL :: SNOW_ABS_ZENITH_BOOLin 
 ! 					activate parametrization of solar absorption for polar regions
-! CHARACTER(3)		:: SNOWMETAMO_optin
-! CHARACTER(3)		:: SNOWRADin
-!LOGICAL  	:: ATMORAD_BOOLin !		activate atmotartes scheme
-
+! CHARACTER(3) :: SNOWMETAMO_optin
+! CHARACTER(3) :: SNOWRADin
+!LOGICAL :: ATMORAD_BOOLin !		activate atmotartes scheme
 
 ! 
 ! see # 1599: You should prefer CSNOWRAD='B92' at the moment for the first tests. 
 ! In that case, the direct-diffuse partition is not used, a 3 band spectral fixed repartition
 !  is used from the global radiation as detailed in Vionnet et al 2012.
 ! 'T17' option comes with a number of other problems (impurities management, memory issues, etc.).
-REAL, allocatable, DIMENSION(:,:) :: ZP_DIR_SWin  ! dimension (spectral band: 186 bands? )
-REAL, allocatable, DIMENSION(:,:) :: ZP_SCA_SWin ! dimension (spectral band: 186 bands? )
+REAL, DIMENSION(1:KSIZE1,1:KSIZE4) :: ZP_DIR_SWin  ! dimension (spectral band: 186 bands? )
+REAL, DIMENSION(1:KSIZE1,1:KSIZE4) :: ZP_SCA_SWin ! dimension (spectral band: 186 bands? )
 !								direct and diffuse spectral irradiance (W/m2/um)
-REAL, allocatable, DIMENSION(:,:) :: ZP_SPEC_ALBout ! dimension (spectral band: 186 bands? )
-REAL, allocatable, DIMENSION(:,:) :: ZP_DIFF_RATIOout ! dimension (spectral band: 186 bands? )
+REAL, DIMENSION(1:KSIZE1,1:KSIZE4) :: ZP_SPEC_ALBout ! dimension (spectral band: 186 bands? )
+REAL, DIMENSION(1:KSIZE1,1:KSIZE4) :: ZP_DIFF_RATIOout ! dimension (spectral band: 186 bands? )
 !								spectral albedo and diffuse to total irradiance ratio
 
-
-REAL, allocatable, DIMENSION(:,:)  :: IMPWETin  ! dimension 
-REAL, allocatable, DIMENSION(:,:)  :: IMPDRYin  ! dimension 
+REAL, DIMENSION(1:KSIZE1,1:nimpur) :: IMPWETin  ! dimension 
+REAL, DIMENSION(1:KSIZE1,1:nimpur) :: IMPDRYin  ! dimension 
 !								Dry and wet deposit coefficient from Forcing File(g/m²/s)
-! 
-REAL, allocatable, DIMENSION(:) :: SNOWMAK_dzin!Snowmaking thickness (m)
+
+REAL, DIMENSION(1:KSIZE1) :: SNOWMAK_dzin !Snowmaking thickness (m)
+LOGICAL, DIMENSION(1:KSIZE1) :: PRODSNOWMAK_BOOLinout
 REAL, DIMENSION(1) :: ZP_TIME ! current time 
-!REAL, DIMENSION(:) 	:: ZPZENITH		! Solar zenithal angle
-REAL, allocatable, DIMENSION(:) :: ZP_AZIMSOL ! Solar azimuthal angle
-REAL, allocatable, DIMENSION(:) :: ZP_TSUN ! Solar time
-REAL, allocatable, DIMENSION(:) :: SLOPE_DIRin	! typical slope aspect in the grid 
-REAL, allocatable, DIMENSION(:) :: ZP_CDN!		 neutral drag coefficient for momentum (not used)
-REAL, allocatable, DIMENSION(:) :: ZP_AC! 		aerodynamical resistance(not used)
-REAL, allocatable, DIMENSION(:) :: ZP_RA! 		aerodynamical resistance(not used)
-
-allocate(ZP_PEW_A_COEF(2))   ! coefficients for atmospheric coupling. In offline mode, they are all equal to 0!
-allocate(ZP_PEW_B_COEF(2)) 
-allocate(ZP_PET_A_COEF(2)) 
-allocate(ZP_PEQ_A_COEF(2))
-allocate(ZP_PET_B_COEF(2))	
-allocate(ZP_PEQ_B_COEF(2)) 
-
-
-allocate(SNOWSWEinout(1,nsnow))
-allocate(SNOWRHOinout(1,nsnow)) 
-allocate(SNOWHEATinout(1,nsnow))
-allocate(SNOWGRAN1inout(1,nsnow))
-allocate(SNOWGRAN2inout(1,nsnow))
-allocate(SNOWHISTinout(1,nsnow))
-allocate(SNOWAGEinout (1,nsnow))
-allocate(ZP_SNOWIMPURinout (1,nsnow,nimpur))
-
-
-allocate(PPSin(2))
-allocate(ZP_PAin(2))
-allocate(SRSNOWin(2))
-allocate(RRSNOWin(2))
-allocate(ZP_PSN3Lin(2))
-allocate(TAin(2))
-allocate(TGin(2))
-allocate(SW_RADin(2))
-allocate(QAin(2))
-allocate(ZP_VMODin(2)) 
-allocate(Wind_Ein(2))
-allocate(Wind_Nin(2))
-allocate(LW_RADin(2))
-allocate(ZP_RHOAin(2))
-allocate(UREFin(2))
-allocate(ZP_EXNSin(2))
-allocate(ZP_EXNAin(2))
-allocate(ZP_DIRCOSZWin(2))
-allocate(SLOPEin(2))
-allocate(ZREFin(2))
-allocate(Z0NATin(2))
-allocate(Z0EFFin(2))
-allocate(Z0HNATin(2)) 					 
-allocate(ALBin(2))
-allocate(SOILCONDin(2))
-allocate(D_Gin(2))
-allocate(SNOWLIQout(1,nsnow))
-allocate(SNOWDZout(1,nsnow))
-allocate(SNOWTEMPinout (1,nsnow))
-allocate(THRUFALout(2))
-allocate(ZP_EVAPCORout(2))
-allocate(ZP_GFLXCORout(2))
-allocate(GRNDFLUXinout(2))
-allocate(ZP_SWNETSNOWout	(2))
-allocate(ZP_SWNETSNOWSout(2))
-allocate(ZP_LWNETSNOWout	(2))
-allocate(ZP_RNSNOWout(2))
-allocate(ZP_HSNOWout(2))
-allocate(ZP_GFLUXSNOWout(2))
-allocate(ZP_HPSNOWout(2))
-allocate(ZP_LES3Lout(2))
-allocate(ZP_LEL3Lout(2))
-allocate(ZP_EVAPout(2))
-allocate(SNDRIFTout(2))
-allocate(RI_nout(2))
-allocate(EMISNOWout(2))
-allocate(CDSNOWout (2)) 
-allocate(USTARSNOWout(2))
-allocate(CHSNOWout(2)) 
-allocate(SNOWHMASSout(2))
-allocate(QSout(2))
-allocate(PERMSNOWFRACin(2))
-allocate(ZP_ZENITHin (2))
-allocate(ZP_ANGL_ILLUMin (2))
-allocate(LATin(2))
-allocate(LONin(2))
-allocate(ZP_DIR_SWin(1,186)) 
-allocate(ZP_SCA_SWin(1,186)) 
-allocate(ZP_SPEC_ALBout (1,186)) 
-allocate(ZP_DIFF_RATIOout(1,186)) 	
-allocate(IMPWETin(1,nimpur)) 
-allocate(IMPDRYin(1,nimpur))							
-allocate(SNOWMAK_dzin	(2))
-allocate(SLOPE_DIRin (2))
-allocate(ZP_AZIMSOL (2))
-allocate(ZP_TSUN (2))
-allocate(ZP_CDN (2))
-allocate(ZP_AC (2))
-allocate(ZP_RA(2))
-allocate(ZP_BLOWSNWin (1,4))
+!REAL, DIMENSION(1:KSIZE1) :: ZPZENITH	  ! Solar zenithal angle
+REAL, DIMENSION(1:KSIZE1) :: ZP_AZIMSOL  ! Solar azimuthal angle
+REAL, DIMENSION(1:KSIZE1) :: ZP_TSUN  ! Solar time
+REAL, DIMENSION(1:KSIZE1) :: SLOPE_DIRin  ! typical slope aspect in the grid 
+REAL, DIMENSION(1:KSIZE1) :: ZP_CDN  ! neutral drag coefficient for momentum (not used)
+REAL, DIMENSION(1:KSIZE1) :: ZP_AC  ! aerodynamical resistance(not used)
+REAL, DIMENSION(1:KSIZE1) :: ZP_RA  ! aerodynamical resistance(not used)
 
 !_______________________________________________
 ! test : initialize to zero
@@ -636,8 +582,8 @@ ZP_PET_A_COEF(:) = 0
 ZP_PEQ_A_COEF(:) = 0
 ZP_PET_B_COEF(:) = 0	
 ZP_PEQ_B_COEF(:) = 0 
-SNOWSWEinout(:,:)		= 0
-SNOWRHOinout(:,:)		= 0
+SNOWSWEinout(:,:) = 0
+SNOWRHOinout(:,:) = 0
 SNOWHEATinout(:,:) = 0
 SNOWALBinout(:) = 0
 SNOWGRAN1inout(:,:) = 0
@@ -688,8 +634,8 @@ ZP_LES3Lout(:) = 0
 ZP_LEL3Lout(:) = 0
 ZP_EVAPout(:) = 0
 SNDRIFTout(:) = 0
-RI_nout(:) = 0
-EMISNOWout(:) = 0
+RI_nout(:) = 0            ! snow3L_isba   --> PRI(:)            = XUNDEF  
+EMISNOWout(:) = 0.99  ! see ini_surf_csts.F90  
  CDSNOWout (:) = 0 ! will be computed 
 USTARSNOWout(:) = 0
  CHSNOWout(:) = 0 ! will be computed 
@@ -698,7 +644,7 @@ QSout(:) = 0
 PERMSNOWFRACin(:) = 0
 ZP_ZENITHin (:) = 0
 ZP_ANGL_ILLUMin(:) = 0
- LATin(:) = 0
+LATin(:) = 0
 LONin(:) = 0
 ZP_DIR_SWin(:,:) = 0 
 ZP_SCA_SWin(:,:) = 0
@@ -709,6 +655,7 @@ IMPDRYin(:,:) = 0
 SNOWMAK_dzin(:) = 0
 SLOPE_DIRin (:) = 0
 ZP_BLOWSNWin (:,:) = 0 
+PRODSNOWMAK_BOOLinout(:) = .FALSE. 
 !_______________________________________________
 ! end test : initialize to zero
 ! ______________________________________________
@@ -764,7 +711,7 @@ Z0NATin(1) 				= Z0NAT
 Z0EFFin(1) 				= Z0EFF 
 Z0HNATin(1) 			= Z0HNAT 					 
 ALBin(1)                            = ALB
-SOILCONDin(1) 			= SOILCOND
+SOILCONDin(1) 		= SOILCOND
 D_Gin(1)                            = D_G
 SNOWLIQout(1,:)              = SNOWLIQ
 SNOWDZout(1,:)               = SNOWDZ
@@ -809,6 +756,7 @@ IMPWETin(1,:) = IMPWET(:) ! dimension (1,nimpur,1)
 IMPDRYin(1,:) = IMPDRY(:) ! dimension (1,nimpur,1)
 !										Dry and wet deposit coefficient from Forcing File(g/m²/s)
 SNOWMAK_dzin(1)	= SNOWMAK_dz
+PRODSNOWMAK_BOOLinout(1) = PRODSNOWMAK_BOOL
 SLOPE_DIRin (1)	= SLOPE_DIR
 
 ZP_BLOWSNWin (1,1:4) = 0 ! No snow drift; set the value to zero
@@ -1001,7 +949,8 @@ TPTIME%TIME = hour*3600 + minute*60
 		SNOWTILLER_BOOL,		&
 		SELF_PROD_BOOL,			&
 		SNOWMAK_PROP_BOOL,	&
-		PRODSNOWMAK_BOOL)
+		PRODSNOWMAK_BOOLinout, &
+              KSIZE1,KSIZE2,KSIZE4)
 !
  ZP_GFLXCORout= 0.0 ! see snow3L_isba.F90
 
@@ -1078,93 +1027,11 @@ QS = QSout(1)
 !IMPWET 		= IMPWETin(1,nimpur) 
 !IMPDRY 		= IMPDRYin(1,nimpur) ! Dry and wet deposit coefficient from Forcing File(g/m²/s)
 !SNOWMAK_dz 		= SNOWMAK_dzin(1,1)
+PRODSNOWMAK_BOOL = PRODSNOWMAK_BOOLinout(1)
 
 
-deallocate(ZP_PEW_A_COEF)   ! coefficients for atmospheric coupling. In offline mode, they are all equal to 0!
-deallocate(ZP_PEW_B_COEF) 
-deallocate(ZP_PET_A_COEF) 
-deallocate(ZP_PEQ_A_COEF)
-deallocate(ZP_PET_B_COEF)	
-deallocate(ZP_PEQ_B_COEF) 
 
-deallocate(SNOWSWEinout)
-deallocate(SNOWRHOinout) 
-deallocate(SNOWHEATinout)
-deallocate(SNOWGRAN1inout)
-deallocate(SNOWGRAN2inout)
-deallocate(SNOWHISTinout)
-deallocate(SNOWAGEinout )
-deallocate(ZP_SNOWIMPURinout)
-deallocate(PPSin)
-deallocate(ZP_PAin)
-deallocate(SRSNOWin)
-deallocate(RRSNOWin)
-deallocate(ZP_PSN3Lin)
-deallocate(TAin)
-deallocate(TGin)
-deallocate(SW_RADin)
-deallocate(QAin)
-deallocate(ZP_VMODin)
-deallocate(Wind_Ein)
-deallocate(Wind_Nin)
-deallocate(LW_RADin)
-deallocate(ZP_RHOAin)
-deallocate(UREFin)
-deallocate(ZP_EXNSin)
-deallocate(ZP_EXNAin)
-deallocate(ZP_DIRCOSZWin)
-deallocate(SLOPEin)
-deallocate(ZREFin)
-deallocate(Z0NATin)
-deallocate(Z0EFFin)
-deallocate(Z0HNATin) 					 
-deallocate(ALBin)
-deallocate(SOILCONDin)
-deallocate(D_Gin)
-deallocate(SNOWLIQout)
-deallocate(SNOWDZout)
-deallocate(SNOWTEMPinout)
-deallocate(THRUFALout)
-deallocate(ZP_EVAPCORout)
-deallocate(ZP_GFLXCORout)
-deallocate(GRNDFLUXinout)
-deallocate(ZP_SWNETSNOWout	)
-deallocate(ZP_SWNETSNOWSout)
-deallocate(ZP_LWNETSNOWout	)
-deallocate(ZP_RNSNOWout)
-deallocate(ZP_HSNOWout)
-deallocate(ZP_GFLUXSNOWout)
-deallocate(ZP_HPSNOWout)
-deallocate(ZP_LES3Lout)
-deallocate(ZP_LEL3Lout)
-deallocate(ZP_EVAPout)
-deallocate(SNDRIFTout)
-deallocate(RI_nout)
-deallocate(EMISNOWout)
-deallocate(CDSNOWout)
-deallocate(USTARSNOWout)
-deallocate(CHSNOWout)
-deallocate(SNOWHMASSout)
-deallocate(QSout)
-deallocate(PERMSNOWFRACin)
-deallocate(ZP_ZENITHin)
-deallocate(ZP_ANGL_ILLUMin)
-deallocate(LATin)
-deallocate(LONin)
-deallocate(ZP_DIR_SWin)
-deallocate(ZP_SCA_SWin) 
-deallocate(ZP_SPEC_ALBout) 
-deallocate(ZP_DIFF_RATIOout)	
-deallocate(IMPWETin) 
-deallocate(IMPDRYin)								
-deallocate(SNOWMAK_dzin)
-deallocate(SLOPE_DIRin)
-deallocate(ZP_AZIMSOL)
-deallocate(ZP_TSUN)
-deallocate(ZP_CDN)
-deallocate(ZP_AC)
-deallocate(ZP_RA)
-deallocate(ZP_BLOWSNWin)
+END SUBROUTINE CALL_MODEL
 END SUBROUTINE crocus_driver
 
 

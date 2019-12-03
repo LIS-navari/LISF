@@ -42,6 +42,7 @@ subroutine Crocus81_coldstart(mtype)
                 enddo
                 do l=1, CROCUS81_struc(n)%nsnow
                     CROCUS81_struc(n)%crocus81(t)%SNOWRHO(l) = CROCUS81_struc(n)%init_SNOWRHO(l)
+                    !CROCUS81_struc(n)%crocus81(t)%SNOWRHO(l) = 10000000000
                 enddo
                 do l=1, CROCUS81_struc(n)%nsnow
                     CROCUS81_struc(n)%crocus81(t)%SNOWHEAT(l) = CROCUS81_struc(n)%init_SNOWHEAT(l)

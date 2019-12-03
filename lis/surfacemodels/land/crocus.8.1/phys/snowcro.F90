@@ -100,7 +100,8 @@
                       OSNOWTILLER,  &
                       OSELF_PROD, &                               
                       OSNOWMAK_PROP, &                                
-                      OPRODSNOWMAK )
+                      OPRODSNOWMAK , &
+                      KSIZE1,KSIZE2,KSIZE4)
 
 !     ##########################################################################
 !
@@ -239,6 +240,9 @@ USE PARKIND1  ,ONLY : JPRB
 #ifdef SFX_OL
 USE MODN_IO_OFFLINE,  ONLY : LFORCIMP
 #endif
+
+USE modi_ini_surf_csts
+
 !
 ! this module is not used anymore
 ! USE MODI_GREGODSTRATI
@@ -271,7 +275,7 @@ LOGICAL, INTENT(IN)                 :: OGLACIER   ! True = Over permanent snow a
 !                                                     ! 'OLD' = direct
 !                                                     ! 'NEW' = Taylor serie, order 1
 !
-REAL, DIMENSION(:), INTENT(IN)      :: PPS, PTA, PSW_RAD, PQA, PVMOD, PLW_RAD, PSR, PRR 
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)      :: PPS, PTA, PSW_RAD, PQA, PVMOD, PLW_RAD, PSR, PRR 
 !                                      PSW_RAD = incoming solar radiation (W/m2)
 !                                      PLW_RAD = atmospheric infrared radiation (W/m2)
 !                                      PRR     = rain rate [kg/(m2 s)]
@@ -281,11 +285,11 @@ REAL, DIMENSION(:), INTENT(IN)      :: PPS, PTA, PSW_RAD, PQA, PVMOD, PLW_RAD, P
 !                                      PPS     = surface pressure
 !                                      PQA     = atmospheric specific humidity
 !                                                at level za
-REAL, DIMENSION(:,:), INTENT(IN)   :: P_DIR_SW, P_SCA_SW ! direct and diffuse spectral irradiance (W/m2/um)
+REAL, DIMENSION(1:KSIZE1,1:KSIZE4), INTENT(IN)   :: P_DIR_SW, P_SCA_SW ! direct and diffuse spectral irradiance (W/m2/um)
 !
-REAL, DIMENSION(:,:), INTENT(IN)   :: PIMPWET, PIMPDRY  !Dry and wet deposit coefficient from Forcing File(g/m²/s)
+REAL, DIMENSION(1:KSIZE1,1:NIMPUR), INTENT(IN)   :: PIMPWET, PIMPDRY  !Dry and wet deposit coefficient from Forcing File(g/m²/s)
 !
-REAL, DIMENSION(:), INTENT(IN)      :: PTG, PSOILCOND, PD_G, PPSN3L
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)      :: PTG, PSOILCOND, PD_G, PPSN3L
 !                                      PTG       = Surface soil temperature (effective
 !                                                  temperature the of layer lying below snow)
 !                                      PSOILCOND = soil thermal conductivity [W/(m K)]
@@ -293,7 +297,7 @@ REAL, DIMENSION(:), INTENT(IN)      :: PTG, PSOILCOND, PD_G, PPSN3L
 !                                                  Used to calculate ground/snow heat flux
 !                                      PPSN3L    = snow fraction
 !
-REAL, DIMENSION(:), INTENT(IN)      :: PZREF, PUREF, PEXNS, PEXNA, PDIRCOSZW, PRHOA, PZ0, PZ0EFF, &
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)      :: PZREF, PUREF, PEXNS, PEXNA, PDIRCOSZW, PRHOA, PZ0, PZ0EFF, &
                                        PALB, PZ0H, PPERMSNOWFRAC 
 !                                      PZ0EFF    = roughness length for momentum
 !                                      PZ0       = grid box average roughness length
@@ -309,7 +313,7 @@ REAL, DIMENSION(:), INTENT(IN)      :: PZREF, PUREF, PEXNS, PEXNA, PDIRCOSZW, PR
 !                                      PALB      = soil/vegetation albedo
 !                                      PPERMSNOWFRAC  = fraction of permanet snow/ice
 !
-REAL, DIMENSION(:), INTENT(IN)      :: PPEW_A_COEF, PPEW_B_COEF,                   &
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)      :: PPEW_A_COEF, PPEW_B_COEF,                   &
                                         PPET_A_COEF, PPEQ_A_COEF, PPET_B_COEF,      &
                                         PPEQ_B_COEF  
 !                                      PPEW_A_COEF = wind coefficient (m2s/kg)
@@ -319,33 +323,33 @@ REAL, DIMENSION(:), INTENT(IN)      :: PPEW_A_COEF, PPEW_B_COEF,                
 !                                      PPEQ_A_COEF = A-air specific humidity coefficient
 !                                      PPEQ_B_COEF = B-air specific humidity coefficient
 !
-REAL, DIMENSION(:), INTENT(INOUT)   :: PSNOWALB
+REAL, DIMENSION(1:KSIZE1), INTENT(INOUT)   :: PSNOWALB
 !                                      PSNOWALB = Prognostic surface snow albedo
 !                                                 (does not include anything but
 !                                                 the actual snow cover)
 !
-REAL, DIMENSION(:,:), INTENT(INOUT)  :: PSNOWHEAT, PSNOWRHO, PSNOWSWE
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2), INTENT(INOUT)  :: PSNOWHEAT, PSNOWRHO, PSNOWSWE
 !                                      PSNOWHEAT = Snow layer(s) heat content (J/m2)
 !                                      PSNOWRHO  = Snow layer(s) averaged density (kg/m3)
 !                                      PSNOWSWE  = Snow layer(s) liquid Water Equivalent (SWE:kg m-2)
 !
-REAL, DIMENSION(:,:), INTENT(INOUT)  :: PSNOWGRAN1, PSNOWGRAN2, PSNOWHIST
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2), INTENT(INOUT)  :: PSNOWGRAN1, PSNOWGRAN2, PSNOWHIST
 !                                      PSNOWGRAN1 = Snow layers grain feature 1
 !                                      PSNOWGRAN2 = Snow layer grain feature 2
 !                                      PSNOWHIST  = Snow layer grain historical
 !                                                   parameter (only for non
 !                                                   dendritic snow)
-REAL, DIMENSION(:,:), INTENT(INOUT)  :: PSNOWAGE  ! Snow grain age
-REAL, DIMENSION(:,:,:), INTENT(INOUT)  :: PSNOWIMPUR  ! Snow impurity content (g) (LOCATION,LAYER,NIMPUR)) Impur type :1/BC 2/Dust
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2), INTENT(INOUT)  :: PSNOWAGE  ! Snow grain age
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2,1:NIMPUR), INTENT(INOUT)  :: PSNOWIMPUR  ! Snow impurity content (g) (LOCATION,LAYER,NIMPUR)) Impur type :1/BC 2/Dust
 !
-REAL, DIMENSION(:,:), INTENT(INOUT)  :: PSNOWTEMP
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2), INTENT(INOUT)  :: PSNOWTEMP
 !                                      PSNOWTEMP = Snow layer(s) temperature (m)
 
-REAL, DIMENSION(:,:), INTENT(OUT)    :: PSNOWLIQ, PSNOWDZ
+REAL, DIMENSION(1:KSIZE1,1:KSIZE2), INTENT(OUT)    :: PSNOWLIQ, PSNOWDZ
 !                                      PSNOWLIQ  = Snow layer(s) liquid water content (m)
 !                                      PSNOWDZ   = Snow layer(s) thickness (m)
 !
-REAL, DIMENSION(:), INTENT(OUT)      :: PTHRUFAL,  PEVAPCOR,  PGFLXCOR
+REAL, DIMENSION(1:KSIZE1), INTENT(OUT)      :: PTHRUFAL,  PEVAPCOR,  PGFLXCOR
 
 !                                      PTHRUFAL  = rate that liquid water leaves snow pack:
 !                                                  paritioned into soil infiltration/runoff
@@ -360,7 +364,7 @@ REAL, DIMENSION(:), INTENT(OUT)      :: PTHRUFAL,  PEVAPCOR,  PGFLXCOR
 !                                                  (to put any energy excess from snow to soil) (W/m2)
 !                                     
 
-REAL, DIMENSION(:,:), INTENT(OUT)       :: PSPEC_ALB, PDIFF_RATIO !! spectral albedo and diffuse to total irradiance ratio
+REAL, DIMENSION(1:KSIZE1,1:KSIZE4), INTENT(OUT)       :: PSPEC_ALB, PDIFF_RATIO !! spectral albedo and diffuse to total irradiance ratio
 
 !REAL, DIMENSION(:), INTENT(OUT)  ::   PSNOWFLUX
 !                                      PSNOWFLUX = heat flux between the surface and sub-surface 
@@ -372,10 +376,10 @@ REAL, DIMENSION(:,:), INTENT(OUT)       :: PSPEC_ALB, PDIFF_RATIO !! spectral al
 !                                      PDELHEATN_SFC = total snow heat content change during the timestep (W m-2)
 
 !
-REAL, DIMENSION(:), INTENT(INOUT)      :: PGRNDFLUX 
+REAL, DIMENSION(1:KSIZE1), INTENT(INOUT)      :: PGRNDFLUX 
 !                                       PGRNDFLUX = soil/snow interface heat flux (W/m2)
 
-REAL, DIMENSION(:), INTENT(INOUT)    :: PRNSNOW, PHSNOW, PGFLUXSNOW, PLES3L, PLEL3L, &
+REAL, DIMENSION(1:KSIZE1), INTENT(INOUT)    :: PRNSNOW, PHSNOW, PGFLUXSNOW, PLES3L, PLEL3L, &
                                         PHPSNOW, PCDSNOW, PUSTAR, PEVAP
 !                                      PLES3L      = evaporation heat flux from snow (W/m2)
 !                                      PLEL3L      = sublimation (W/m2)
@@ -387,10 +391,10 @@ REAL, DIMENSION(:), INTENT(INOUT)    :: PRNSNOW, PHSNOW, PGFLUXSNOW, PLES3L, PLE
 !                                      PUSTAR      = friction velocity over snow (m/s)
 !                                      PEVAP       = total evaporative flux (kg/m2/s)
 
-REAL, DIMENSION(:), INTENT(OUT)      :: PSNDRIFT
+REAL, DIMENSION(1:KSIZE1), INTENT(OUT)      :: PSNDRIFT
 !                                      PSNDRIFT    = blowing snow sublimation (kg/m2/s)
 !
-REAL, DIMENSION(:), INTENT(INOUT) :: PSWNETSNOW, PLWNETSNOW, PSWNETSNOWS
+REAL, DIMENSION(1:KSIZE1), INTENT(INOUT) :: PSWNETSNOW, PLWNETSNOW, PSWNETSNOWS
 !                                      PSWNETSNOW = net shortwave radiation entering top of snowpack 
 !                                                  (W m-2) Imposed if MEB=T, diagnosed herein if MEB=F
 !                                      PSWNETSNOWS= net shortwave radiation in uppermost layer of snowpack 
@@ -399,25 +403,25 @@ REAL, DIMENSION(:), INTENT(INOUT) :: PSWNETSNOW, PLWNETSNOW, PSWNETSNOWS
 !                                      PLWNETSNOW = net longwave radiation entering top of snowpack 
 !                                                  (W m-2) Imposed if MEB=T, diagnosed herein if MEB=F
 !
-REAL, DIMENSION(:), INTENT(INOUT)    :: PCHSNOW,PRI
+REAL, DIMENSION(1:KSIZE1), INTENT(INOUT)    :: PCHSNOW,PRI
 !                                      PCHSNOW     = drag coefficient for heat over snow
 !                                      PRI = Ridcharson number
 
-REAL, DIMENSION(:), INTENT(OUT)      :: PEMISNOW, PSNOWHMASS
+REAL, DIMENSION(1:KSIZE1), INTENT(OUT)      :: PEMISNOW, PSNOWHMASS
 !                                      PEMISNOW    = snow surface emissivity
 !                                      PSNOWHMASS  = heat content change due to mass
 !                                                    changes in snowpack (J/m2): for budget
 !                                                    calculations only.
 !
-REAL, DIMENSION(:), INTENT(OUT)      ::  PQS
+REAL, DIMENSION(1:KSIZE1), INTENT(OUT)      ::  PQS
 
 !                                      PQS = surface humidity
 !
-REAL, DIMENSION(:), INTENT(IN)        :: PZENITH ! solar zenith angle
-REAL, DIMENSION(:), INTENT(IN)        :: PANGL_ILLUM ! Effective illumination angle, Angle between the sun and the normal to the ground (=zenith if no slope) used in TARTES
-REAL, DIMENSION(:), INTENT(IN)        :: PXLAT,PXLON ! LAT/LON after packing
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)        :: PZENITH ! solar zenith angle
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)        :: PANGL_ILLUM ! Effective illumination angle, Angle between the sun and the normal to the ground (=zenith if no slope) used in TARTES
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)        :: PXLAT,PXLON ! LAT/LON after packing
 !
-REAL, DIMENSION(:,:), INTENT(IN)      :: PBLOWSNW !  Properties of deposited blowing snow (from Sytron or Meso-NH/Crocus)
+REAL, DIMENSION(1:KSIZE1,1:4), INTENT(IN)      :: PBLOWSNW !  Properties of deposited blowing snow (from Sytron or Meso-NH/Crocus)
                                       !    1 : Deposition flux (kg/m2/s)
                                       !    2 : Density of deposited snow (kg/m3)
                                       !    3 : SGRA1 of deposited snow
@@ -431,10 +435,10 @@ CHARACTER(4), INTENT(IN)            :: HSNOWDRIFT        ! Snowdrift scheme :
                                       !    'GA01': Gallee et al 2001
                                       !    'VI13': Vionnet et al 2013
 LOGICAL, INTENT(IN)                   :: OSNOWDRIFT_SUBLIM ! activate sublimation during drift
-REAL, DIMENSION (:), INTENT(IN)       ::  PSNOWMAK        ! Snowmaking thickness (m)
+REAL, DIMENSION (1:KSIZE1), INTENT(IN)       ::  PSNOWMAK        ! Snowmaking thickness (m)
 LOGICAL, INTENT(IN)                   :: OSNOWCOMPACT_BOOL, OSNOWMAK_BOOL, OSNOWTILLER, &
                                          OSELF_PROD, OSNOWMAK_PROP
-LOGICAL, DIMENSION(:), INTENT(INOUT)  :: OPRODSNOWMAK
+LOGICAL, DIMENSION(1:KSIZE1), INTENT(INOUT)  :: OPRODSNOWMAK
 !
 LOGICAL, INTENT(IN)                   :: OSNOW_ABS_ZENITH ! activate parametrization of solar absorption for polar regions
  CHARACTER(3), INTENT(IN)             :: HSNOWMETAMO, HSNOWRAD, HSNOWFALL, HSNOWCOND, HSNOWHOLD, HSNOWCOMP, HSNOWZREF
@@ -472,7 +476,13 @@ LOGICAL, INTENT(IN)                   :: OATMORAD ! activate atmotartes scheme
                                          ! reference height is constant or variable from the snow surface
                                          ! HSNOWZREF='CST' constant reference height from the snow surface
                                          ! HSNOWZREF='VAR' variable reference height from the snow surface (i.e. constant from the ground)
-                                         !-----------------------                                         
+                                         !-----------------------     
+
+INTEGER, INTENT(IN) :: KSIZE1
+INTEGER, INTENT(IN) :: KSIZE2
+INTEGER, INTENT(IN) :: KSIZE4
+
+                                    
 !*      0.2    declarations of local variables
 !
 REAL, DIMENSION(SIZE(PSNOWRHO,1),SIZE(PSNOWRHO,2)) :: ZSNOWSSA_BEFORE, ZSNOWSSA_AFTER,ZSNOWDSSA
@@ -580,9 +590,10 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 IF (LHOOK) CALL DR_HOOK('SNOWCRO',0,ZHOOK_HANDLE)
 !
-
-
-
+! MN
+XRHO_SNOWMAK = 600.
+XPSR_SNOWMAK = 0.0012
+print *, 'XRHO_SNOWMAK' , XRHO_SNOWMAK , XPSR_SNOWMAK
 
 !***************************************PRINT IN**********************************************
 ! Look if we have to print snow profiles for debugging
@@ -688,6 +699,8 @@ DO JST = 1,SIZE(PSNOWSWE(:,:),2)
     ENDIF
   ENDDO  !  end loop snow layers
 ENDDO    ! end loop grid points
+
+print*, 'INLVLS_USE', INLVLS_USE !MN
 ! Incrementation of snow layers age
 ZTSTEPDAYS = PTSTEP/86400. ! time step in days
 ! Lafaysse / Cluzet : reimplementation of first Morin/Charrois impuritites content option:
@@ -811,6 +824,7 @@ ZSNOW(:) = ZSNOWBIS(:)
 !
 DO JJ=1,SIZE(ZSNOW)
   !
+print*, 'GMODIF_MAILLAGE', GMODIF_MAILLAGE !MN
   IF ( GMODIF_MAILLAGE(JJ) ) THEN    
     CALL SNOWNLGRIDFRESH_1D(JJ,ZSNOW(JJ),PSNOWDZ(JJ,:),ZSNOWDZN(JJ,:),PSNOWRHO(JJ,:),    &
                             PSNOWHEAT(JJ,:),PSNOWGRAN1(JJ,:),PSNOWGRAN2(JJ,:),           &

@@ -468,19 +468,19 @@ subroutine Crocus81_main(n)
             ![ 1] output variable: SNOWSWE (unit=kg/m2). *** Snow layer(s) liquid Water Equivalent (SWE:kg m-2)
             do i=1, CROCUS81_struc(n)%nsnow
                 call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWLIQPROF, value = CROCUS81_struc(n)%crocus81(t)%SNOWSWE(i), &
-                                                  vlevel=i, unit="kg/m2", direction="-", surface_type = LIS_rc%lsm_index)
+                                                  vlevel=i, unit="kg m-2", direction="-", surface_type = LIS_rc%lsm_index)
             end do
             
             ![ 2] output variable: SNOWHEAT (unit=J/m2). *** Snow layer(s) Heat content (J/m2)
             do i=1, CROCUS81_struc(n)%nsnow
                 call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWHEATCONTENTPROF, value = CROCUS81_struc(n)%crocus81(t)%SNOWHEAT(i), &
-                                                  vlevel=i, unit="J/m2", direction="-", surface_type = LIS_rc%lsm_index)
+                                                  vlevel=i, unit="J m-2", direction="-", surface_type = LIS_rc%lsm_index)
             end do
             
             ![ 3] output variable: SNOWRHO (unit=kg/m3). *** Snow layer(s) Density (kg/m3)
             do i=1, CROCUS81_struc(n)%nsnow
                 call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWRHOPROF, value = CROCUS81_struc(n)%crocus81(t)%SNOWRHO(i), &
-                                                  vlevel=i, unit="kg/m3", direction="-", surface_type = LIS_rc%lsm_index)
+                                                  vlevel=i, unit="kg m-3", direction="-", surface_type = LIS_rc%lsm_index)
             end do
             
             ![ 4] output variable: SNOWALB (unit=-). *** Snow surface albedo
@@ -531,15 +531,15 @@ subroutine Crocus81_main(n)
             
             ![ 12] output variable: THRUFAL (unit=kg/(m2 s)). *** Rate that liquid water leaves snow pack: paritioned into soil infiltration/runoff  by ISBA [kg/(m2 s)]
             call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWQS, value = CROCUS81_struc(n)%crocus81(t)%THRUFAL, &
-                                              vlevel=1, unit="kg/(m2 s)", direction="OUT", surface_type = LIS_rc%lsm_index)
+                                              vlevel=1, unit="kg m-2 s-1", direction="OUT", surface_type = LIS_rc%lsm_index)
             
             ![ 13] output variable: GRNDFLUX (unit=W/m2). *** Soil/snow interface heat flux (W/m2) (If MEB input else initalize to 0)
             call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWSOILHEATFLUX, value = CROCUS81_struc(n)%crocus81(t)%GRNDFLUX, &
-                                              vlevel=1, unit="W/m2", direction="", surface_type = LIS_rc%lsm_index)
+                                              vlevel=1, unit="W m-2", direction="-", surface_type = LIS_rc%lsm_index)
             
             ![ 14] output variable: SNDRIFT (unit=kg/m2/s). *** Blowing snow sublimation (kg/m2/s) NOTE: Snow compaction and metamorphism due to drift, Mass is unchanged  (Assistance #1592)
             call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_BLOWINGSNOWSUBLIM, value = CROCUS81_struc(n)%crocus81(t)%SNDRIFT, &
-                                              vlevel=1, unit="kg/m2/s", direction="UP", surface_type = LIS_rc%lsm_index)
+                                              vlevel=1, unit="kg m-2 s-1", direction="UP", surface_type = LIS_rc%lsm_index)
             
             ![ 15] output variable: RI_n (unit=-). *** Richardson number (-)  NOTE: ZP_RI has not been initialized in CALL_MODEL (If not OMED initalized to undefined in the snow3L_isba.F90)  
             call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWRECHARD, value = CROCUS81_struc(n)%crocus81(t)%RI_n, &
@@ -556,7 +556,7 @@ subroutine Crocus81_main(n)
             
             ![ 18] output variable: USTARSNOW (unit=m/s). *** Friction velocity over snow (m/s);
             call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWSHEARVLOCITY, value = CROCUS81_struc(n)%crocus81(t)%USTARSNOW, &
-                                              vlevel=1, unit="m/s", direction="-", surface_type = LIS_rc%lsm_index)
+                                              vlevel=1, unit="m s-1", direction="-", surface_type = LIS_rc%lsm_index)
             
             ![ 19] output variable: CHSNOW (unit=-). *** Drag coefficient for heat over snow  (-)                          
             call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWHEATDRAG, value = CROCUS81_struc(n)%crocus81(t)%CHSNOW, &
@@ -564,11 +564,11 @@ subroutine Crocus81_main(n)
             
             ![ 20] output variable: SNOWHMASS (unit=J/m2). *** Heat content change due to mass changes in snowpack: for budget calculations only.
             call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWDELTAHEAT, value = CROCUS81_struc(n)%crocus81(t)%SNOWHMASS, &
-                                              vlevel=1, unit="J/m2", direction="-", surface_type = LIS_rc%lsm_index)
+                                              vlevel=1, unit="J m-2", direction="-", surface_type = LIS_rc%lsm_index)
             
             ![ 21] output variable: QS (unit=kg/kg). *** surface humidity (kg/kg)
             call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWSURFACEQ, value = CROCUS81_struc(n)%crocus81(t)%QS, &
-                                              vlevel=1, unit="kg/kg", direction="-", surface_type = LIS_rc%lsm_index)
+                                              vlevel=1, unit="kg kg-1", direction="-", surface_type = LIS_rc%lsm_index)
             ! reset forcing variables to zeros
             CROCUS81_struc(n)%crocus81(t)%PPS = 0.0
             CROCUS81_struc(n)%crocus81(t)%SRSNOW = 0.0

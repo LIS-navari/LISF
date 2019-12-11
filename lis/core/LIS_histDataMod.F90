@@ -5191,15 +5191,15 @@ contains
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWQS,&
             LIS_histData(n)%head_lsm_list,&
-            n,1,ntiles,(/"kg/(m2 s)"/),1,(/"-"/),1,1,1,&
+            n,1,ntiles,(/"kg/m2s"/),1,(/"OUT"/),1,1,1,&
             model_patch=.true.)
     endif
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_GRNDFLUX:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Soil/snow heat flux",&
-         "Soil/snow interface heat flux",&
-         "Soil/snow interface heat flux",rc)
+         "Soilsnow heat flux",&
+         "Soilsnow interface heat flux",&
+         "Soilsnow interface heat flux",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWSOILHEATFLUX,&
             LIS_histData(n)%head_lsm_list,&
@@ -5215,7 +5215,7 @@ contains
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_BLOWINGSNOWSUBLIM,&
             LIS_histData(n)%head_lsm_list,&
-            n,1,ntiles,(/"kg/m2/s"/),1,(/"-"/),1,1,1,&
+            n,1,ntiles,(/"kg/m2s"/),1,(/"UP"/),1,1,1,&
             model_patch=.true.)
     endif
 

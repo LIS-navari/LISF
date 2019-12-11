@@ -405,6 +405,34 @@ IF (ZSNOW >= XSNOWDMIN .OR. ZSNOWFALL >= XSNOWDMIN) THEN
  CALL  CALL_MODEL(1, nsnow, 1)
 ENDIF
 
+! ===============================================================
+!
+! Remove trace amounts of snow and reinitialize snow prognostic variables
+! if snow cover is ablated.
+
+
+ !Prognostic variables forced to XUNDEF for correct outputs
+SNOWDZ (:) = LIS_rc%udef
+SNOWTEMP(:) = LIS_rc%udef
+SNOWLIQ(:) = LIS_rc%udef
+SNOWHEAT(:) = LIS_rc%udef
+SNOWRHO(:) = LIS_rc%udef
+SNOWAGE(:) = LIS_rc%udef
+SNOWGRAN1(:)= LIS_rc%udef
+SNOWGRAN2(:)= LIS_rc%udef
+SNOWHIST(:) = LIS_rc%udef
+
+! MN: For now set these variables to UNDIFF
+! TO DO  look at snow3L_isba.F90 for details
+
+SNOWSWE(:) = LIS_rc%udef
+SNOWALB = LIS_rc%udef
+THRUFAL = LIS_rc%udef
+EMISNOW = LIS_rc%udef
+SNOWHMASS = LIS_rc%udef
+QS = LIS_rc%udef
+
+!================================================================
  CONTAINS
 !
 !================================================================

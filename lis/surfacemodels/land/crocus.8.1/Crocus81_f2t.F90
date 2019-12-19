@@ -178,5 +178,8 @@ subroutine Crocus81_f2t(n)
         ! PPS
         CROCUS81_struc(n)%crocus81(t)%pps = CROCUS81_struc(n)%crocus81(t)%pps + psurf(tid)
     enddo
- 
+! print *, 'f2t  , RRSNOW, SRSNOW', CROCUS81_struc(n)%crocus81(1)%rrsnow  , CROCUS81_struc(n)%crocus81(1)%srsnow ! MN
+ print *, 'f2t  , SW',LIS_rc%yr, LIS_rc%mo, LIS_rc%da, & 
+         LIS_rc%hr, LIS_rc%mn, CROCUS81_struc(n)%crocus81(1)%sw_rad ! MN
+
 end subroutine Crocus81_f2t

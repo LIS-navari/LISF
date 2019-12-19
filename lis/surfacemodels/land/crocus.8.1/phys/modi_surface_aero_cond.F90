@@ -9,7 +9,8 @@ MODULE MODI_SURFACE_AERO_COND
 CONTAINS
 
     SUBROUTINE MODI_SURFACE_AERO_COND_SUB(PRI, PZREF, PUREF, PVMOD, PZ0,&
-                                     PZ0H, PAC, PRA, PCH    ,HSNOWRES       )
+                                     PZ0H, PAC, PRA, PCH    ,HSNOWRES , &
+                                     KSIZE1) 
 !   ######################################################################
 !
 !!****  *SURFACE_AERO_COND*  
@@ -76,21 +77,22 @@ IMPLICIT NONE
 !*      0.1    declarations of arguments
 !
 !
-REAL, DIMENSION(:), INTENT(IN)    :: PRI      ! Richardson number
-REAL, DIMENSION(:), INTENT(IN)    :: PVMOD    ! module of the horizontal wind
-REAL, DIMENSION(:), INTENT(IN)    :: PZREF    ! reference height of the first
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PRI      ! Richardson number
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PVMOD    ! module of the horizontal wind
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PZREF    ! reference height of the first
                                               ! atmospheric level
-REAL, DIMENSION(:), INTENT(IN)    :: PUREF    ! reference height of the wind
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PUREF    ! reference height of the wind
                                               ! NOTE this is different from ZZREF
                                               ! ONLY in stand-alone/forced mode,
                                               ! NOT when coupled to a model (MesoNH)
-REAL, DIMENSION(:), INTENT(IN)    :: PZ0      ! roughness length for momentum
-REAL, DIMENSION(:), INTENT(IN)    :: PZ0H     ! roughness length for heat
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PZ0      ! roughness length for momentum
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PZ0H     ! roughness length for heat
 !
-REAL, DIMENSION(:), INTENT(OUT)   :: PAC      ! aerodynamical conductance
-REAL, DIMENSION(:), INTENT(OUT)   :: PRA      ! aerodynamical resistance
-REAL, DIMENSION(:), INTENT(OUT)   :: PCH      ! drag coefficient for heat
+REAL, DIMENSION(1:KSIZE1), INTENT(OUT)   :: PAC      ! aerodynamical conductance
+REAL, DIMENSION(1:KSIZE1), INTENT(OUT)   :: PRA      ! aerodynamical resistance
+REAL, DIMENSION(1:KSIZE1), INTENT(OUT)   :: PCH      ! drag coefficient for heat
 CHARACTER(LEN=3), INTENT(IN)  ::HSNOWRES !surface exchange coefficient option 
+INTEGER , INTENT(IN)   :: KSIZE1
 !
 !*      0.2    declarations of local variables
 !

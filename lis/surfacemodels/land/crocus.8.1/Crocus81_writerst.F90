@@ -52,10 +52,12 @@ subroutine Crocus81_writerst(n)
     logical       :: alarmCheck
     integer       :: ftn
     integer       :: status
-    
+    character*3        :: fnest  ! MN added 
+
     ! set restart alarm
-    alarmCheck = LIS_isAlarmRinging(LIS_rc, "Crocus81 restart alarm")
-    
+    ! alarmCheck = LIS_isAlarmRinging(LIS_rc, "Crocus81 restart alarm")
+    write(fnest,'(i3.3)') n   ! MN added   Bug in the toolkit
+    alarmCheck = LIS_isAlarmRinging(LIS_rc, "CROCUS81 restart alarm "//trim(fnest)) ! MN added  Bug in the toolkit
     ! set restart file format (read from LIS configration file_
     wformat = trim(CROCUS81_struc(n)%rformat)
     

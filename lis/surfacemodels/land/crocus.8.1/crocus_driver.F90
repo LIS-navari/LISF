@@ -18,7 +18,7 @@ SUBROUTINE crocus_driver(n,		&
 			day, 					&
 			hour,				&
 			minute,				&
- SNOWRES_opt,			&
+                     SNOWRES_opt,			&
 			!TPTIME,				&
 			OMEB_BOOL,				&
  			GLACIER_BOOL,			&
@@ -40,8 +40,8 @@ SUBROUTINE crocus_driver(n,		&
 			!ZP_SNOWIMPUR,		&
 			PTSTEP,				&
 			PPS, 				&
-			RRSNOW, 			&
 			SRSNOW,			&
+			RRSNOW, 			&
 			!ZP_PSN3L,			& ! compute this using rainfall and snowfall 
  			TA,				&
  			TG,				& ! TG(:,1)
@@ -135,10 +135,18 @@ SUBROUTINE crocus_driver(n,		&
  USE MODD_TYPE_DATE_SURF, ONLY: DATE_TIME! MN: declaration of temporal types.  DATE_TIME%.... (YEAR, MONTH, DAY)
  USE MODD_CSTS, ONLY : XRD, XP00, XCPD, XG, XBOLTZ, &
 								XAVOGADRO, XMD,XMV,XRD,XRV,XPI, &
-  XDAY, XKARMAN 
+                                                        XDAY, XKARMAN, XTT, XCI, XLMTT, XLVTT, & 
+                                                        XLSTT, XRHOLW, XRHOLI, XCONDI , XCL, &
+                                                        XALPW,XBETAW,XGAMW,& ! Constants for saturation vapor 
+                                                        XCPV, XESTT, XSTEFAN, XPLANCK, XLIGHTSPEED   
+
  USE modi_surface_cd ! for drag coefficient for momentum 
  USE modi_surface_aero_cond  ! for drag coefficient for heat 
-
+ USE modd_snow_metamo ! use XVVISC3= 0.023
+ USE modd_snow_par , only :  XRHOTHRESHOLD_ICE, XZ0ICEZ0SNOW, XVAGING_NOGLACIER,&
+                                                 XANSMAX, XANSMIN, XEMISSN, XPERCENTAGEPORE
+USE MODD_SURF_ATM, ONLY : XRIMAX
+USE MODI_INI_SURF_CSTS
 
   implicit none
 
@@ -399,9 +407,11 @@ ZSNOWFALL  =  0.0
            ZSNOW = ZSNOW  + SNOWSWE( JWRK)/SNOWRHO( JWRK)
     END DO
  ZSNOWFALL  = SRSNOW*PTSTEP/XRHOSMAX_ES    ! maximum possible snowfall depth (m)
-
+!print*, ' RRSNOW , SRSNOW,   ZSNOWFALL  ,PTSTEP, XRHOSMAX_ES ' , RRSNOW, SRSNOW,ZSNOWFALL , PTSTEP, XRHOSMAX_ES !MN
+WRITE(*,*) 'Driver SW',YEAR, MONTH, DAY, hour, minute , SW_RAD
 
 IF (ZSNOW >= XSNOWDMIN .OR. ZSNOWFALL >= XSNOWDMIN) THEN
+print*, 'ZSNOW>XSNOWDMIN , ZSNOWFALL>XSNOWDMIN ' , ZSNOW, XSNOWDMIN , ZSNOWFALL, XSNOWDMIN !MN
  CALL  CALL_MODEL(1, nsnow, 1)
 ENDIF
 
@@ -416,7 +426,7 @@ SNOWDZ (:) = LIS_rc%udef
 SNOWTEMP(:) = LIS_rc%udef
 SNOWLIQ(:) = LIS_rc%udef
 SNOWHEAT(:) = LIS_rc%udef
-SNOWRHO(:) = LIS_rc%udef
+SNOWRHO(:) = 10000000000000 !LIS_rc%udef
 SNOWAGE(:) = LIS_rc%udef
 SNOWGRAN1(:)= LIS_rc%udef
 SNOWGRAN2(:)= LIS_rc%udef
@@ -702,7 +712,27 @@ CHSNOW = 0 ! it has not been initialized in the CALL_MODEL
 SNOWHMASS = 0 ! it has not been initialized in the CALL_MODEL
 XDAY = 86400.
 XKARMAN = 0.4
-
+XTT    = 273.16
+XCI    = 2.106E+3
+XLSTT  = 2.8345E+6
+XLVTT  = 2.5008E+6
+XLMTT  = XLSTT - XLVTT
+XRHOLW = 1000.
+XRHOLI = 917.
+XVVISC3= 0.023
+XRHOTHRESHOLD_ICE = 850.
+XZ0ICEZ0SNOW = 10.
+XVAGING_NOGLACIER = 60.
+XANSMAX = 0.85
+XANSMIN = 0.50
+XCONDI = 2.22
+XCL    = 4.218E+3
+XESTT  = 611.14 
+XRIMAX = 0 !  TO DO check the value  user manual 192  defulat value ? 
+XEMISSN =  0.99
+XPLANCK     = 6.6260755E-34 
+XLIGHTSPEED = 299792458.  ! light speed 
+XPERCENTAGEPORE = 0.05 ! 
 ! ***************************************************************************
 ! Set up local variables for dimension match
 ! ***************************************************************************
@@ -827,7 +857,7 @@ ZP_EXNAin(1) = (ZP_PAin(1)/XP00)**(XRD/XCPD) ! Exner function at lowest atmos. l
 ! ------------------------------------------------------------------------------
 ZP_TIME = LIS_rc%hr*3600 + LIS_rc%mn*60 + LIS_rc%ss ! current time 
  CALL SUNPOS (YEAR, MONTH, DAY, ZP_TIME, &
- LONin, LATin, ZP_TSUN, ZP_ZENITHin, ZP_AZIMSOL)
+ LONin, LATin, ZP_TSUN, ZP_ZENITHin, ZP_AZIMSOL,1)
 
 ! Compute the effective illumination angle 
 ! ---------------------------------------------------------------------------------- 
@@ -869,7 +899,19 @@ ZP_ANGL_ILLUMin(1) = ACOS((COS(ZP_ZENITHin(1))*COS(ACOS(ZP_DIRCOSZWin(1))))+ &
 ! ZP_RA (out) ! aerodynamical resistance
 
  CALL MODI_SURFACE_AERO_COND_SUB(RI_nout, ZREFin, UREFin, ZP_VMODin, Z0NATin ,&
- Z0HNATin, ZP_AC, ZP_RA, CHSNOWout,SNOWRES_opt )
+ Z0HNATin, ZP_AC, ZP_RA, CHSNOWout,SNOWRES_opt ,1)
+
+
+
+XCPV   = 4.* XRV
+XGAMW  = (XCL - XCPV) / XRV
+XBETAW = (XLVTT/XRV) + (XGAMW * XTT)
+XALPW  = LOG(XESTT) + (XBETAW /XTT) + (XGAMW *LOG(XTT))
+ 
+XSTEFAN = ( 2.* XPI**5 / 15. ) * ( (XBOLTZ / XPLANCK)* XBOLTZ ) * (XBOLTZ/(XLIGHTSPEED*XPLANCK))**2 
+
+
+
 
 TPTIME%TDATE%YEAR = year
 TPTIME%TDATE%MONTH = month

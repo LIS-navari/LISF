@@ -4,7 +4,8 @@
 !SFX_LIC for details. version 1.
 !     #########
       SUBROUTINE SUNPOS (KYEAR, KMONTH, KDAY, PTIME, &
-                         PLON, PLAT, PTSUN, PZENITH, PAZIMSOL)
+                         PLON, PLAT, PTSUN, PZENITH, PAZIMSOL, &
+                         KSIZE1) 
 !     ####################################################################################
 !
 !!****  *SUNPOS * - routine to compute the position of the sun
@@ -75,12 +76,13 @@ INTEGER,                      INTENT(IN)   :: KYEAR      ! current year
 INTEGER,                      INTENT(IN)   :: KMONTH     ! current month                        
 INTEGER,                      INTENT(IN)   :: KDAY       ! current day                        
 REAL,                         INTENT(IN)   :: PTIME      ! current time                        
-REAL, DIMENSION(2),           INTENT(IN)   :: PLON       ! longitude   ! MN: For the next 5 variables dimension changed from (:) to (2)
-REAL, DIMENSION(2),           INTENT(IN)   :: PLAT       ! latutude
+REAL, DIMENSION(1:KSIZE1),           INTENT(IN)   :: PLON       ! longitude   ! MN: For the next 5 variables dimension changed from (:) to (2)
+REAL, DIMENSION(1:KSIZE1),           INTENT(IN)   :: PLAT       ! latutude
 !
-REAL, DIMENSION(2),           INTENT(OUT)  :: PZENITH    ! Solar zenithal angle
-REAL, DIMENSION(2),           INTENT(OUT)  :: PAZIMSOL   ! Solar azimuthal angle
-REAL, DIMENSION(2),           INTENT(OUT)  :: PTSUN      ! Solar time
+REAL, DIMENSION(1:KSIZE1),           INTENT(OUT)  :: PZENITH    ! Solar zenithal angle
+REAL, DIMENSION(1:KSIZE1),           INTENT(OUT)  :: PAZIMSOL   ! Solar azimuthal angle
+REAL, DIMENSION(1:KSIZE1),           INTENT(OUT)  :: PTSUN      ! Solar time
+INTEGER , INTENT(IN)   :: KSIZE1
 !
 !*       0.2   declarations of local variables
 !

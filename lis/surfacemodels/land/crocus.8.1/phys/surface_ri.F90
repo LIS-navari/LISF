@@ -4,7 +4,8 @@
 !SFX_LIC for details. version 1.
 !     #########
     SUBROUTINE SURFACE_RI(PTG, PQS, PEXNS, PEXNA, PTA, PQA,   &
-                               PZREF, PUREF, PDIRCOSZW, PVMOD, PRI )  
+                               PZREF, PUREF, PDIRCOSZW, PVMOD, PRI, &
+                                KSIZE1) 
 !   ######################################################################
 !
 !!****  *SURFACE_RI*  
@@ -62,27 +63,28 @@ IMPLICIT NONE
 !*      0.1    declarations of arguments
 !
 !
-REAL, DIMENSION(:), INTENT(IN)    :: PTG      ! surface temperature
-REAL, DIMENSION(:), INTENT(IN)    :: PQS      ! surface specific humidity
-REAL, DIMENSION(:), INTENT(IN)    :: PEXNS    ! surface exner function
-REAL, DIMENSION(:), INTENT(IN)    :: PTA      ! temperature at the lowest level
-REAL, DIMENSION(:), INTENT(IN)    :: PQA      ! specific humidity
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PTG      ! surface temperature
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PQS      ! surface specific humidity
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PEXNS    ! surface exner function
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PTA      ! temperature at the lowest level
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PQA      ! specific humidity
                                               ! at the lowest level
-REAL, DIMENSION(:), INTENT(IN)    :: PEXNA    ! exner function
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PEXNA    ! exner function
                                               ! at the lowest level
-REAL, DIMENSION(:), INTENT(IN)    :: PVMOD    ! module of the horizontal wind
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PVMOD    ! module of the horizontal wind
 !
-REAL, DIMENSION(:), INTENT(IN)    :: PZREF    ! reference height of the first
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PZREF    ! reference height of the first
                                               ! atmospheric level
-REAL, DIMENSION(:), INTENT(IN)    :: PUREF    ! reference height of the wind
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PUREF    ! reference height of the wind
 !                                             ! NOTE this is different from ZZREF
 !                                             ! ONLY in stand-alone/forced mode,
 !                                             ! NOT when coupled to a model (MesoNH)
-REAL, DIMENSION(:), INTENT(IN)    :: PDIRCOSZW! Cosine of the angle between
+REAL, DIMENSION(1:KSIZE1), INTENT(IN)    :: PDIRCOSZW! Cosine of the angle between
 !                                             ! the normal to the surface and
 !                                             ! the vertical
 !
-REAL, DIMENSION(:), INTENT(OUT)   :: PRI      ! Richardson number
+REAL, DIMENSION(1:KSIZE1), INTENT(OUT)   :: PRI      ! Richardson number
+INTEGER , INTENT(IN)   :: KSIZE1
 !
 !*      0.2    declarations of local variables
 !
@@ -90,6 +92,7 @@ REAL, DIMENSION(:), INTENT(OUT)   :: PRI      ! Richardson number
 REAL, DIMENSION(SIZE(PTG))   :: ZTHVA, ZTHVS
 REAL, DIMENSION(SIZE(PVMOD)) :: ZVMOD
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
+
 !-------------------------------------------------------------------------------
 !
 !       1.     Richardson number

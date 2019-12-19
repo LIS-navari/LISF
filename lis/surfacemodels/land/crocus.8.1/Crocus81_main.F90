@@ -333,18 +333,23 @@ subroutine Crocus81_main(n)
  
 
           ! MN isba 
-           INQUIRE(File="surfex_param_final.txt", Exist=file_exists)
+          print*, '========================================================'
+          print*, 'name of surfex parameter file hard  coded in the Crocus81_main.F90' 
+          !print*, 'WANNING :  code uses  surfex_param_final_del.txt'  
+          print*, '========================================================'
+           INQUIRE(File="surfex_param_final_del.txt", Exist=file_exists)
            if (file_exists) then
-              OPEN(UNIT=99,FILE="surfex_param_final.txt", &
+              OPEN(UNIT=99,FILE="surfex_param_final_del.txt", &
                            FORM="FORMATTED",STATUS="OLD",ACTION="READ")
               do ii = 1 , CROCUS81_struc(n)%isba_param_count 
                  read ( 99,*) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
                  150 format(A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 11(F10.6,1x) )
-                 write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
+                 !write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
               enddo
               CLOSE(UNIT=99 )
            endif
 
+!print *, 'main , tmp_RRSNOW,  tmp_SRSNOW' , tmp_RRSNOW , tmp_SRSNOW ! MN
             ! call model physics 
             call crocus_driver(tmp_n                 , & ! IN    - nest id [-]
                                tmp_nsnow             , & ! IN    - number of snow layer []

@@ -220,7 +220,7 @@ USE MODD_TYPE_DATE_SURF, ONLY: DATE_TIME
 USE MODD_CSTS, ONLY : XTT, XRHOLW, XLMTT,XLSTT,XLVTT, XCL, XCI, XPI, XRHOLI
 USE MODD_SNOW_PAR, ONLY : XZ0ICEZ0SNOW, XRHOTHRESHOLD_ICE, XPERCENTAGEPORE, XIMPUR_EFOLD, &
                           XIMPUR_COEFF,XIMPUR_INIT,XMAXIMPUR,XRHO_SNOWMAK, XPSR_SNOWMAK
-USE MODD_SNOW_METAMO
+USE MODD_SNOW_METAMO   ! use XVVISC3= 0.023
 USE MODD_SURF_PAR, ONLY : XUNDEF
 USE MODD_PREP_SNOW, ONLY : NIMPUR
 USE MODD_CONST_TARTES, ONLY:  XPSNOWG0, XPSNOWY0, XPSNOWW0, XPSNOWB0,NPNBANDS
@@ -593,8 +593,8 @@ IF (LHOOK) CALL DR_HOOK('SNOWCRO',0,ZHOOK_HANDLE)
 ! MN
 XRHO_SNOWMAK = 600.
 XPSR_SNOWMAK = 0.0012
-print *, 'XRHO_SNOWMAK' , XRHO_SNOWMAK , XPSR_SNOWMAK
-
+!print *, 'XRHO_SNOWMAK' , XRHO_SNOWMAK , XPSR_SNOWMAK  !MN
+WRITE(*,*) 'solar radiation1=',PSW_RAD
 !***************************************PRINT IN**********************************************
 ! Look if we have to print snow profiles for debugging
 GCROINFOPRINT = LCRODAILYINFO .AND. (TPTIME%TIME ==0.0)
@@ -1075,7 +1075,7 @@ SELECT CASE (HSNOWRAD)
   ENDDO
 
 
-
+WRITE(*,*) 'solar radiation2=',PSW_RAD
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   
   !
   CASE DEFAULT
@@ -1175,6 +1175,7 @@ ELSE
 !
 ENDIF
 !
+WRITE(*,*) 'solar radiation3=',PSW_RAD
 !***************************************DEBUG IN**********************************************
 IF (GCRODEBUGDETAILSPRINT) THEN
   CALL SNOWCROPRINTPROFILE("after SNOWCROEBUD", INLVLS_USE(IDEBUG),LPRINTGRAN,              &
@@ -1226,6 +1227,7 @@ IF (.NOT. OMEB) THEN
                   PUSTAR                                              ) 
 END IF
 !
+WRITE(*,*) 'solar radiation4=',PSW_RAD
 !***************************************DEBUG IN**********************************************
 IF (GCRODEBUGDETAILSPRINT) THEN
   CALL SNOWCROPRINTPROFILE("after SNOWCROFLUX", INLVLS_USE(IDEBUG),LPRINTGRAN,              &
@@ -2933,7 +2935,7 @@ PEMIST(:) = XEMISSN
 ! -------------------------------------------------
 !
  CALL SURFACE_RI(PTS, PQSAT, PEXNS, PEXNA, PTA, PQA,  &
-                 PZREF, PUREF, PDIRCOSZW, PVMOD, ZRI  ) 
+                 PZREF, PUREF, PDIRCOSZW, PVMOD, ZRI, 1 ) 
 !
 ! Simple adaptation of method by Martin and Lejeune (1998)
 ! to apply a lower limit to turbulent transfer coef
@@ -2951,7 +2953,7 @@ PRI(:) = ZRI(:)
 ! Surface aerodynamic resistance for heat transfers
 !
 ! CALL SURFACE_AERO_COND(ZRI, PZREF, PUREF, PVMOD, PZ0, PZ0H, ZAC, PRA, PCHSNOW, HSNOWRES)
- CALL MODI_SURFACE_AERO_COND_SUB(ZRI, PZREF, PUREF, PVMOD, PZ0, PZ0H, ZAC, PRA, PCHSNOW, HSNOWRES)
+ CALL MODI_SURFACE_AERO_COND_SUB(ZRI, PZREF, PUREF, PVMOD, PZ0, PZ0H, ZAC, PRA, PCHSNOW, HSNOWRES, 1)
 !
 PRSRA(:) = PRHOA(:) / PRA(:)
 !

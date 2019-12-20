@@ -139,10 +139,10 @@ subroutine timeinterp_Col_de_Porte(n,findex)
   call ESMF_FieldGet(swdownField,localDE=0,farrayPtr=swdown,rc=status)
   call LIS_verify(status)
 
-  call ESMF_FieldGet(swdownField,localDE=0,farrayPtr=SWdirect,rc=status) ! added
+  call ESMF_FieldGet(SWdirectField,localDE=0,farrayPtr=SWdirect,rc=status) ! added
   call LIS_verify(status)
 
-  call ESMF_FieldGet(swdownField,localDE=0,farrayPtr=SWdiffuse,rc=status) ! added
+  call ESMF_FieldGet(SWdiffuseField,localDE=0,farrayPtr=SWdiffuse,rc=status) ! added
   call LIS_verify(status)
 
   call ESMF_FieldGet(lwdownField,localDE=0,farrayPtr=lwdown,rc=status)

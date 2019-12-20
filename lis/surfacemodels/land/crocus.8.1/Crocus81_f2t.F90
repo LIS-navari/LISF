@@ -73,6 +73,14 @@ subroutine Crocus81_f2t(n)
     type(ESMF_Field)  :: swdField
     real, pointer     :: swd(:)
  
+    ! Incident Direct Shortwave Radiation [W/m2]
+    type(ESMF_Field)  :: swdirField
+    real, pointer     :: swdir(:)
+ 
+    ! Incident Diffuse Shortwave Radiation [W/m2]
+    type(ESMF_Field)  :: swdifField
+    real, pointer     :: swdif(:)
+
     ! Surface Pressure [Pa]
     type(ESMF_Field)  :: psurfField
     real, pointer     :: psurf(:)
@@ -136,6 +144,24 @@ subroutine Crocus81_f2t(n)
     call ESMF_FieldGet(swdField, localDE = 0, farrayPtr = swd, rc = status)
     call LIS_verify(status, "Crocus81_f2t: error retrieving SW_RAD")
     
+    ! get incident direct shortwave radiation
+    if(LIS_FORC_SWdirect%selectOpt .eq. 1) then 
+        call ESMF_StateGet(LIS_FORC_State(n), trim(LIS_FORC_SWdirect%varname(1)), swdirField, rc=status)
+        call LIS_verify(status, "Crocus81_f2t: error getting DIR_SW")
+
+        call ESMF_FieldGet(swdirField, localDE = 0, farrayPtr = swdir, rc = status)
+        call LIS_verify(status, "Crocus81_f2t: error retrieving DIR_SW")
+    endif 
+    
+    ! get incident diffuse shortwave radiation
+    if(LIS_FORC_SWdiffuse%selectOpt .eq. 1) then 
+        call ESMF_StateGet(LIS_FORC_State(n), trim(LIS_FORC_SWdiffuse%varname(1)), swdifField, rc=status)
+        call LIS_verify(status, "Crocus81_f2t: error getting SCA_SW")
+
+        call ESMF_FieldGet(swdifField, localDE = 0, farrayPtr = swdif, rc = status)
+        call LIS_verify(status, "Crocus81_f2t: error retrieving SCA_SW")
+    endif 
+
     ! get surface pressure
     call ESMF_StateGet(LIS_FORC_State(n), trim(LIS_FORC_Psurf%varname(1)), psurfField, rc=status)
     call LIS_verify(status, "Crocus81_f2t: error getting PPS")
@@ -175,11 +201,23 @@ subroutine Crocus81_f2t(n)
         ! SW_RAD
         CROCUS81_struc(n)%crocus81(t)%sw_rad = CROCUS81_struc(n)%crocus81(t)%sw_rad + swd(tid)
 
+        ! DIR_SW
+        if(LIS_FORC_SWdirect%selectOpt .eq. 1) then 
+            CROCUS81_struc(n)%crocus81(t)%dir_sw = CROCUS81_struc(n)%crocus81(t)%dir_sw + swdir(tid)
+        endif
+
+        ! SCA_SW
+        if(LIS_FORC_SWdiffuse%selectOpt .eq. 1) then 
+            CROCUS81_struc(n)%crocus81(t)%sca_sw = CROCUS81_struc(n)%crocus81(t)%sca_sw + swdif(tid)
+        endif
+
         ! PPS
         CROCUS81_struc(n)%crocus81(t)%pps = CROCUS81_struc(n)%crocus81(t)%pps + psurf(tid)
     enddo
 ! print *, 'f2t  , RRSNOW, SRSNOW', CROCUS81_struc(n)%crocus81(1)%rrsnow  , CROCUS81_struc(n)%crocus81(1)%srsnow ! MN
  print *, 'f2t  , SW',LIS_rc%yr, LIS_rc%mo, LIS_rc%da, & 
-         LIS_rc%hr, LIS_rc%mn, CROCUS81_struc(n)%crocus81(1)%sw_rad ! MN
+         LIS_rc%hr, LIS_rc%mn, CROCUS81_struc(n)%crocus81(1)%sw_rad, &
+         CROCUS81_struc(n)%crocus81(1)%sca_sw,&
+         CROCUS81_struc(n)%crocus81(1)%sca_sw  !MN
 
 end subroutine Crocus81_f2t

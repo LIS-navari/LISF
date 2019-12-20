@@ -410,7 +410,7 @@ forcing_ts_tick = time0(i)   ! 0, 3600, 7200, ... , 757382400 (s)
          LIS_rc%lnc(n)*LIS_rc%lnr(n),Col_de_Porte_struc(n)%nstns)
 
 WRITE(*,*) '**read_Col_de_Porte.F90 SW',Col_de_Porte_yr,Col_de_Porte_mon,  &
-                      Col_de_Porte_day,Col_de_Porte_hr , varfield(11,1)
+                      Col_de_Porte_day,Col_de_Porte_hr , varfield(11,1) , varfield(8,1) , varfield(9,1) 
 
    do f = 1,11
    count1 = 0

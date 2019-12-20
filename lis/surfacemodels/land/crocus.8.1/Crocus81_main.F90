@@ -84,6 +84,8 @@ subroutine Crocus81_main(n)
     REAL                 :: tmp_TA                 ! atmospheric temperature at level za (K) [K]
     REAL                 :: tmp_TG !(:)              ! Surface soil temperature (effective temperature the of layer lying below snow) (K)  (for snowcro.F90 we only use the surface layer ZP_TG(:,1))  (#nsoil depends on 2-L, 3-L DIF) [K]
     REAL                 :: tmp_SW_RAD             ! incoming solar radiation (W/m2) [W/m2]
+    REAL                 :: tmp_DIR_SW             ! Incident Direct Shortwave Radiation [W/m2] 
+    REAL                 :: tmp_SCA_SW             ! Incident Diffuse Shortwave Radiation [W/m2]
     REAL                 :: tmp_QA                 ! atmospheric specific humidity at level za [-]
     REAL                 :: tmp_Wind_E             ! Eastward Wind [m/s]
     REAL                 :: tmp_Wind_N             ! Northward Wind [m/s]
@@ -193,6 +195,16 @@ subroutine Crocus81_main(n)
             ! SW_RAD: incoming solar radiation (W/m2)
             tmp_SW_RAD     = CROCUS81_struc(n)%crocus81(t)%SW_RAD / CROCUS81_struc(n)%forc_count
  
+            ! DIR_SW: Incident Direct Shortwave Radiation
+            if(LIS_FORC_SWdirect%selectOpt .eq. 1) then 
+                tmp_DIR_SW = CROCUS81_struc(n)%crocus81(t)%DIR_SW / CROCUS81_struc(n)%forc_count
+            endif
+ 
+            ! SCA_SW: Incident Diffuse Shortwave Radiation
+            if(LIS_FORC_SWdiffuse%selectOpt .eq. 1) then 
+                tmp_SCA_SW = CROCUS81_struc(n)%crocus81(t)%SCA_SW / CROCUS81_struc(n)%forc_count
+            endif
+
             ! QA: atmospheric specific humidity at level za
             tmp_QA         = CROCUS81_struc(n)%crocus81(t)%QA     / CROCUS81_struc(n)%forc_count
  
@@ -233,6 +245,18 @@ subroutine Crocus81_main(n)
             ! check validity of SW_RAD
             if(tmp_SW_RAD .eq. LIS_rc%udef) then
                 write(LIS_logunit, *) "undefined value found for forcing variable SW_RAD in Crocus81"
+                write(LIS_logunit, *) "for tile ", t, "latitude = ", lat, "longitude = ", lon
+                call LIS_endrun()
+            endif
+            ! check validity of DIR_SW
+            if((LIS_FORC_SWdirect%selectOpt .eq. 1) .and. (tmp_DIR_SW .eq. LIS_rc%udef)) then
+                write(LIS_logunit, *) "undefined value found for forcing variable DIR_SW in Crocus81"
+                write(LIS_logunit, *) "for tile ", t, "latitude = ", lat, "longitude = ", lon
+                call LIS_endrun()
+            endif
+            ! check validity of SCA_SW
+            if((LIS_FORC_SWdiffuse%selectOpt .eq. 1) .and. (tmp_SCA_SW .eq. LIS_rc%udef)) then
+                write(LIS_logunit, *) "undefined value found for forcing variable SCA_SW in Crocus81"
                 write(LIS_logunit, *) "for tile ", t, "latitude = ", lat, "longitude = ", lon
                 call LIS_endrun()
             endif
@@ -385,7 +409,9 @@ subroutine Crocus81_main(n)
                                tmp_TA                , & ! IN    - atmospheric temperature at level za (K) [K]
                                tmp_TG                , & ! IN    - Surface soil temperature (effective temperature the of layer lying below snow) (K)  (for snowcro.F90 we only use the surface layer ZP_TG(:,1))  (#nsoil depends on 2-L, 3-L DIF) [K]
                                tmp_SW_RAD            , & ! IN    - incoming solar radiation (W/m2) [W/m2]
-                               tmp_QA                , & ! IN    - atmospheric specific humidity at level za [-]
+                               tmp_DIR_SW            , & ! IN    - Incident Direct Shortwave Radiation [W/m2]
+                               tmp_SCA_SW            , & ! IN    - Incident Diffuse Shortwave Radiation [W/m2] 
+                              tmp_QA                , & ! IN    - atmospheric specific humidity at level za [-]
                                tmp_Wind_E            , & ! IN    - Eastward Wind [m/s]
                                tmp_Wind_N            , & ! IN    - Northward Wind [m/s]
                                tmp_LW_RAD            , & ! IN    - atmospheric infrared radiation (W/m2) [W/m2]
@@ -580,6 +606,8 @@ subroutine Crocus81_main(n)
             CROCUS81_struc(n)%crocus81(t)%RRSNOW = 0.0
             CROCUS81_struc(n)%crocus81(t)%TA = 0.0
             CROCUS81_struc(n)%crocus81(t)%SW_RAD = 0.0
+            CROCUS81_struc(n)%crocus81(t)%DIR_SW = 0.0
+            CROCUS81_struc(n)%crocus81(t)%SCA_SW = 0.0
             CROCUS81_struc(n)%crocus81(t)%QA = 0.0
             CROCUS81_struc(n)%crocus81(t)%Wind_E = 0.0
             CROCUS81_struc(n)%crocus81(t)%Wind_N = 0.0

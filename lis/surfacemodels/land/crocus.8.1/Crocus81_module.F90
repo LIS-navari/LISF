@@ -73,6 +73,10 @@ module Crocus81_module
 !     Surface soil temperature (effective temperature the of layer lying below snow) (K)  (for snowcro.F90 we only use the surface layer ZP\_TG(:,1))  (#nsoil depends on 2-L, 3-L DIF). unit: K
 !   \item[SW\_RAD]
 !     incoming solar radiation (W/m2). unit: W/m2
+!   \item[DIR\_SW]
+!     Incident Direct Shortwave Radiation. unit: W/m2
+!   \item[SCA\_SW]
+!     Incident Diffuse Shortwave Radiation. unit: W/m2
 !   \item[QA]
 !     atmospheric specific humidity at level za. unit: -
 !   \item[Wind\_E]
@@ -199,6 +203,8 @@ module Crocus81_module
         real               :: RRSNOW
         real               :: TA
         real               :: SW_RAD
+        real               :: DIR_SW
+        real               :: SCA_SW
         real               :: QA
         real               :: Wind_E
         real               :: Wind_N

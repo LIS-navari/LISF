@@ -354,7 +354,14 @@ subroutine Crocus81_main(n)
             tmp_USTARSNOW     = CROCUS81_struc(n)%crocus81(t)%USTARSNOW 
             tmp_CHSNOW        = CROCUS81_struc(n)%crocus81(t)%CHSNOW    
             tmp_SNOWMAK_dz    = CROCUS81_struc(n)%crocus81(t)%SNOWMAK_dz
- 
+
+            ! initialize output  !MN added 
+            tmp_THRUFAL = 0 !LIS_rc%udef
+            tmp_EMISNOW = 0 !LIS_rc%udef
+            tmp_SNOWHMASS = 0 ! LIS_rc%udef
+            tmp_QS = 0 !LIS_rc%udef
+
+
 
           ! MN isba 
           print*, '========================================================'

@@ -357,9 +357,9 @@ subroutine Crocus81_main(n)
 
             ! initialize output  !MN added 
             tmp_THRUFAL = 0 !LIS_rc%udef
-            tmp_EMISNOW = 0 !LIS_rc%udef
+            tmp_EMISNOW = 0.99 !LIS_rc%udef
             tmp_SNOWHMASS = 0 ! LIS_rc%udef
-            tmp_QS = 0 !LIS_rc%udef
+            tmp_QS = LIS_rc%udef
 
 
 

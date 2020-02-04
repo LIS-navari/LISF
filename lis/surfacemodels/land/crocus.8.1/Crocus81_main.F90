@@ -140,6 +140,10 @@ subroutine Crocus81_main(n)
     LOGICAL              :: tmp_SNOWMAK_PROP_BOOL  ! Snowmaking and Grooming options [-]
     LOGICAL              :: tmp_PRODSNOWMAK_BOOL   ! Snowmaking and Grooming options [-]
     REAL                 :: tmp_SLOPE_DIR          ! !Typical slope aspect in the grid  (deg from N clockwise) [degrees]
+    REAL                 ::  tmp_ZENITH  ! added for isba parameter 
+    REAL                 ::  tmp_ANGL_ILLUM  ! added fro isba parameter  
+    REAL 		    ::  tmp_EXNS			! added fro isba parameter   !compute this using presure at surface
+    REAL 		    ::  tmp_EXNA                ! added fro isba parameter  
    ! Bug in toolkit
     character*3        :: fnest
 ! MN isba  
@@ -333,21 +337,34 @@ subroutine Crocus81_main(n)
  
 
           ! MN isba 
-          print*, '========================================================'
-          print*, 'name of surfex parameter file hard  coded in the Crocus81_main.F90' 
-          !print*, 'WANNING :  code uses  surfex_param_final_del.txt'  
-          print*, '========================================================'
-           INQUIRE(File="surfex_param_final_del.txt", Exist=file_exists)
+          !print*, '========================================================'
+          !print*, 'name of surfex parameter file hard  coded in the Crocus81_main.F90' 
+          !print*, 'WANNING :  code uses  surfex_param_final.txt'  
+          !print*, '========================================================'
+          ! Var1 ,Var2  ,Var3        ,Var4  ,Var5          ,Var6         ,Var7          ,Var8             ,Var9  
+          ! MN1,YEAR, MONTH, DAY, TIME/3600., ZP_EXNS, ZP_EXNA,ZP_SNDRIFT, ZP_RI,
+         ! Var10                ,Var11              ,Var12                    ,Var13        ,Var14                ,Var15            ,Var16
+         !  ZP_EMISNOW, ZP_CDSNOW,ZP_USTARSNOW, ZP_TG(:,1), ZP_SOILCOND, ZP_ZENITH, ZP_ANGL_ILLUM
+
+           INQUIRE(File="surfex_param_final.txt", Exist=file_exists)
            if (file_exists) then
-              OPEN(UNIT=99,FILE="surfex_param_final_del.txt", &
+              OPEN(UNIT=99,FILE="surfex_param_final.txt", &
                            FORM="FORMATTED",STATUS="OLD",ACTION="READ")
               do ii = 1 , CROCUS81_struc(n)%isba_param_count 
                  read ( 99,*) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
                  150 format(A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 11(F10.6,1x) )
                  !write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
               enddo
+!                 print*,'test'
+!                 write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
               CLOSE(UNIT=99 )
            endif
+           tmp_TG = Var13                           
+           tmp_SOILCOND  = Var14  
+	    tmp_ZENITH = var15
+	    tmp_ANGL_ILLUM = var16 
+           tmp_EXNS = var6
+           tmp_EXNA = var7
 
 !print *, 'main , tmp_RRSNOW,  tmp_SRSNOW' , tmp_RRSNOW , tmp_SRSNOW ! MN
             ! call model physics 
@@ -440,8 +457,11 @@ subroutine Crocus81_main(n)
                                tmp_SELF_PROD_BOOL    , & ! IN    - Snowmaking and Grooming options [-]
                                tmp_SNOWMAK_PROP_BOOL , & ! IN    - Snowmaking and Grooming options [-]
                                tmp_PRODSNOWMAK_BOOL  , & ! INOUT - Snowmaking and Grooming options [-]
-                               tmp_SLOPE_DIR         )   ! IN    - !Typical slope aspect in the grid  (deg from N clockwise) [degrees]
- 
+                               tmp_SLOPE_DIR        , &  ! IN    - !Typical slope aspect in the grid  (deg from N clockwise) [degrees]
+                               tmp_ZENITH ,&  ! added to read surfex parameter 
+	                        tmp_ANGL_ILLUM  , & ! added to read surfex parameter
+                               tmp_EXNS , &            ! added to read surfex parameter
+                               tmp_EXNA)            ! added to read surfex parameter
     
             ! save state variables from local variables to global variables
             CROCUS81_struc(n)%crocus81(t)%SNOWSWE(:)    = tmp_SNOWSWE(:)   

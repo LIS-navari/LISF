@@ -590,11 +590,24 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 IF (LHOOK) CALL DR_HOOK('SNOWCRO',0,ZHOOK_HANDLE)
 !
+
+! MN
+!print *, 'PPS, PTA, PSW_RAD, PQA, PVMOD, PLW_RAD, PSR, PRR ' , PPS, PTA, PSW_RAD, PQA, PVMOD, PLW_RAD, PSR, PRR 
+!print *, '***PSR, PRR ' , PSR, PRR 
+!WRITE (*, '(A30 , 1x, 5(F10.6,1x) )')'***PSR PRR PLW_RAD PSW_RAD,T' , PSR, PRR, PLW_RAD, PSW_RAD, PTA 
+!WRITE (*, '(A45 , 1x, 4(F10.6,1x) )')  '===PSNOWALB, PTHRUFAL,  PEVAPCOR,  PGFLXCOR' ,PSNOWALB, PTHRUFAL,  PEVAPCOR,  PGFLXCOR
+!WRITE (*, '(A35 , 1x,4(F10.6,1x) )')  '+=+PEVAP,PRNSNOW, PCDSNOW, PUSTAR', PEVAP,PRNSNOW, PCDSNOW, PUSTAR
+!WRITE (*, '(A50 , 1x, 5(F10.6,1x) )')  '###PHSNOW, PGFLUXSNOW, PLES3L, PLEL3L, PHPSNOW',PHSNOW, PGFLUXSNOW, PLES3L, PLEL3L, PHPSNOW                                 
+
+!print *, 'PTG, PSOILCOND, PD_G, PPSN3L', PTG, PSOILCOND, PD_G, PPSN3L
+!WRITE (*, '(A40 , 1x, 5(F10.6,1x) )')  '+PZREF, PUREF , PZ0, PZ0EFF, PZ0H', PZREF, PUREF , PZ0, PZ0EFF, PZ0H
+!WRITE (*, '(A65 , 1x, 6(F10.6,1x) )')  '++PEXNS, PEXNA, PDIRCOSZW, PRHOA, PALB, PPERMSNOWFRAC', PEXNS, PEXNA, PDIRCOSZW, PRHOA, PALB, PPERMSNOWFRAC
+!print *, '************'
 ! MN
 XRHO_SNOWMAK = 600.
 XPSR_SNOWMAK = 0.0012
 !print *, 'XRHO_SNOWMAK' , XRHO_SNOWMAK , XPSR_SNOWMAK  !MN
-WRITE(*,*) 'solar radiation1=',PSW_RAD
+!WRITE(*,*) 'solar radiation1=',PSW_RAD
 !***************************************PRINT IN**********************************************
 ! Look if we have to print snow profiles for debugging
 GCROINFOPRINT = LCRODAILYINFO .AND. (TPTIME%TIME ==0.0)
@@ -700,7 +713,7 @@ DO JST = 1,SIZE(PSNOWSWE(:,:),2)
   ENDDO  !  end loop snow layers
 ENDDO    ! end loop grid points
 
-print*, 'INLVLS_USE', INLVLS_USE !MN
+!print*, 'INLVLS_USE', INLVLS_USE !MN
 ! Incrementation of snow layers age
 ZTSTEPDAYS = PTSTEP/86400. ! time step in days
 ! Lafaysse / Cluzet : reimplementation of first Morin/Charrois impuritites content option:
@@ -806,6 +819,7 @@ ENDIF
                         PBLOWSNW,HSNOWMETAMO, HSNOWFALL, PQA, PSNOWTEMP,        &
                         PSNOWMAK, OSNOWMAK_BOOL, OSNOWMAK_PROP)
 !
+
 !***************************************DEBUG IN**********************************************
 IF (GCRODEBUGDETAILSPRINT) THEN
   CALL SNOWCROPRINTPROFILE("after SNOWFALL_UPGRID",INLVLS_USE(IDEBUG),LPRINTGRAN,      &
@@ -824,7 +838,7 @@ ZSNOW(:) = ZSNOWBIS(:)
 !
 DO JJ=1,SIZE(ZSNOW)
   !
-print*, 'GMODIF_MAILLAGE', GMODIF_MAILLAGE !MN
+!print*, 'GMODIF_MAILLAGE', GMODIF_MAILLAGE !MN
   IF ( GMODIF_MAILLAGE(JJ) ) THEN    
     CALL SNOWNLGRIDFRESH_1D(JJ,ZSNOW(JJ),PSNOWDZ(JJ,:),ZSNOWDZN(JJ,:),PSNOWRHO(JJ,:),    &
                             PSNOWHEAT(JJ,:),PSNOWGRAN1(JJ,:),PSNOWGRAN2(JJ,:),           &
@@ -906,6 +920,7 @@ ENDIF
  CALL SNOWCROMETAMO(PSNOWDZ,PSNOWGRAN1,PSNOWGRAN2,PSNOWHIST,ZSNOWTEMP, &
                     PSNOWLIQ,PTSTEP,PSNOWSWE,INLVLS_USE,PSNOWAGE,HSNOWMETAMO       ) 
 !
+
  CALL SNOWCROGETSSA(HSNOWMETAMO, PSNOWGRAN1,PSNOWGRAN2, INLVLS_USE,ZSNOWSSA_AFTER)                   
 !
 ZSNOWDSSA=ZSNOWSSA_AFTER-ZSNOWSSA_BEFORE
@@ -1075,7 +1090,7 @@ SELECT CASE (HSNOWRAD)
   ENDDO
 
 
-WRITE(*,*) 'solar radiation2=',PSW_RAD
+!WRITE(*,*) 'solar radiation2=',PSW_RAD
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   
   !
   CASE DEFAULT
@@ -1099,6 +1114,7 @@ ENDIF
 !
  CALL SNOWCROTHRM(PSNOWRHO,ZSCOND,ZSNOWTEMP,PPS,PSNOWLIQ,HSNOWCOND)
 !
+
 !***************************************DEBUG IN**********************************************
 IF (GCRODEBUGDETAILSPRINT) THEN
   CALL SNOWCROPRINTPROFILE("after SNOWCROTHRM", INLVLS_USE(IDEBUG),LPRINTGRAN,              &
@@ -1175,7 +1191,11 @@ ELSE
 !
 ENDIF
 !
-WRITE(*,*) 'solar radiation3=',PSW_RAD
+! MN 
+!DO JJ = 1,SIZE(ZSNOW)
+!      WRITE(*,*) 'TEMP9',ZSNOWTEMP(JJ,1:INLVLS_USE(JJ))
+!ENDDO
+!WRITE(*,*) 'solar radiation3=',PSW_RAD
 !***************************************DEBUG IN**********************************************
 IF (GCRODEBUGDETAILSPRINT) THEN
   CALL SNOWCROPRINTPROFILE("after SNOWCROEBUD", INLVLS_USE(IDEBUG),LPRINTGRAN,              &
@@ -1192,12 +1212,21 @@ ZSNOWTEMPO1(:) = ZSNOWTEMP(:,1) ! save surface snow temperature before update
 !
 ZGRNDFLUXI(:)  = PGRNDFLUX(:) ! on sauvegarde le flux imposé par MEB
 
+! MN 
+!DO JJ = 1,SIZE(ZSNOW)
+!      WRITE(*,*) 'TEMP8',ZSNOWTEMP(JJ,1:INLVLS_USE(JJ))
+!ENDDO   ! issue is here
+
  CALL SNOWCROSOLVT(OMEB,PTSTEP,XSNOWDZMIN,PSNOWDZ,ZSCOND,ZSCAP,PTG,           &
                    PSOILCOND,PD_G,ZRADSINK,ZCT,ZTSTERM1,ZTSTERM2,             &
                    ZPET_A_COEF_T,ZPEQ_A_COEF_T,ZPET_B_COEF_T,ZPEQ_B_COEF_T,   &
                    ZTA_IC,ZQA_IC,PGRNDFLUX, ZSNOWTEMP ,ZSNOWFLUX,             &
                    INLVLS_USE                                                 ) 
 !
+! MN 
+!DO JJ = 1,SIZE(ZSNOW)
+!      WRITE(*,*) 'TEMP7',ZSNOWTEMP(JJ,1:INLVLS_USE(JJ))
+!ENDDO
 !***************************************DEBUG IN**********************************************
 IF (GCRODEBUGDETAILSPRINT) THEN
   CALL SNOWCROPRINTPROFILE("after SNOWCROSOLVT", INLVLS_USE(IDEBUG),LPRINTGRAN,             &
@@ -1227,7 +1256,7 @@ IF (.NOT. OMEB) THEN
                   PUSTAR                                              ) 
 END IF
 !
-WRITE(*,*) 'solar radiation4=',PSW_RAD
+!WRITE(*,*) 'solar radiation4=',PSW_RAD
 !***************************************DEBUG IN**********************************************
 IF (GCRODEBUGDETAILSPRINT) THEN
   CALL SNOWCROPRINTPROFILE("after SNOWCROFLUX", INLVLS_USE(IDEBUG),LPRINTGRAN,              &
@@ -1247,7 +1276,9 @@ ENDIF
                   PSNOWHEAT,ZRADSINK,PEVAPCOR,PTHRUFAL,PGRNDFLUX, &
                   PGFLUXSNOW,PSNOWDZ,PSNOWLIQ,ZSNOWTEMP,ZRADXS,   &
                   PRR,INLVLS_USE                                  ) 
+
 !
+
 !***************************************DEBUG IN**********************************************
 IF (GCRODEBUGDETAILSPRINT) THEN
   CALL SNOWCROPRINTPROFILE("after SNOWCROGONE", INLVLS_USE(IDEBUG),LPRINTGRAN,              &
@@ -1269,7 +1300,7 @@ PGRNDFLUX(:) = PGRNDFLUX(:) + ZRADXS(:)
  CALL SNOWCROLAYER_GONE(PTSTEP,ZSCAP,ZSNOWTEMP,PSNOWDZ,          &
                         PSNOWRHO,PSNOWLIQ,PSNOWGRAN1,PSNOWGRAN2, &
                         PSNOWHIST,PSNOWAGE,PSNOWIMPUR,PLES3L, INLVLS_USE    ) 
-!
+
 !***************************************DEBUG IN**********************************************
 IF (GCRODEBUGDETAILSPRINT) THEN
   CALL SNOWCROPRINTPROFILE("after SNOWCROLAYER_GONE", INLVLS_USE(IDEBUG),LPRINTGRAN,        &
@@ -1283,7 +1314,9 @@ ENDIF
 ! For partial melt: transform excess heat content into snow liquid:
 !
  CALL SNOWCROMELT(ZSCAP,ZSNOWTEMP,PSNOWDZ,PSNOWRHO,PSNOWLIQ,INLVLS_USE)
+
 !
+
 !***************************************DEBUG IN**********************************************
 IF (GCRODEBUGDETAILSPRINT) THEN
   CALL SNOWCROPRINTPROFILE("after SNOWCROMELT", INLVLS_USE(IDEBUG),LPRINTGRAN,              &
@@ -1317,6 +1350,7 @@ ENDIF
 !
  CALL SNOWCROEVAPN(PLES3L,PTSTEP,ZSNOWTEMP(:,1),PSNOWRHO(:,1), &
                    PSNOWDZ(:,1),PSNOWLIQ(:,1),PEVAPCOR,PSNOWHMASS )
+
 !
 !***************************************DEBUG IN**********************************************
 IF (GCRODEBUGDETAILSPRINT) THEN
@@ -2936,6 +2970,9 @@ PEMIST(:) = XEMISSN
 !
  CALL SURFACE_RI(PTS, PQSAT, PEXNS, PEXNA, PTA, PQA,  &
                  PZREF, PUREF, PDIRCOSZW, PVMOD, ZRI, 1 ) 
+!WRITE (*,  '(A45 , 1x, 8(F10.6,1x) )')  &
+!        '##PTS,PQSAT,PEXNS,PEXNA,PTA,PQA,PDIRCOSZW,ZRI', PTS, PQSAT, PEXNS, PEXNA, PTA, PQA,PDIRCOSZW,ZRI   ! MN
+
 !
 ! Simple adaptation of method by Martin and Lejeune (1998)
 ! to apply a lower limit to turbulent transfer coef
@@ -2948,12 +2985,20 @@ IF ( HSNOWRES=='RIL' ) THEN
   ENDDO
 ENDIF
 !
+!print *, 'X_RI_MAX', X_RI_MAX
 PRI(:) = ZRI(:)
+
 !
 ! Surface aerodynamic resistance for heat transfers
 !
 ! CALL SURFACE_AERO_COND(ZRI, PZREF, PUREF, PVMOD, PZ0, PZ0H, ZAC, PRA, PCHSNOW, HSNOWRES)
  CALL MODI_SURFACE_AERO_COND_SUB(ZRI, PZREF, PUREF, PVMOD, PZ0, PZ0H, ZAC, PRA, PCHSNOW, HSNOWRES, 1)
+!WRITE (*,  '(A32 , 1x, 5(F7.4,1x) )')  &
+!        '&& ZRI, PZREF, PUREF, PVMOD, PZ0', ZRI, PZREF, PUREF, PVMOD, PZ0
+!WRITE (*,  '(A22 , 1x, 4(F10.7,1x) )')  &
+!        '&&& PZ0H, ZAC, PCHSNOW', PZ0H, ZAC, PCHSNOW
+!print *, '&&&&PRA ', PRA
+!
 !
 PRSRA(:) = PRHOA(:) / PRA(:)
 !
@@ -2961,6 +3006,7 @@ PRSRA(:) = PRHOA(:) / PRA(:)
 !
 ! CALL SURFACE_CD(ZRI, PZREF, PUREF, PZ0EFF, PZ0H, PCDSNOW, ZCDN)
  CALL MODI_SURFACE_CD_SUB(ZRI, PZREF, PUREF, PZ0EFF, PZ0H, PCDSNOW, ZCDN)
+
 !
 !
 ! Modify flux-form implicit coupling coefficients:
@@ -3059,6 +3105,11 @@ ZC(:) = PCT(:) * ( - PRSRA(:) * ZLVT(:) * ( PQSAT(:) - PPEQ_B_COEF_T(:) )  &
 PTSTERM2(:) = 2. * ZSCONDA(:) * PCT(:) / ( ZA(:) * (ZSNOWDZM2(:)+ZSNOWDZM1(:) ) )
 !
 PTSTERM1(:) = ( PTS(:)*ZB(:) + ZC(:) ) / ZA(:)
+!print*, '++TERM1,TERM2,PTS, ZB,ZC,ZA', PTSTERM1, PTSTERM2, PTS, ZB,ZC,ZA  ! MN 
+!print*, '++++PCT, PRSRA,PQSAT', PCT, PRSRA,  PQSAT
+!print*, '++++++PALBT, ' , PALBT, 
+!WRITE (*,  '(A35 , 1x, 6(F10.5,1x) )') '++PTSTERM1,PTSTERM2,PTS, ZB,ZC,ZA', PTSTERM1,PTSTERM2,PTS, ZB,ZC,ZA
+!WRITE (*,  '(A35 , 1x, 4(F10.5,1x) )') '++++PCT, PRHOA, PRA,PQSAT, PALBT', PCT, PRHOA, PRA, PQSAT, PALBT
 !
 IF (LHOOK) CALL DR_HOOK('SNOWCROEBUD',1,ZHOOK_HANDLE)
 !
@@ -3227,6 +3278,17 @@ INTEGER :: JJ, JST   ! looping indexes
 INTEGER :: INLVLS
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
+
+!! MN 
+!WRITE (*, '(A65 , 1x)') '!!!PTSTEP, PSNOWDZMIN,PTG, PSOILCOND, PD_G, PCT, PTERM1, PTERM2 ' 
+!WRITE (*, '(1x, 8(F10.6,1x) )') PTSTEP, PSNOWDZMIN,PTG, PSOILCOND, PD_G, PCT, PTERM1, PTERM2 
+!WRITE (*, '(A46 , 1x)') '!==!PSNOWDZ, PSCOND, PSCAP,PRADSINK, PSNOWTEMP' 
+!WRITE (*, '(1x, 5(F10.6,1x) )') PSNOWDZ(:,4), PSCOND(:,4), PSCAP(:,4),PRADSINK(:,4), PSNOWTEMP (:,4)
+!Print*,  'PSNOWDZ ' , PSNOWDZ(:,1:4) ! MN
+!Print*, 'PSCOND' , PSCOND(:,1:4)! MN
+!Print*,  'PSCAP' , PSCAP(:,1:4) ! MN
+!Print*,  'PRADSINK' , PRADSINK(:,1:4)! MN
+!Print*, 'PSNOWTEMP' , PSNOWTEMP(:,1:4) ! MN
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('SNOWCROSOLVT',0,ZHOOK_HANDLE)
 !
@@ -5431,6 +5493,7 @@ IF ( GSNOWFALL ) INLVLS_OLD = INLVLS_OLD + 1
 !
 ZPSNOW_OLD = PSNOW
 ZPSNOW_NEW = ZPSNOW_OLD
+! ZSNOWHEATO = 0.0 ! MN initialize to zero for test -->  doesn't works 
 !
 ! initialization of variables describing the initial snowpack + new snowfall
 !
@@ -5471,6 +5534,7 @@ ELSE
     ZSNOWHISTO (JST) = PSNOWHIST (JST)
     ZSNOWAGEO  (JST) = PSNOWAGE  (JST)
   ENDDO
+
   !IMPURITIES
   DO JIMP=1,NIMPUR 
      DO JST = 1,INLVLS_OLD
@@ -5479,6 +5543,7 @@ ELSE
   ENDDO
 ENDIF    
 !
+!print *, ')))PSNOWHEAT  ', PSNOWHEAT (1:4) ! MN 
 ! 1. Calculate vertical grid limits (m):
 ! --------------------------------------
 !
@@ -5538,6 +5603,15 @@ DO JST = 1,INLVLS_OLD
   ZPSNOW_OLD = ZPSNOW_OLD + ZSNOWDZO(JST)
 ENDDO
 !
+!WRITE (*,  '(A45 , 1x, I2, 1x, 3(F12.4,1x) )')  &
+!        '% INLVLS_NEW, ZMASTOTN, ZPSNOW_NEW ', INLVLS_NEW, ZMASTOTN, ZPSNOW_NEW  ! MN 
+!WRITE (*,  '(A45 , 1x, I2, 1x, 3(F12.4,1x) )')  &
+!        '%% INLVLS_OLD, ZPSNOW_OLD', INLVLS_OLD, ZMASTOTO, ZPSNOW_OLD
+!print *, 'ZSNOWHEAN,ZSNOWHEAO ', ZSNOWHEAN,ZSNOWHEAO
+!print *, 'ZSNOWHEATN ', ZSNOWHEATN(1:4)
+!print *, 'ZSNOWHEATO ', ZSNOWHEATO(1:4)
+
+
 IF ( ABS( ZSNOWHEAN-ZSNOWHEAO )>0.0001 .OR. ABS( ZMASTOTN-ZMASTOTO )>0.0001 .OR. &
      ABS( ZPSNOW_NEW-ZPSNOW_OLD )> 0.0001 ) THEN 
   WRITE(*,*) 'Warning diff', ZSNOWHEAN-ZSNOWHEAO,ZMASTOTN-ZMASTOTO,ZPSNOW_NEW-ZPSNOW_OLD

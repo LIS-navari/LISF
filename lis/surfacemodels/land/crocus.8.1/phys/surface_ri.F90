@@ -115,8 +115,12 @@ ZVMOD(:) = WIND_THRESHOLD(PVMOD(:),PUREF(:))
 PRI(:) = XG * PDIRCOSZW(:) * PUREF(:) * PUREF(:)              &
           * (ZTHVA(:)-ZTHVS(:)) / (0.5 * (ZTHVA(:)+ZTHVS(:)) )  &
           / (ZVMOD(:)*ZVMOD(:)) /PZREF(:)  
+!WRITE (*,  '(A42 , 1x, 7(F10.5,1x) )')  &
+!        '@@ ZTHVA, ZTHVS, ZVMOD, PTA, PTG, PQA, PQS', ZTHVA, ZTHVS, ZVMOD, PTA, PTG, PQA, PQS
+!Print*,'sirface_ri , RI , XRIMAX', PRI, XRIMAX  ! MN
 !
 PRI(:) = MIN(PRI(:),XRIMAX)
+!Print*,'sirface_ri , RI2 ', PRI  ! MN
 !
 IF (LHOOK) CALL DR_HOOK('SURFACE_RI',1,ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------

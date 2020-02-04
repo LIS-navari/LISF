@@ -293,7 +293,11 @@ forcing_ts_tick = time0(i)   ! 0, 3600, 7200, ... , 757382400 (s)
          Col_de_Porte_day,Col_de_Porte_hr,Col_de_Porte_min, &
          Col_de_Porte_sec,Col_de_Porte_tick)
    if ((Col_de_Porte_time.ge.listime).and.(itime.eq.1)) exit
-   if ((Col_de_Porte_time.gt.listime).and.(itime.eq.2)) exit
+   if ((Col_de_Porte_time.gt.listime).and.(itime.eq.2)) then
+      rainf0(i) = rainf(i,ts+1) 
+      snowf0(i) = snowf(i,ts+1) 
+      exit
+   endif
    enddo
 !close(ftn)
    !else
@@ -409,8 +413,16 @@ forcing_ts_tick = time0(i)   ! 0, 3600, 7200, ... , 757382400 (s)
          Col_de_Porte_struc(n)%undef,swdown0,varfield(11,:),         &
          LIS_rc%lnc(n)*LIS_rc%lnr(n),Col_de_Porte_struc(n)%nstns)
 
-WRITE(*,*) '**read_Col_de_Porte.F90 SW',Col_de_Porte_yr,Col_de_Porte_mon,  &
-                      Col_de_Porte_day,Col_de_Porte_hr , varfield(11,1)
+!WRITE(*,*) '**read_Col_de_Porte.F90 SW',Col_de_Porte_yr,Col_de_Porte_mon,  &
+!                      Col_de_Porte_day,Col_de_Porte_hr , varfield(11,1)
+
+varfield(11,:) = varfield(8,:) + varfield(9,:)
+print *, '*****************************************'
+Print *, 'ALERT : For the test case the SW was replaced with sum of SW_dir and SW_diff'
+Print *, '               in the SURFEX-Crocus SW =  SW_dir and SW_diff'
+!WRITE(*,*) '**read_Col_de_Porte.F90 SW',Col_de_Porte_yr,Col_de_Porte_mon,  &
+!                      Col_de_Porte_day,Col_de_Porte_hr , varfield(11,1), varfield(8,1), varfield(9,1)
+
 
    do f = 1,11
    count1 = 0

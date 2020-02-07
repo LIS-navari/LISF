@@ -339,16 +339,16 @@ subroutine Crocus81_main(n)
           ! MN isba 
           !print*, '========================================================'
           !print*, 'name of surfex parameter file hard  coded in the Crocus81_main.F90' 
-          !print*, 'WANNING :  code uses  surfex_param_final.txt'  
+          !print*, 'WANNING :  code uses  surfex_param_final_del.txt'  
           !print*, '========================================================'
           ! Var1 ,Var2  ,Var3        ,Var4  ,Var5          ,Var6         ,Var7          ,Var8             ,Var9  
           ! MN1,YEAR, MONTH, DAY, TIME/3600., ZP_EXNS, ZP_EXNA,ZP_SNDRIFT, ZP_RI,
          ! Var10                ,Var11              ,Var12                    ,Var13        ,Var14                ,Var15            ,Var16
          !  ZP_EMISNOW, ZP_CDSNOW,ZP_USTARSNOW, ZP_TG(:,1), ZP_SOILCOND, ZP_ZENITH, ZP_ANGL_ILLUM
 
-           INQUIRE(File="surfex_param_final.txt", Exist=file_exists)
+           INQUIRE(File="surfex_param_final_del.txt", Exist=file_exists)
            if (file_exists) then
-              OPEN(UNIT=99,FILE="surfex_param_final.txt", &
+              OPEN(UNIT=99,FILE="surfex_param_final_del.txt", &
                            FORM="FORMATTED",STATUS="OLD",ACTION="READ")
               do ii = 1 , CROCUS81_struc(n)%isba_param_count 
                  read ( 99,*) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16

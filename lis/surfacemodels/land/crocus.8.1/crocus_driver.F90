@@ -148,9 +148,22 @@ SUBROUTINE crocus_driver(n,		&
  USE modi_surface_aero_cond  ! for drag coefficient for heat 
  USE modd_snow_metamo ! use XVVISC3= 0.023
  USE modd_snow_par , only :  XRHOTHRESHOLD_ICE, XZ0ICEZ0SNOW, XVAGING_NOGLACIER,&
-                                                 XANSMAX, XANSMIN, XEMISSN, XPERCENTAGEPORE, X_RI_MAX
+                                                 XANSMAX, XANSMIN, XEMISSN, XPERCENTAGEPORE, X_RI_MAX, &
+                                                 XALBICE1, XALBICE2, XALBICE3,  XRHOTHRESHOLD_ICE, &
+                                                 XVAGING_GLACIER, XIMPUR_EFOLD, XIMPUR_COEFF,&
+                                                 XIMPUR_INIT,XMAXIMPUR, XRHO_SNOWMAK, XPSR_SNOWMAK
 USE MODD_SURF_ATM, ONLY : XRIMAX
 USE MODI_INI_SURF_CSTS
+!USE MODD_PREP_SNOW, ONLY : NIMPUR
+USE MODD_CONST_TARTES, ONLY:  XPSNOWG0, XPSNOWY0, XPSNOWW0, XPSNOWB0,NPNBANDS
+USE MODD_CONST_ATM, ONLY: JPNBANDS_ATM
+!
+USE MODE_SNOW3L
+USE MODE_TARTES, ONLY : SNOWCRO_TARTES
+!
+USE MODE_THERMOS
+USE MODE_CRODEBUG
+USE MODD_REPROD_OPER
 
   implicit none
 
@@ -388,6 +401,7 @@ REAL :: ZP_EVAPCOR = 0.0 ! it has not been initialized  in the CALL_MODEL
 REAL :: ZP_GFLXCOR = 0.0 ! it has not been initialized  in the CALL_MODEL
 REAL, PARAMETER       :: XRHOSMAX_ES = 750.0  ! (kg m-3)
 REAL, PARAMETER      :: XSNOWDMIN = 0.000001  ! (m)
+
 ! ***************************************************************************
 ! Local variable 
 ! ***************************************************************************
@@ -763,7 +777,7 @@ XAVOGADRO = 6.0221367E+23
 XMD = 28.9644E-3
 XMV = 18.0153E-3
 XG = 9.80665
-XPI = 2.*ASIN(1.)
+XPI = 2.*ASIN(1.)  ! ini_csts.F90
 RI_n = 0.2 ! it has not been initialized in the CALL_MODEL 
 EMISNOW = 0.99 ! see ini_surf_csts.F90
 USTARSNOW = 0 ! it has not been initialized in the CALL_MODEL 
@@ -771,29 +785,42 @@ CHSNOW = 0 ! it has not been initialized in the CALL_MODEL
 SNOWHMASS = 0 ! it has not been initialized in the CALL_MODEL
 XDAY = 86400.
 XKARMAN = 0.4
-XTT    = 273.16
-XCI    = 2.106E+3
-XLSTT  = 2.8345E+6
-XLVTT  = 2.5008E+6
+XTT    = 273.16  ! ini_csts.F90
+XCI    = 2.106E+3 ! /ini_csts.F90
+XLSTT  = 2.8345E+6  ! ini_csts.F90
+XLVTT  = 2.5008E+6  ! /ini_csts.F90
 XLMTT  = XLSTT - XLVTT
-XRHOLW = 1000.
-XRHOLI = 917.
+XRHOLW = 1000. ! SURFEX/ini_csts.F90
+XRHOLI = 917. ! ini_csts.F90
 XVVISC3= 0.023
-XRHOTHRESHOLD_ICE = 850.
-XZ0ICEZ0SNOW = 10.
-XVAGING_NOGLACIER = 60.
 XANSMAX = 0.85
 XANSMIN = 0.50
 XCONDI = 2.22
-XCL    = 4.218E+3
+XCL    = 4.218E+3 ! ini_csts.F90
 XESTT  = 611.14 
 XRIMAX = 0 !  TO DO check the value  user manual 192  defulat value ? 
 XEMISSN =  0.99
 XPLANCK     = 6.6260755E-34 
 XLIGHTSPEED = 299792458.  ! light speed 
-XPERCENTAGEPORE = 0.05 ! 
+XPERCENTAGEPORE = 0.05 ! ini_surf_csts.F90
 XRIMAX = 0.2 ! in surfex it is defined in the namelist 
 X_RI_MAX = 0.2 ! in surfex it is initialized in the ini_surf_csts.F90
+XIMPUR_COEFF(1)=5.E-9 ! BC deposition at top of snowpack  ! ini_surf_csts.F90:
+XIMPUR_COEFF(2:5)=10.E-6 ! Dust deposition at top of snowpack ! ini_surf_csts.F90:
+XIMPUR_INIT(1)=4.E-9 ! BC initial content (g/g) of impurity for fresh snow   ! ini_surf_csts.F90:
+XIMPUR_INIT(2:5)=5.E-6 ! Dust initial content (g/g) of impurity for fresh snow   ! ini_surf_csts.F90:
+XRHO_SNOWMAK = 600. ! ini_surf_csts.F90
+XPSR_SNOWMAK = 0.0012 ! ini_surf_csts.F90
+XEVERG_RSMIN = 175.  !Rsmin  ini_surf_csts.F90
+XEVERG_VEG     = 0.99 ! ini_surf_csts.F90
+! the following coming from the namelist  https://opensource.umr-cnrm.fr/projects/snowtools_git/repository/revisions/master/entry/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam
+  XALBICE1=0.38
+  XALBICE2=0.23
+  XALBICE3=0.08
+  XRHOTHRESHOLD_ICE=850.  ! ini_surf_csts.F90
+  XZ0ICEZ0SNOW=10.  ! ini_surf_csts.F90
+  XVAGING_GLACIER=900.
+  XVAGING_NOGLACIER=60.
 ! ***************************************************************************
 ! Set up local variables for dimension match
 ! ***************************************************************************
@@ -814,7 +841,7 @@ RRSNOWin(1)			= RRSNOW
 TAin(1)					= TA
 TGin(1) 					= TG
 SW_RADin(1) 			= SW_RAD
-QAin(1) 				= QA
+QAin(1) 				       = QA
 !ZP_VMODin(1,1) = ZP_VMOD
 Wind_Ein(1)				= Wind_E
 Wind_Nin(1)				= Wind_N
@@ -829,34 +856,34 @@ ZREFin(1) 				= ZREF
 Z0NATin(1) 				= Z0NAT
 Z0EFFin(1) 				= Z0EFF 
 Z0HNATin(1) 			= Z0HNAT 					 
-ALBin(1)                            = ALB
-SOILCONDin(1) 		= SOILCOND
+ALBin(1)                            = 0.2 ! ALB  !  soil/vegetation albedo   set to 0.2 in the SURFEX-Crocus 
+SOILCONDin(1) 		       = SOILCOND
 D_Gin(1)                            = D_G
 SNOWLIQout(1,:)              = SNOWLIQ
 SNOWDZout(1,:)               = SNOWDZ
 SNOWTEMPinout (1,:) 	= SNOWTEMP
-THRUFALout(1)                = THRUFAL
-ZP_EVAPCORout(1)         = ZP_EVAPCOR
-ZP_GFLXCORout(1)         = ZP_GFLXCOR
-GRNDFLUXinout(1)		= GRNDFLUX
-ZP_SWNETSNOWout(1)   = ZP_SWNETSNOW
-ZP_SWNETSNOWSout(1) = ZP_SWNETSNOWS
-ZP_LWNETSNOWout(1)	 = ZP_LWNETSNOW
-ZP_RNSNOWout(1) 		= ZP_RNSNOW
-ZP_HSNOWout(1) 		= ZP_HSNOW
-ZP_GFLUXSNOWout(1)	=  0 !                    ZP_GFLUXSNOW ,     , update: it is 0 in the SURFEX-Crocus  
-ZP_HPSNOWout(1) 		= ZP_HPSNOW
-ZP_LES3Lout(1) 			= ZP_LES3L
-ZP_LEL3Lout(1) 			= ZP_LEL3L
-ZP_EVAPout(1) 			= ZP_EVAP
-SNDRIFTout(1)                  = SNDRIFT
+THRUFALout(1)                = 0 ! THRUFAL
+ZP_EVAPCORout(1)         = 0 ! ZP_EVAPCOR
+ZP_GFLXCORout(1)         =  0 ! ZP_GFLXCOR       ? 
+GRNDFLUXinout(1)		= 0 ! GRNDFLUX   , update: it is 0 in the SURFEX-Crocus  
+ZP_SWNETSNOWout(1)   = 0 ! ZP_SWNETSNOW        update: it is 0 in the SURFEX-Crocus 
+ZP_SWNETSNOWSout(1) = 0 ! ZP_SWNETSNOWS     update: it is 0 in the SURFEX-Crocus 
+ZP_LWNETSNOWout(1)	= 0 ! ZP_LWNETSNOW     update: it is 0 in the SURFEX-Crocus 
+ZP_RNSNOWout(1) 		= 0 ! ZP_RNSNOW   update: it is 0 in the SURFEX-Crocus 
+ZP_HSNOWout(1) 		= 0 ! ZP_HSNOW   update: it is 0 in the SURFEX-Crocus  
+ZP_GFLUXSNOWout(1)	= 0 ! ZP_GFLUXSNOW      , update: it is 0 in the SURFEX-Crocus  
+ZP_HPSNOWout(1) 		= 0 ! ZP_HPSNOW
+ZP_LES3Lout(1) 			= 0 ! ZP_LES3L    update: it is 0 in the SURFEX-Crocus  
+ZP_LEL3Lout(1) 			= 0 !ZP_LEL3L
+ZP_EVAPout(1) 			= 0 ! ZP_EVAP
+SNDRIFTout(1)                  = 0 ! SNDRIFT  , update: it is not initialized in the scow3L_isba.F90 but, it is initialized to 0 in the snowcro.F90 
 RI_nout(1)                          = 0 !                    , update: it is 0 in the SURFEX-Crocus  
 EMISNOWout(1) 	              = EMISNOW
  CDSNOWout (1) 		=  0 ! CDSNOW ! will be computed  , update: it is 0 in the SURFEX-Crocus  --> the call to subroutine   MODI_SURFACE_CD_SUB to compute CDSNOWout was commented out 
-USTARSNOWout(1)          = USTARSNOW
+USTARSNOWout(1)          = 0 ! USTARSNOW , update: it is not initialized in the scow3L_isba.F90 
  CHSNOWout(1) 		= 0 !CHSNOW ! will be computed  , update: it is 0 in the SURFEX-Crocus  --> the call to subroutine   MODI_SURFACE_AERO_COND_SUB to compute CHSNOWout was commented out 
-SNOWHMASSout(1)          = SNOWHMASS
-QSout(1)                             = QS
+SNOWHMASSout(1)          = 0 ! SNOWHMASS     , update: it is not initialized in the scow3L_isba.F90 but it is initialized to 0 in the snowcro.F90 
+QSout(1)                             = 0 ! QS    
 PERMSNOWFRACin(1) 	= PERMSNOWFRAC
 !ZP_ZENITHin (1,1) 			= ZP_ZENITH
 !ZP_ANGL_ILLUMin (1,1) 		= ZP_ANGL_ILLUM
@@ -993,14 +1020,22 @@ TPTIME%TIME = hour*3600 + minute*60
 !1- add alocation for variable that has more than 1D
 !2- do we need to have these local variables for logical and character variables? 
 
-!WRITE (*, '( A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, 18(F10.6,1x) )') 'MN1',  &
+WRITE (*, '( A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, 18(F10.6,1x) )') 'MN1',  &
+                               TPTIME%TDATE%YEAR, & 
+                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
+                                ZP_EXNSin, ZP_EXNAin,&
+                                SNDRIFTout, RI_nout, EMISNOWout, CDSNOWout, USTARSNOWout,         &
+                                TGin, SOILCONDin, ZP_PSN3Lin, ZP_RHOAin, ZP_RNSNOWout, ZP_HSNOWout, & 
+                                ZP_GFLUXSNOWout, ZP_HPSNOWout, CHSNOWout,ZP_ZENITHin, ZP_ANGL_ILLUMin  !
+print *, '+++++++++++++++++++++++++++++++++++++++++'
+!WRITE (*, '( A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 2x,  9(A3, 1x) , 11(L1, 1x))') 'MN1',  &
 !                               TPTIME%TDATE%YEAR, & 
 !                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
-!                                ZP_EXNSin, ZP_EXNAin,&
-!                                SNDRIFTout, RI_nout, EMISNOWout, CDSNOWout, USTARSNOWout,         &
-!                                TGin, SOILCONDin, ZP_PSN3Lin, ZP_RHOAin, ZP_RNSNOWout, ZP_HSNOWout, & 
-!                                ZP_GFLUXSNOWout, ZP_HPSNOWout, CHSNOWout,ZP_ZENITHin, ZP_ANGL_ILLUMin  !
-
+!                               SNOWRES_opt, HIMPLICIT_WIND_opt, SNOWMETAMO_opt, SNOWRAD_opt, SNOWFALL_opt, &
+!                               SNOWCOND_opt, SNOWHOLD_opt, SNOWCOMP_opt, SNOWZREF_opt, &
+!                               OMEB_BOOL, GLACIER_BOOL, SNOWDRIFT_SUBLIM_BOOL,SNOWCOMPACT_BOOL,& 
+!                               SNOWMAK_BOOL, SNOWTILLER_BOOL, SELF_PROD_BOOL, SNOWMAK_PROP_BOOL,	&
+!		                 PRODSNOWMAK_BOOLinout, SNOW_ABS_ZENITH_BOOL, ATMORAD_BOOL  ! mn_character_logical input  
 
 ! call model physics here 
  CALL SNOWCRO(SNOWRES_opt, &
@@ -1104,14 +1139,20 @@ TPTIME%TIME = hour*3600 + minute*60
 !
  ZP_GFLXCORout= 0.0 ! see snow3L_isba.F90
 
-WRITE (*, '( A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x , F6.2 , 1x, 8(F10.6,1x), 1(F16.6,1x), 3(F10.6,1x)  )') 'MN1',  &
+WRITE (*, '( A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x , F6.2 , 1x, 4(F10.6,1x), 1(F16.6,1x), 3(F10.6,1x), 1(F16.6,1x), 3(F10.6,1x)  )') 'MN1',  &
                                TPTIME%TDATE%YEAR, & 
                                TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
                                SNOWALBinout, THRUFALout,  ZP_EVAPCORout,  ZP_GFLXCORout, GRNDFLUXinout, & 
                                ZP_SWNETSNOWout, ZP_LWNETSNOWout, ZP_SWNETSNOWSout, SNOWHMASSout, & 
                                QSout, ZP_SPEC_ALBout, ZP_DIFF_RATIOout   ! print_output_1    
-
-
+print *, '========================================='
+WRITE (*, '( A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x , F6.2 , 1x,4(F16.6,1x) , 28(F10.6,1x))') 'MN1',  &
+                               TPTIME%TDATE%YEAR, & 
+                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
+                               SNOWHEATinout(1:1,1:4), SNOWRHOinout(1:1,1:4), SNOWSWEinout(1:1,1:4), & 
+                               SNOWGRAN1inout(1:1,1:4), SNOWGRAN2inout(1:1,1:4), & 
+                               SNOWTEMPinout(1:1,1:4), SNOWLIQout(1:1,1:4), SNOWDZout(1:1,1:4)  ! print_output_snowprofile
+                           
 
 ! --------------------------------------------------------------------------------------------------------------
 SNOWHEAT(:) = SNOWHEATinout(1,:)

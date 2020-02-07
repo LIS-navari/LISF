@@ -282,6 +282,7 @@ REAL, PARAMETER :: XSNOWTHRMCOND_C11_3 = 0.024    ! (W m-1 K-1)
 ! ISBA-ES CROCUS (Pahaut 1976): snowfall density coefficients:
 !
 REAL, PARAMETER :: XSNOWFALL_A_SN = 109.0  ! kg/m3
+!REAL, SAVE :: XSNOWFALL_A_SN = 109.0  ! kg/m3  ! it is working and totlaview shows the value
 REAL, PARAMETER :: XSNOWFALL_B_SN =   6.0  ! kg/(m3 K)
 REAL, PARAMETER :: XSNOWFALL_C_SN =  26.0  ! kg/(m7/2 s1/2)
 !

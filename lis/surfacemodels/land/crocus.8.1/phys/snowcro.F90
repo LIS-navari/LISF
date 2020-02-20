@@ -241,7 +241,7 @@ USE PARKIND1  ,ONLY : JPRB
 USE MODN_IO_OFFLINE,  ONLY : LFORCIMP
 #endif
 
-USE MODI_INI_SURF_CSTS , ONLY : INI_SURF_CSTS_SUB 
+USE MODI_INI_SURF_CSTS 
 !USE INI_SURF_CSTS 
 !
 ! this module is not used anymore
@@ -562,7 +562,7 @@ REAL, DIMENSION(SIZE(PTA))          :: ZZ0_SNOWICE, ZZ0H_SNOWICE, ZZ0EFF_SNOWICE
 ! Reference heights for temperature and wind can be modified depending on snow depth when HSNOWZREF=="VAR".
 REAL, DIMENSION(SIZE(PTA))          :: ZZREF,ZUREF
 !To control and print eneregy balance
-REAL , DIMENSION(SIZE(PTA))         :: ZSUMMASS_INI,ZSUMHEAT_INI,ZSUMMASS_FIN,ZSUMHEAT_FIN
+REAL, DIMENSION(SIZE(PTA))         :: ZSUMMASS_INI,ZSUMHEAT_INI,ZSUMMASS_FIN,ZSUMHEAT_FIN
 !
 REAL, DIMENSION(SIZE(PTA))          :: ZMASSBALANCE, ZENERGYBALANCE, ZEVAPCOR2
 !
@@ -594,7 +594,7 @@ IF (LHOOK) CALL DR_HOOK('SNOWCRO',0,ZHOOK_HANDLE)
 ! MN
 !print *, 'PPS, PTA, PSW_RAD, PQA, PVMOD, PLW_RAD, PSR, PRR ' , PPS, PTA, PSW_RAD, PQA, PVMOD, PLW_RAD, PSR, PRR 
 !print *, '***PSR, PRR ' , PSR, PRR 
-!WRITE (*, '(A40 , 1x, 7(F10.6,1x) )')'***PSR PRR PLW_RAD PSW_RAD T  PQA PVMOD' , PSR, PRR, PLW_RAD, PSW_RAD, PTA , PQA, PVMOD
+WRITE (*, '(A40 , 1x, 7(F10.6,1x) )')'***PSR PRR PLW_RAD PSW_RAD T  PQA PVMOD' , PSR, PRR, PLW_RAD, PSW_RAD, PTA , PQA, PVMOD
 !WRITE (*, '(A45 , 1x, 4(F10.6,1x) )')  '===PSNOWALB, PTHRUFAL,  PEVAPCOR,  PGFLXCOR' ,PSNOWALB, PTHRUFAL,  PEVAPCOR,  PGFLXCOR
 !WRITE (*, '(A35 , 1x,4(F10.6,1x) )')  '+=+PEVAP,PRNSNOW, PCDSNOW, PUSTAR', PEVAP,PRNSNOW, PCDSNOW, PUSTAR
 !WRITE (*, '(A50 , 1x, 5(F10.6,1x) )')  '###PHSNOW, PGFLUXSNOW, PLES3L, PLEL3L, PHPSNOW',PHSNOW, PGFLUXSNOW, PLES3L, PLEL3L, PHPSNOW                                 
@@ -4734,6 +4734,7 @@ DO JJ = 1,SIZE(PSNOW(:))
     !! implementation of different parametrical options for fresh snow density.
     !! Be careful to the time-validity of the options A76(<2h) and S02(<1h) as well as the range of densities. Refer to Lehning et al. 2002 SNOWPACKIII, Anderson 76 and Pahaut 1975
     IF ( HSNOWFALL == 'V12' ) THEN ! Crocus original law
+!Print *, "XSNOWFALL_A_SN" , XSNOWFALL_A_SN 
         PSNOWRHOF (JJ) = MAX( XRHOSMIN_ES, XSNOWFALL_A_SN + &
                                        XSNOWFALL_B_SN * ( PTA(JJ)-XTT ) + &
                                        XSNOWFALL_C_SN * SQRT(ZWIND_RHO(JJ) ) )
@@ -6265,7 +6266,7 @@ USE MODI_ABOR1_SFX
 !
 IMPLICIT NONE
 !
-REAL , DIMENSION(:), INTENT(IN) :: PMASSBALANCE, PENERGYBALANCE
+REAL, DIMENSION(:), INTENT(IN) :: PMASSBALANCE, PENERGYBALANCE
 !
 REAL,DIMENSION(SIZE(PSR)) :: ZMASSBALANCE,ZENERGYBALANCE
 !

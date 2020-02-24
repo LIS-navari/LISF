@@ -356,7 +356,7 @@ subroutine Crocus81_main(n)
                  !write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
               enddo
 !                 print*,'test'
-                 write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
+!                 write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
               CLOSE(UNIT=99 )
            endif
            tmp_TG = Var13                           
@@ -365,7 +365,7 @@ subroutine Crocus81_main(n)
 	    tmp_ANGL_ILLUM = var16 
            tmp_EXNS = var6
            tmp_EXNA = var7
-WRITE (*, '( A10 , 1x , 1(F12.6, 1x))')  ' tmp_TG', tmp_TG 
+!WRITE (*, '( A10 , 1x , 1(F12.6, 1x))')  ' tmp_TG', tmp_TG 
 !print *, 'main , tmp_RRSNOW,  tmp_SRSNOW' , tmp_RRSNOW , tmp_SRSNOW ! MN
             ! call model physics 
             call crocus_driver(tmp_n                 , & ! IN    - nest id [-]

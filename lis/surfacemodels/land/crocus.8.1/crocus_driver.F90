@@ -412,7 +412,8 @@ REAL :: ZP_EVAPCOR  ! it has not been initialized  in the CALL_MODEL
 ! ***************************************************************************
 ! Local variable 
 ! ***************************************************************************
-
+REAL :: ZP_GSFCSNOW  !heat flux between the surface and sub-surface 
+!                                           snow layers (for energy budget diagnostics) (W/m2)
 
 !KSIZE4 = 1  !SIZE(ZP_DIR_SW,2)
 
@@ -456,7 +457,7 @@ ZSNOWFALL  =  0.0
 !print*, ' RRSNOW , SRSNOW,   ZSNOWFALL  ,PTSTEP, XRHOSMAX_ES ' , RRSNOW, SRSNOW,ZSNOWFALL , PTSTEP, XRHOSMAX_ES ! MN
 !WRITE(*,*) 'Driver SW',YEAR, MONTH, DAY, hour, minute , SW_RAD
 WRITE(*,*) '*Driver ',YEAR, MONTH, DAY, hour, minute
-!WRITE (*, '(A30 , 1x, 3(F10.6,1x) )') '**ZSNOW, ZSNOWFALL,XSNOWDMIN ' , ZSNOW, ZSNOWFALL, XSNOWDMIN ! MN
+WRITE (*, '(A30 , 1x, 3(F10.6,1x) )') '**ZSNOW, ZSNOWFALL,XSNOWDMIN ' , ZSNOW, ZSNOWFALL, XSNOWDMIN ! MN
 IF (ZSNOW >= XSNOWDMIN .OR. ZSNOWFALL >= XSNOWDMIN) THEN
 
  CALL  CALL_MODEL(1, nsnow, 1)
@@ -476,6 +477,7 @@ ZP_LEL3L = 0.0
 ZP_EVAP = 0.0
 THRUFAL = 0.0 
 SNOWALB = XUNDEF
+ZP_GSFCSNOW  = 0.0
 ZP_EVAPCOR = 0.0
 ZP_GFLUXSNOW = 0 ! TO DO check snow3L_isba.F90!  NOTE: it has not been initialized in the CALL_MODEL but in the outpit it is zero
 SNOWHMASS = 0.0  ! TO DO check snow3L_isba.F90
@@ -608,6 +610,7 @@ REAL, DIMENSION(1:KSIZE1) :: THRUFALout	! THRUFAL  = rate that liquid water leav
 !  paritioned into soil infiltration/runoff by ISBA [kg/(m2 s)]
 REAL,DIMENSION(1:KSIZE1) :: GRNDFLUXinout !REAL, DIMENSION(1:KSIZE1) :: GRNDFLUXinout 
 !					GRNDFLUX = soil/snow interface heat flux (W/m2)
+REAL, DIMENSION(1:KSIZE1) :: ZP_GSFCSNOWout ! SURFEX Feb 21 20
 REAL, DIMENSION(1:KSIZE1) :: ZP_EVAPCORout	! ZP_EVAPCOR  = evaporation/sublimation correction term:
 !  extract any evaporation exceeding the
 !  actual snow cover (as snow vanishes)
@@ -747,6 +750,7 @@ SNOWLIQout(:,:) = 0
 SNOWDZout(:,:) = 0
 SNOWTEMPinout (:,:) = 0
 THRUFALout(:) = 0
+ZP_GSFCSNOWout (:) = 0
 ZP_EVAPCORout(:) = 0
 !ZP_GFLXCORout(:) = 0
 GRNDFLUXinout(:) = 0
@@ -885,6 +889,7 @@ SNOWLIQout(1,:)              = SNOWLIQ
 SNOWDZout(1,:)               = SNOWDZ
 SNOWTEMPinout (1,:) 	= SNOWTEMP
 THRUFALout(1)                = THRUFAL
+ZP_GSFCSNOWout (1)      =  ZP_GSFCSNOW 
 ZP_EVAPCORout(1)         =  ZP_EVAPCOR
 ZP_GFLXCORout(1)         =  0 ! this is a local variable and set to zero after CALL to 'snowcor'  
 GRNDFLUXinout(1)		= 0 ! GRNDFLUX   , update: it is 0 in the SURFEX-Crocus  
@@ -1029,7 +1034,7 @@ TPTIME%TDATE%MONTH = month
 TPTIME%TDATE%DAY = day
 TPTIME%TIME = hour*3600 + minute*60 
 
-WRITE (*, '( A10 , 1x ,  2(F12.6, 1x))') 'TGin, TG', TGin  , TG                 
+!WRITE (*, '( A10 , 1x ,  2(F12.6, 1x))') 'TGin, TG', TGin  , TG                 
 ! Over write these 4 parameters using SURFEX-Crocus data 
 			SOILCONDin = SOILCOND
 			TGin = TG			
@@ -1050,7 +1055,7 @@ WRITE (*, '( A5 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, 18(F10.6,1x) )') 'Input',  &
                                 SNDRIFTout, RI_nout, EMISNOWout, CDSNOWout, USTARSNOWout,         &
                                 TGin, SOILCONDin, ZP_PSN3Lin, ZP_RHOAin, ZP_RNSNOWout, ZP_HSNOWout, & 
                                 ZP_GFLUXSNOWout, ZP_HPSNOWout, CHSNOWout,ZP_ZENITHin, ZP_ANGL_ILLUMin  !
-print *, '+++++++++++++++++++++++++++++++++++++++++'
+print *, 'ZP_HPSNOWout', ZP_HPSNOWout
 !WRITE (*, '( A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 2x,  9(A3, 1x) , 11(L1, 1x))') 'MN1',  &
 !                               TPTIME%TDATE%YEAR, & 
 !                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
@@ -1144,6 +1149,7 @@ print *, '+++++++++++++++++++++++++++++++++++++++++'
 		ZP_SCA_SWin,			&
 		ZP_SPEC_ALBout, 		&
 		ZP_DIFF_RATIOout,		&
+              ZP_GSFCSNOWout, &
 		IMPWETin,			&
 		IMPDRYin,			&
 		SNOWFALL_opt,			&
@@ -1168,14 +1174,14 @@ print *, '+++++++++++++++++++++++++++++++++++++++++'
 !                               SNOWALBinout, THRUFALout,  ZP_EVAPCORout,  ZP_GFLXCORout, GRNDFLUXinout, & 
 !                               ZP_SWNETSNOWout, ZP_LWNETSNOWout, ZP_SWNETSNOWSout, SNOWHMASSout, & 
 !                               QSout, ZP_SPEC_ALBout, ZP_DIFF_RATIOout   ! print_output_1    
-print *, '========================================='
-WRITE (*, '( A11 , 1x ,I4, 1x, I2, 1x,  I3 , 1x , F6.2 , 1x,4(F16.6,1x) , 28(F10.6,1x))') 'snowprofile',  &
-                               TPTIME%TDATE%YEAR, & 
-                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
-                               SNOWHEATinout(1:1,1:4), SNOWRHOinout(1:1,1:4), SNOWSWEinout(1:1,1:4), & 
-                               SNOWGRAN1inout(1:1,1:4), SNOWGRAN2inout(1:1,1:4), & 
-                               SNOWTEMPinout(1:1,1:4), SNOWLIQout(1:1,1:4), SNOWDZout(1:1,1:4)  ! print_output_snowprofile
-                           
+!print *, '========================================='
+!WRITE (*, '( A11 , 1x ,I4, 1x, I2, 1x,  I3 , 1x , F6.2 , 1x,4(F16.6,1x) , 28(F10.6,1x))') 'snowprofile',  &
+!                               TPTIME%TDATE%YEAR, & 
+!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
+!                               SNOWHEATinout(1:1,1:4), SNOWRHOinout(1:1,1:4), SNOWSWEinout(1:1,1:4), & 
+!                               SNOWGRAN1inout(1:1,1:4), SNOWGRAN2inout(1:1,1:4), & 
+!                               SNOWTEMPinout(1:1,1:4), SNOWLIQout(1:1,1:4), SNOWDZout(1:1,1:4)  ! print_output_snowprofile
+ print *, '+++++++++++++++++++++++++++++++++++++++++'                          
 
 ! --------------------------------------------------------------------------------------------------------------
 SNOWHEAT(:) = SNOWHEATinout(1,:)
@@ -1214,6 +1220,7 @@ SNOWLIQ(:) = SNOWLIQout(1,:)
 SNOWDZ (:) = SNOWDZout(1,:)
 SNOWTEMP(:) = SNOWTEMPinout(1,:) 
 THRUFAL = THRUFALout(1)
+ZP_GSFCSNOW  = ZP_GSFCSNOWout (1)    
 ZP_EVAPCOR = ZP_EVAPCORout(1)
 ! ZP_GFLXCOR = ZP_GFLXCORout(1)  ! it is a local variable and set to zero after a CALL to 'snowcro'
 GRNDFLUX = GRNDFLUXinout(1)

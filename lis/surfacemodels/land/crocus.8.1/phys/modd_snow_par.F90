@@ -110,10 +110,9 @@ REAL, SAVE       :: XZ0ICEZ0SNOW
 ! dependence of melt when snow fraction < unity.
 !
 REAL, SAVE       :: XTAU_SMELT
-! for snow impurity
-REAL,DIMENSION(5), SAVE :: XIMPUR_COEFF !(g/s)
-REAL,DIMENSION(5), SAVE     :: XIMPUR_INIT !(g)
-REAL, SAVE    :: XMAXIMPUR=1         !g
+! Snow impurity deposition rates
+REAL,DIMENSION(5), SAVE :: XIMPUR_DRY !(g m-2 s-1)
+REAL,DIMENSION(5), SAVE     :: XIMPUR_WET !(g m-2 s-1)
 
 !
 !	 Grooming and Snowmaking option by P.Spandre 20160211
@@ -282,7 +281,6 @@ REAL, PARAMETER :: XSNOWTHRMCOND_C11_3 = 0.024    ! (W m-1 K-1)
 ! ISBA-ES CROCUS (Pahaut 1976): snowfall density coefficients:
 !
 REAL, PARAMETER :: XSNOWFALL_A_SN = 109.0  ! kg/m3
-!REAL, SAVE :: XSNOWFALL_A_SN = 109.0  ! kg/m3  ! it is working and totlaview shows the value
 REAL, PARAMETER :: XSNOWFALL_B_SN =   6.0  ! kg/(m3 K)
 REAL, PARAMETER :: XSNOWFALL_C_SN =  26.0  ! kg/(m7/2 s1/2)
 !

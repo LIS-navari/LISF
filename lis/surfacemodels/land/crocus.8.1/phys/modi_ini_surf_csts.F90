@@ -65,7 +65,7 @@ USE MODD_SNOW_PAR,  ONLY : XEMISSN, XANSMIN, XANSMAX,          &
                            XPERCENTAGEPORE,                    &
                            LMEBREC,                            &
                            XANSFRACMEL, XTEMPANS, XANSMINMEB,  &
-                           XIMPUR_INIT, XIMPUR_COEFF,          &
+                           XIMPUR_WET, XIMPUR_DRY,          &
                            XPSR_SNOWMAK, XRHO_SNOWMAK,         &
                            XPTA_SEUIL, XTIMESNOWMAK,           &
                            XPROD_SCHEME, XSM_END, XFREQ_GRO !Grooming and Snowmaking option by P.Spandre 20160211
@@ -255,11 +255,11 @@ XVVISC3= 0.023
 XZ0FLOOD = 0.0002
 
 !!! impurity value 
-XIMPUR_COEFF(1)=5.E-9 ! BC deposition at top of snowpack 
-XIMPUR_INIT(1)=4.E-9 ! BC initial content (g/g) of impurity for fresh snow
+XIMPUR_DRY(1)=0. ! BC dry deposition at top of snowpack (g m-2 s-1)
+XIMPUR_WET(1)=0.! BC Wet deposition of with precipitation (g m-2 s-1)   
 
-XIMPUR_COEFF(2:5)=10.E-6 ! Dust deposition at top of snowpack
-XIMPUR_INIT(2:5)=5.E-6 ! Dust initial content (g/g) of impurity for fresh snow
+XIMPUR_DRY(2:5)=0. ! Dust dry deposition at top of snowpack (g m-2 s-1) 
+XIMPUR_WET(2:5)=0. ! Dust Wet deposition of with precipitation (g m-2 s-1) 
 
 
 !-------------------------------------------------------------------------------

@@ -69,49 +69,49 @@ subroutine Crocus81_main(n)
     LOGICAL              :: tmp_GLACIER_BOOL       ! !True = Over permanent snow and ice, initialise WGI=WSAT, Hsnow>=10m and allow 0.8<SNOALB<0.85
 ! False = No specific treatment [-]
     CHARACTER(len=3)     :: tmp_HIMPLICIT_WIND_opt ! wind implicitation option  'OLD' = direct , 'NEW' = Taylor serie, order 1 [-]
-    REAL, allocatable    :: tmp_SNOWSWE(:)         ! Snow layer(s) liquid Water Equivalent (SWE:kg m-2) [kg/m2]
-    REAL, allocatable    :: tmp_SNOWRHO(:)         ! Snow layer(s) averaged density (kg/m3) [kg/m3]
-    REAL, allocatable    :: tmp_SNOWHEAT(:)        ! Snow layer(s) heat content (J/m2) [J/m2]
-    REAL                 :: tmp_SNOWALB            ! snow surface albedo [-]
-    REAL, allocatable    :: tmp_SNOWGRAN1(:)       ! Snow layers grain feature 1 [-]
-    REAL, allocatable    :: tmp_SNOWGRAN2(:)       ! Snow layer grain feature 2 [-]
-    REAL, allocatable    :: tmp_SNOWHIST(:)        ! Snow layer grain historical parameter (only for non dendritic snow) (-) in {0-5} [-]
-    REAL, allocatable    :: tmp_SNOWAGE(:)         ! Age since snowfall (day) [day]
-    REAL                 :: tmp_PTSTEP             ! time step of the integration [s]
-    REAL                 :: tmp_PPS                ! pressure at atmospheric model surface (Pa) [Pa]
-    REAL                 :: tmp_SRSNOW             ! snow rate (SWE) [kg/(m2 s)] [kg/(m2 s)]
-    REAL                 :: tmp_RRSNOW             ! rain rate [kg/(m2 s)] [kg/(m2 s)]
-    REAL                 :: tmp_TA                 ! atmospheric temperature at level za (K) [K]
-    REAL                 :: tmp_TG !(:)              ! Surface soil temperature (effective temperature the of layer lying below snow) (K)  (for snowcro.F90 we only use the surface layer ZP_TG(:,1))  (#nsoil depends on 2-L, 3-L DIF) [K]
-    REAL                 :: tmp_SW_RAD             ! incoming solar radiation (W/m2) [W/m2]
-    REAL                 :: tmp_QA                 ! atmospheric specific humidity at level za [-]
-    REAL                 :: tmp_Wind_E             ! Eastward Wind [m/s]
-    REAL                 :: tmp_Wind_N             ! Northward Wind [m/s]
-    REAL                 :: tmp_LW_RAD             ! atmospheric infrared radiation (W/m2) [W/m2]
+    REAL*8, allocatable    :: tmp_SNOWSWE(:)         ! Snow layer(s) liquid Water Equivalent (SWE:kg m-2) [kg/m2]
+    REAL*8, allocatable    :: tmp_SNOWRHO(:)         ! Snow layer(s) averaged density (kg/m3) [kg/m3]
+    REAL*8, allocatable    :: tmp_SNOWHEAT(:)        ! Snow layer(s) heat content (J/m2) [J/m2]
+    REAL*8                 :: tmp_SNOWALB            ! snow surface albedo [-]
+    REAL*8, allocatable    :: tmp_SNOWGRAN1(:)       ! Snow layers grain feature 1 [-]
+    REAL*8, allocatable    :: tmp_SNOWGRAN2(:)       ! Snow layer grain feature 2 [-]
+    REAL*8, allocatable    :: tmp_SNOWHIST(:)        ! Snow layer grain historical parameter (only for non dendritic snow) (-) in {0-5} [-]
+    REAL*8, allocatable    :: tmp_SNOWAGE(:)         ! Age since snowfall (day) [day]
+    REAL*8                 :: tmp_PTSTEP             ! time step of the integration [s]
+    REAL*8                 :: tmp_PPS                ! pressure at atmospheric model surface (Pa) [Pa]
+    REAL*8                 :: tmp_SRSNOW             ! snow rate (SWE) [kg/(m2 s)] [kg/(m2 s)]
+    REAL*8                 :: tmp_RRSNOW             ! rain rate [kg/(m2 s)] [kg/(m2 s)]
+    REAL*8                 :: tmp_TA                 ! atmospheric temperature at level za (K) [K]
+    REAL*8                 :: tmp_TG !(:)              ! Surface soil temperature (effective temperature the of layer lying below snow) (K)  (for snowcro.F90 we only use the surface layer ZP_TG(:,1))  (#nsoil depends on 2-L, 3-L DIF) [K]
+    REAL*8                 :: tmp_SW_RAD             ! incoming solar radiation (W/m2) [W/m2]
+    REAL*8                 :: tmp_QA                 ! atmospheric specific humidity at level za [-]
+    REAL*8                 :: tmp_Wind_E             ! Eastward Wind [m/s]
+    REAL*8                 :: tmp_Wind_N             ! Northward Wind [m/s]
+    REAL*8                 :: tmp_LW_RAD             ! atmospheric infrared radiation (W/m2) [W/m2]
     REAL                 :: tmp_UREF               ! reference height of the wind [m]
     REAL                 :: tmp_SLOPE              ! angle between the normal to the surface and the vertical  (MN:  replaced PDIRCOSZW with slope and computed the cosine in the driver) [-]
     REAL                 :: tmp_ZREF               ! Reference height of the first atmospheric level (m) [m]
     REAL                 :: tmp_Z0NAT              ! grid box average roughness length (m) (roughness length for momentum) [m]
     REAL                 :: tmp_Z0EFF              ! roughness length for momentum (modd_diagn.F90 effective roughness length for heat(!?)) [m]
     REAL                 :: tmp_Z0HNAT             ! grid box average roughness length for heat [m]
-    REAL                 :: tmp_ALB !(:)             ! soil/vegetation albedo [-]
-    REAL                 :: tmp_SOILCOND           ! soil thermal conductivity (W m-1 K-1) [W /(m K)]
+    REAL*8                 :: tmp_ALB !(:)             ! soil/vegetation albedo [-]
+    REAL*8                 :: tmp_SOILCOND           ! soil thermal conductivity (W m-1 K-1) [W /(m K)]
     REAL                 :: tmp_D_G                ! !Assumed first soil layer thickness (m)
 !Used to calculate ground/snow heat flux   (D_G(:,1)) [m]
-    REAL, allocatable    :: tmp_SNOWLIQ(:)         ! Snow layer(s) liquid water content (m) [m]
-    REAL, allocatable    :: tmp_SNOWTEMP(:)        ! Snow layer(s) temperature (K) [K]
-    REAL, allocatable    :: tmp_SNOWDZ(:)          ! Snow layer(s) thickness (m) [m]
-    REAL                 :: tmp_THRUFAL            ! Rate that liquid water leaves snow pack: paritioned into soil infiltration/runoff  by ISBA [kg/(m2 s)] [kg/(m2 s)]
-    REAL                 :: tmp_GRNDFLUX           ! Soil/snow interface heat flux (W/m2) [W/m2]
+    REAL*8, allocatable    :: tmp_SNOWLIQ(:)         ! Snow layer(s) liquid water content (m) [m]
+    REAL*8, allocatable    :: tmp_SNOWTEMP(:)        ! Snow layer(s) temperature (K) [K]
+    REAL*8, allocatable    :: tmp_SNOWDZ(:)          ! Snow layer(s) thickness (m) [m]
+    REAL*8                 :: tmp_THRUFAL            ! Rate that liquid water leaves snow pack: paritioned into soil infiltration/runoff  by ISBA [kg/(m2 s)] [kg/(m2 s)]
+    REAL*8                 :: tmp_GRNDFLUX           ! Soil/snow interface heat flux (W/m2) [W/m2]
     REAL                 :: tmp_SNDRIFT            ! Blowing snow sublimation (kg/m2/s) NOTE: Snow compaction and metamorphism due to drift, Mass is unchanged  (Assistance #1592) [kg/m2/s]
     REAL                 :: tmp_RI_n               ! Richardson number (-)  NOTE: RI has not been initialized in CALL_MODEL (If not OMED initalized to undefined in the snow3L_isba.F90) [-]
-    REAL                 :: tmp_EMISNOW            ! Snow surface emissivity (initialize to XEMISSN
+    REAL*8                 :: tmp_EMISNOW            ! Snow surface emissivity (initialize to XEMISSN
 !XEMISSN  comes from MODD_SNOW_PAR) [-]
     REAL                 :: tmp_CDSNOW             ! Drag coefficient for momentum over snow (-) [-]
     REAL                 :: tmp_USTARSNOW          ! Friction velocity over snow (m/s); [m/s]
     REAL                 :: tmp_CHSNOW             ! Drag coefficient for heat over snow  (-) [-]
-    REAL                 :: tmp_SNOWHMASS          ! Heat content change due to mass changes in snowpack: for budget calculations only. [J/m2]
-    REAL                 :: tmp_QS                 ! Surface humidity (kg/kg) [kg/kg]
+    REAL*8                 :: tmp_SNOWHMASS          ! Heat content change due to mass changes in snowpack: for budget calculations only. [J/m2]
+    REAL*8                 :: tmp_QS                 ! Surface humidity (kg/kg) [kg/kg]
     REAL                 :: tmp_PERMSNOWFRAC       ! Fraction of permanet snow/ice [-]
     real                 :: tmp_LAT                ! Latitude in decimal degree  (latitude (degrees +North)) [degrees]
     real                 :: tmp_LON                ! Longitude in decimal year    (longitude (degrees +East)) [degrees]
@@ -132,7 +132,7 @@ subroutine Crocus81_main(n)
     CHARACTER(len=3)     :: tmp_SNOWHOLD_opt       ! liquid water content scheme: B92 (Brun et al. 1992) O04 (Oleson et al., 2004) S02 (SNOWPACK, Lehning et al, 2002) B02 (ISBA_ES, Boone et al. 2002) [-]
     CHARACTER(len=3)     :: tmp_SNOWCOMP_opt       ! B92 snow compaction basis version and B93 for slightly different parameters   (NOTE: IN THE CODE S14, T11, ) [-]
     CHARACTER(len=3)     :: tmp_SNOWZREF_opt       ! reference height is constant or variable from the snow surface: CST (constant from snow surface, i.e. Col de Porte) or VAR (variable from snow surface = snow depth has to be removed from reference height) [-]
-    REAL                 :: tmp_SNOWMAK_dz         ! Snowmaking thickness (m) [m]
+    REAL*8                 :: tmp_SNOWMAK_dz         ! Snowmaking thickness (m) [m]
     LOGICAL              :: tmp_SNOWCOMPACT_BOOL   ! Snowmaking and Grooming options [-]
     LOGICAL              :: tmp_SNOWMAK_BOOL       ! Snowmaking and Grooming options [-]
     LOGICAL              :: tmp_SNOWTILLER_BOOL    ! Snowmaking and Grooming options [-]
@@ -187,10 +187,10 @@ subroutine Crocus81_main(n)
  
             ! SRSNOW: snow rate (SWE) [kg/(m2 s)]
             tmp_SRSNOW     = CROCUS81_struc(n)%crocus81(t)%SRSNOW / CROCUS81_struc(n)%forc_count
- 
+            !print*, 'tmp_SRSNOW   main ', tmp_SRSNOW  ! MN
             ! RRSNOW: rain rate [kg/(m2 s)]
             tmp_RRSNOW     = CROCUS81_struc(n)%crocus81(t)%RRSNOW / CROCUS81_struc(n)%forc_count
- 
+            !print*, 'tmp_RRSNOW   main ', tmp_RRSNOW  ! MN
             ! TA: atmospheric temperature at level za (K)
             tmp_TA         = CROCUS81_struc(n)%crocus81(t)%TA     / CROCUS81_struc(n)%forc_count
  
@@ -356,7 +356,7 @@ subroutine Crocus81_main(n)
                  !write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
               enddo
 !                 print*,'test'
-!                 write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
+                 !write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
               CLOSE(UNIT=99 )
            endif
            tmp_TG = Var13                           
@@ -489,7 +489,7 @@ subroutine Crocus81_main(n)
             CROCUS81_struc(n)%crocus81(t)%SNOWHMASS    = tmp_SNOWHMASS   
             CROCUS81_struc(n)%crocus81(t)%QS           = tmp_QS          
  
-            
+            !print*, 'Crocus81_main tmp_THRUFAL' , tmp_THRUFAL  ! MN  
             ![ 1] output variable: SNOWSWE (unit=kg/m2). *** Snow layer(s) liquid Water Equivalent (SWE:kg m-2)
             do i=1, CROCUS81_struc(n)%nsnow
                 call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWLIQPROF, value = CROCUS81_struc(n)%crocus81(t)%SNOWSWE(i), &

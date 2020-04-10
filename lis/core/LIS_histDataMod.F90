@@ -5053,9 +5053,9 @@ contains
 ! Snow model 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_SNOWSWE:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Layer(s) Liquid Water Equivalent",&
-         "Snow layer(s) liquid Water Equivalent",&
-         "Snow layer(s) liquid Water Equivalent",rc)
+         "LayerLiquidWaterEquivalent",&
+         "Snow_layer_liquid_Water_Equivalent",&
+         "Snow layer liquid Water Equivalent",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWLIQPROF,&
             LIS_histData(n)%head_lsm_list,&
@@ -5065,9 +5065,9 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_SNOWHEAT:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Layer(s) Heat Content",&
-         "Snow layer(s) Heat content",&
-         "Snow layer(s) Heat content",rc)
+         "LayerHeatContent",&
+         "Snow_layer_Heat_content",&
+         "Snow layer Heat content",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWHEATCONTENTPROF,&
             LIS_histData(n)%head_lsm_list,&
@@ -5077,9 +5077,9 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_SNOWRHO:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Layer(s) Density",&
-         "Snow layer(s) Density",&
-         "Snow layer(s) Density",rc)
+         "LayerDensity",&
+         "Snow_layer_Density",&
+         "Snow layer Density",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWRHOPROF,&
             LIS_histData(n)%head_lsm_list,&
@@ -5089,8 +5089,8 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_SNOWALB:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Surface albedo",&
-         "Snow surface albedo",&
+         "Surface_albedo",&
+         "Snow_surface_albedo",&
          "Snow surface albedo",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWALB,&
@@ -5101,9 +5101,9 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_SNOWGRAN1:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Layer(s) grain parameter 1",&
-         "Snow layer(s) grain parameter 1",&
-         "Snow layer(s) grain parameter 1",rc)
+         "LayerGrainParameter1",&
+         "Snow_layer_grain_parameter1",&
+         "Snow layer grain parameter 1",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWGRAIN1PROF,&
             LIS_histData(n)%head_lsm_list,&
@@ -5113,9 +5113,9 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_SNOWGRAN2:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Layer(s) grain parameter 2",&
-         "Snow layer(s) grain parameter 2",&
-         "Snow layer(s) grain parameter 2",rc)
+         "LayerGrainParameter 2",&
+         "Snow_layer_ grain_parameter2",&
+         "Snow layer grain parameter 2",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWGRAIN2PROF,&
             LIS_histData(n)%head_lsm_list,&
@@ -5125,9 +5125,9 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_SNOWHIST:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Layer(s) Historical parameter",&
-         "Snow layer(s) Historical parameter",&
-         "Snow layer(s) Historical parameter (-) in {0-5}",rc)
+         "LayerHistoricalParameter",&
+         "Snow_layer_historical_parameter",&
+         "Snow layer Historical parameter (-) in {0-5}",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWHISTPROF,&
             LIS_histData(n)%head_lsm_list,&
@@ -5137,9 +5137,9 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_SNOWAGE:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Age since snowfall",&
-         "Snow layer(s) Age since snowfall",&
-         "Snow layer(s) Age since snowfall",rc)
+         "AgeSinceSnowfall",&
+         "Snow_layer_age_since_snowfall",&
+         "Snow layer age since snowfall",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWAGEPROF,&
             LIS_histData(n)%head_lsm_list,&
@@ -5147,11 +5147,11 @@ contains
             model_patch=.true.)
     endif
 
-    call ESMF_ConfigFindLabel(modelSpecConfig,"SNOWLIQ:",rc=rc)
+    call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_SNOWLIQ:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Liquid Water Content",&
-         "Snow layer(s) liquid water content",&
-         "Snow layer(s) liquid water content",rc)
+         "LiquidWaterContent",&
+         "Snow_layer_liquid_water_content",&
+         "Snow layer liquid water content",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWLIQCONTENTPROF,&
             LIS_histData(n)%head_lsm_list,&
@@ -5161,9 +5161,9 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_SNOWTEMP:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Layer(s) temperature",&
-         "Snow layer(s) temperature",&
-         "Snow layer(s) temperature",rc)
+         "LayerTemperature",&
+         "Snowlayer_temperature",&
+         "Snow layer temperature",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWTEMPPROF,&
             LIS_histData(n)%head_lsm_list,&
@@ -5173,9 +5173,9 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_SNOWDZ:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Layer(s) thickness",&
-         "Snow layer(s) thickness",&
-         "Snow layer(s) thickness",rc)
+         "LayerThickness",&
+         "Snow_layer_thickness",&
+         "Snow layer thickness",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWHIGHTPROF,&
             LIS_histData(n)%head_lsm_list,&
@@ -5185,9 +5185,9 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_THRUFAL:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Liquid water leaves snow pack",&
-         "Rate that liquid water leaves snow pack",&
-         "Rate that liquid water leaves snow pack",rc)
+         "LiquidWaterLeavesSnowpack",&
+         "Rate_that_liquid_water_leaves_snowpack",&
+         "Rate that liquid water leaves snowpack",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWQS,&
             LIS_histData(n)%head_lsm_list,&
@@ -5197,8 +5197,8 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_GRNDFLUX:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Soilsnow heat flux",&
-         "Soilsnow interface heat flux",&
+         "SoilsnowHeatFlux",&
+         "Soilsnow_interface_heat_flux",&
          "Soilsnow interface heat flux",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWSOILHEATFLUX,&
@@ -5209,8 +5209,8 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_SNDRIFT:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Blowing snow sublimation",&
-         "Blowing snow sublimation",&
+         "BlowingSnowSublimation",&
+         "Blowing_snow_sublimation",&
          "Blowing snow sublimation",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_BLOWINGSNOWSUBLIM,&
@@ -5221,8 +5221,8 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_RI:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Richardson number",&
-         "Richardson number",&
+         "RichardsonNumber",&
+         "Richardson_number",&
          "Richardson number",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWRECHARD,&
@@ -5233,8 +5233,8 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_EMISNOW:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Snow surface emissivity",&
-         "Snow surface emissivity",&
+         "SnowSurfaceEmissivity",&
+         "Snow_surface_emissivity",&
          "Snow surface emissivity",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWEMISS,&
@@ -5245,8 +5245,8 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_CDSNOW:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Drag coefficient for momentum",&
-         "Drag coefficient for momentum over snow",&
+         "DragCoefficientForMomentum",&
+         "Drag_coefficient_for_momentum_over_snow",&
          "Drag coefficient for momentum over snow",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWCM,&
@@ -5257,8 +5257,8 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_USTARSNOW:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Friction velocity over snow",&
-         "Friction velocity over snow",&
+         "FrictionVelocityOverSnow",&
+         "Friction_velocity_over_snow",&
          "Friction velocity over snow",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWSHEARVLOCITY,&
@@ -5269,8 +5269,8 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_CHSNOW:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Drag coefficient for heat",&
-         "Drag coefficient for heat over snow",&
+         "DragCoefficientForHeat",&
+         "Drag_coefficient_for_heat_over_snow",&
          "Drag coefficient for heat over snow",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWHEATDRAG,&
@@ -5281,8 +5281,8 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_SNOWHMASS:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Heat content change due to mass changes",&
-         "Heat content change due to mass changes in snowpack",&
+         "HeatContentChangeDuetoMassChanges",&
+         "Heat_content_change_due_to_mass_changes_in_snowpack",&
          "Heat content change due to mass changes in snowpack",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWDELTAHEAT,&
@@ -5293,8 +5293,8 @@ contains
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"ZP_QS:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
-         "Surface humidity",&
-         "surface humidity",&
+         "SurfaceHumidity",&
+         "surface_humidity",&
          "surface humidity",rc)
     if ( rc == 1 ) then
        call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SNOWSURFACEQ,&

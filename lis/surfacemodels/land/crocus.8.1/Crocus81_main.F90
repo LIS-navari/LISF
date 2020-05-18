@@ -140,10 +140,10 @@ subroutine Crocus81_main(n)
     LOGICAL              :: tmp_SNOWMAK_PROP_BOOL  ! Snowmaking and Grooming options [-]
     LOGICAL              :: tmp_PRODSNOWMAK_BOOL   ! Snowmaking and Grooming options [-]
     REAL                 :: tmp_SLOPE_DIR          ! !Typical slope aspect in the grid  (deg from N clockwise) [degrees]
-    REAL                 ::  tmp_ZENITH  ! added for isba parameter 
-    REAL                 ::  tmp_ANGL_ILLUM  ! added fro isba parameter  
-    REAL 		    ::  tmp_EXNS			! added fro isba parameter   !compute this using presure at surface
-    REAL 		    ::  tmp_EXNA                ! added fro isba parameter  
+    REAL                 ::  tmp_ZENITH            ! added for isba parameter 
+    REAL                 ::  tmp_ANGL_ILLUM        ! added fro isba parameter  
+    REAL                 ::  tmp_EXNS           ! added fro isba parameter   !compute this using presure at surface
+    REAL                 ::  tmp_EXNA           ! added fro isba parameter  
    ! Bug in toolkit
     character*3        :: fnest
 ! MN isba  
@@ -361,8 +361,8 @@ subroutine Crocus81_main(n)
            endif
            tmp_TG = Var13                           
            tmp_SOILCOND  = Var14  
-	    tmp_ZENITH = var15
-	    tmp_ANGL_ILLUM = var16 
+           tmp_ZENITH = var15
+           tmp_ANGL_ILLUM = var16 
            tmp_EXNS = var6
            tmp_EXNA = var7
 !WRITE (*, '( A10 , 1x , 1(F12.6, 1x))')  ' tmp_TG', tmp_TG 
@@ -459,7 +459,7 @@ subroutine Crocus81_main(n)
                                tmp_PRODSNOWMAK_BOOL  , & ! INOUT - Snowmaking and Grooming options [-]
                                tmp_SLOPE_DIR        , &  ! IN    - !Typical slope aspect in the grid  (deg from N clockwise) [degrees]
                                tmp_ZENITH ,&  ! added to read surfex parameter 
-	                        tmp_ANGL_ILLUM  , & ! added to read surfex parameter
+                               tmp_ANGL_ILLUM  , & ! added to read surfex parameter
                                tmp_EXNS , &            ! added to read surfex parameter
                                tmp_EXNA)            ! added to read surfex parameter
     

@@ -511,9 +511,9 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 ! MN
 ! MN
-WRITE (*, '( A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2)') 'MN1',  &
-                               TPTIME%TDATE%YEAR, & 
-                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.
+!WRITE (*, '( A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2)') 'MN1',  &
+!                               TPTIME%TDATE%YEAR, & 
+!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.
 !print*, 'PQA    snowcro' , PQA  
 !print*,' snowcro     PSNOWFLUX', PSNOWFLUX
 !print *, 'PPS, PTA, PSW_RAD, PQA, PVMOD, PLW_RAD, PSR, PRR ' , PPS, PTA, PSW_RAD, PQA, PVMOD, PLW_RAD, PSR, PRR 
@@ -3676,7 +3676,7 @@ DO JJ = 1,SIZE(PSNOWDZ,1)  ! loop JJ grid points
   ! Rate water leaves the snowpack [kg/(m2 s)]:
   !
   PTHRUFAL(JJ)  = PTHRUFAL(JJ) + ZFLOWLIQ(JJ,KNLVLS_USE(JJ)) * XRHOLW / PTSTEP
-  print*, 'snowcro PTHRUFAL,ZFLOWLIQ', PTHRUFAL(JJ),ZFLOWLIQ(JJ,KNLVLS_USE(JJ))  ! MN   
+  !print*, 'snowcro PTHRUFAL,ZFLOWLIQ', PTHRUFAL(JJ),ZFLOWLIQ(JJ,KNLVLS_USE(JJ))  ! MN   
 !
 ENDDO ! loop JJ grid points
 !
@@ -4108,13 +4108,13 @@ PTHRUFAL(:) = 0.
 !
 DO JJ=1, SIZE(ZRADSINK)
   !
-print*, 'ISNOWGONE_DELTA' ,ISNOWGONE_DELTA  ! MN
+! print*, 'ISNOWGONE_DELTA' ,ISNOWGONE_DELTA  ! MN
   IF(ISNOWGONE_DELTA(JJ) == 0 ) THEN
     PTHRUFAL(JJ) = PTHRUFAL(JJ) + &
                    SUM( PSNOWRHO(JJ,1:INLVLS_USE(JJ))*PSNOWDZ(JJ,1:INLVLS_USE(JJ)) ) / PTSTEP 
 ! takes into account rain and condensation/evaporation
     PTHRUFAL(JJ) = PTHRUFAL(JJ) + PRR(JJ) - PLEL3L(JJ)/XLVTT
-    print*, 'snowcro PTHRUFAL, PRR,PLEL3L', PTHRUFAL, PRR,PLEL3L  ! MN
+!    print*, 'snowcro PTHRUFAL, PRR,PLEL3L', PTHRUFAL, PRR,PLEL3L  ! MN
     PSNOWTEMP(JJ,:) = XTT
     PSNOWDZ  (JJ,:) = 0.
     PSNOWLIQ (JJ,:) = 0.

@@ -23,6 +23,7 @@ See the LIS Users' Guide for more informaion.
 #define MF_GDAS_T1534
 #define MF_GEOS
 #define MF_GEOS5_FORECAST
+#define MF_GEFS_FORECAST
 #define MF_ECMWF
 #define MF_GSWP1
 #define MF_GSWP2
@@ -102,12 +103,12 @@ See the LIS Users' Guide for more informaion.
 #define DA_ENSRF
 #define DA_EKF
 #define DA_ENKS
-#undef DA_PF
+#define DA_PF
 #define DA_OBS_SYNTHETICSM
 #define DA_OBS_SYNTHETICSND
 #define DA_OBS_SYNTHETICSNOWTB
 #define DA_OBS_SNODEP
-#define DA_OBS_LDTSI
+#define DA_OBS_USAFSI
 #define DA_OBS_PMW_SNOW
 #define DA_OBS_ANSA_SCF
 #define DA_OBS_ESACCI_SM
@@ -157,6 +158,7 @@ See the LIS Users' Guide for more informaion.
 #define PE_OBS_ARSSM
 #define PE_OBS_ISMNSM
 #define PE_OBS_SMAPSM
+#define PE_OBS_UASNOW
 #define PE_OBJFUNC_LS
 #define PE_OBJFUNC_LM
 #define PE_OBJFUNC_LL
@@ -176,10 +178,12 @@ See the LIS Users' Guide for more informaion.
 #define SM_MOSAIC
 #define SM_HYSSIB
 #undef SM_JULES_4_3
-#undef JULES_5_0_DEV
 #undef SM_JULES_5_0
+#undef SM_JULES_5_1
 #undef SM_JULES_5_2
 #undef SM_JULES_5_3
+#undef SM_JULES_5_4
+#undef SM_JULES_5_X
 #define SM_CABLE
 #undef SM_FASST
 #define SM_CLSM_F2_5

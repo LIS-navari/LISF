@@ -1075,10 +1075,17 @@ WRITE (*, '( A5 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, 18(F10.6,1x) )') 'Input',  &
 !ZP_PEQ_A_COEF, ZP_PET_B_COEF, ZP_PEQ_B_COEF', &
 !ZP_PEW_A_COEF, ZP_PEW_B_COEF, ZP_PET_A_COEF, &
 !ZP_PEQ_A_COEF, ZP_PET_B_COEF, ZP_PEQ_B_COEF! MN
-WRITE (*, '( A25 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, 3(F10.6,1x) )') 'SNOWALBinout, ALBin, D_Gin',  &
+!WRITE (*, '( A25 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, 3(F10.6,1x) )') 'SNOWALBinout, ALBin, D_Gin',  &
+!                               TPTIME%TDATE%YEAR, &
+!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
+!                               SNOWALBinout, ALBin, D_Gin
+
+
+WRITE (*, '( A25 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 5(F10.6,1x) )') 'PSN3L RI, CDSNOW, USTARSNOW, CHSNOW',  &
                                TPTIME%TDATE%YEAR, &
                                TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
-                               SNOWALBinout, ALBin, D_Gin
+                               ZP_PSN3Lin , RI_nout, CDSNOWout, USTARSNOWout, CHSNOWout
+
 
 ! call model physics here
       CALL SNOWCRO(SNOWRES_opt, &

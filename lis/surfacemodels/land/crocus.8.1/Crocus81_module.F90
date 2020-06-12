@@ -179,6 +179,14 @@ module Crocus81_module
 !     Snowmaking and Grooming options. unit: -
 !   \item[SLOPE\_DIR]
 !     !Typical slope aspect in the grid  (deg from N clockwise). unit: degrees
+!   \item[SAND]
+!     Soil sand fraction (-). unit: -
+!   \item[SILT]
+!     Soil silt fraction (-). unit: -
+!   \item[CLAY]
+!     Soil clay fraction (-). unit: -
+!   \item[POROSITY]
+!     Soil porosity (m3 m-3). unit: m3/m3
 !   \end{description}
 !
 ! !REVISION HISTORY:
@@ -208,9 +216,13 @@ module Crocus81_module
         !-------------------------------------------------------------------------
         !logical            :: GLACIER_BOOL
         real               :: SLOPE
-        real               :: SOILCOND
+        !real               :: SOILCOND
         !real               :: PERMSNOWFRAC
         !real               :: SLOPE_DIR
+        real               :: SAND
+        real               :: SILT
+        real               :: CLAY
+        real               :: POROSITY
         !-------------------------------------------------------------------------
         ! multilevel spatial parameter
         !-------------------------------------------------------------------------

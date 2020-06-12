@@ -31,6 +31,14 @@ module Crocus81_lsmMod
 !   LDT NetCDF variable name for Fraction of permanet snow/ice
 ! \item[LDT\_ncvar\_SLOPE\_DIR]
 !   LDT NetCDF variable name for !Typical slope aspect in the grid  (deg from N clockwise)
+! \item[LDT\_ncvar\_SAND]
+!   LDT NetCDF variable name for Soil sand fraction (-)
+! \item[LDT\_ncvar\_SILT]
+!   LDT NetCDF variable name for Soil silt fraction (-)
+! \item[LDT\_ncvar\_CLAY]
+!   LDT NetCDF variable name for Soil clay fraction (-)
+! \item[LDT\_ncvar\_POROSITY]
+!   LDT NetCDF variable name for Soil porosity (m3 m-3)
 ! \item[ts]
 !   Crocus81 model time step in second
 ! \item[count]
@@ -89,6 +97,10 @@ module Crocus81_lsmMod
         !character*128      :: LDT_ncvar_SOILCOND
         !character*128      :: LDT_ncvar_PERMSNOWFRAC
         !character*128      :: LDT_ncvar_SLOPE_DIR
+        character*128      :: LDT_ncvar_SAND
+        character*128      :: LDT_ncvar_SILT
+        character*128      :: LDT_ncvar_CLAY
+        character*128      :: LDT_ncvar_POROSITY   
         !-------------------------------------------------------------------------
         ! ts, Count, rstInterval, outInterval
         !-------------------------------------------------------------------------

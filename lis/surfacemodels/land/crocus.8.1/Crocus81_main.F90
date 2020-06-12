@@ -140,6 +140,10 @@ subroutine Crocus81_main(n)
     LOGICAL              :: tmp_SNOWMAK_PROP_BOOL  ! Snowmaking and Grooming options [-]
     LOGICAL              :: tmp_PRODSNOWMAK_BOOL   ! Snowmaking and Grooming options [-]
     REAL                 :: tmp_SLOPE_DIR          ! !Typical slope aspect in the grid  (deg from N clockwise) [degrees]
+    REAL*8                 :: tmp_SAND               ! Soil sand fraction (-) [-]
+    REAL*8                 :: tmp_SILT               ! Soil silt fraction (-) [-]
+    REAL*8                 :: tmp_CLAY               ! Soil clay fraction (-) [-]
+    REAL*8                 :: tmp_POROSITY           ! Soil porosity (m3 m-3) [m3/m3]
     REAL                 ::  tmp_ZENITH            ! added for isba parameter 
     REAL                 ::  tmp_ANGL_ILLUM        ! added fro isba parameter  
     REAL                 ::  tmp_EXNS           ! added fro isba parameter   !compute this using presure at surface
@@ -314,7 +318,11 @@ subroutine Crocus81_main(n)
             tmp_SNOWMAK_PROP_BOOL                   = CROCUS81_struc(n)%SNOWMAK_PROP_BOOL               
             tmp_PRODSNOWMAK_BOOL                    = CROCUS81_struc(n)%PRODSNOWMAK_BOOL                
             tmp_SLOPE_DIR                           = CROCUS81_struc(n)%SLOPE_DIR   ! CROCUS81_struc(n)%crocus81(t)%SLOPE_DIR                         
- 
+            tmp_SAND                                = CROCUS81_struc(n)%crocus81(t)%SAND                            
+            tmp_SILT                                = CROCUS81_struc(n)%crocus81(t)%SILT                            
+            tmp_CLAY                                = CROCUS81_struc(n)%crocus81(t)%CLAY                            
+            tmp_POROSITY                            = CROCUS81_struc(n)%crocus81(t)%POROSITY            
+
             ! get state variables
             tmp_SNOWSWE(:)    = CROCUS81_struc(n)%crocus81(t)%SNOWSWE(:)   
             tmp_SNOWRHO(:)    = CROCUS81_struc(n)%crocus81(t)%SNOWRHO(:)   
@@ -365,6 +373,7 @@ subroutine Crocus81_main(n)
            tmp_ANGL_ILLUM = var16 
            tmp_EXNS = var6
            tmp_EXNA = var7
+print*, 'Crocus81_main.F90  SOILCOND', tmp_SOILCOND
 !WRITE (*, '( A10 , 1x , 1(F12.6, 1x))')  ' tmp_TG', tmp_TG 
 !print *, 'main , tmp_RRSNOW,  tmp_SRSNOW' , tmp_RRSNOW , tmp_SRSNOW ! MN
             ! call model physics 
@@ -413,7 +422,7 @@ subroutine Crocus81_main(n)
                                tmp_Z0EFF             , & ! IN    - roughness length for momentum (modd_diagn.F90 effective roughness length for heat(!?)) [m]
                                tmp_Z0HNAT            , & ! IN    - grid box average roughness length for heat [m]
                                tmp_ALB               , & ! IN    - soil/vegetation albedo [-]
-                               tmp_SOILCOND          , & ! IN    - soil thermal conductivity (W m-1 K-1) [W /(m K)]
+                               !tmp_SOILCOND          , & ! IN    - soil thermal conductivity (W m-1 K-1) [W /(m K)]! MN : for now will be computed in the driver using the sand fraction
                                tmp_D_G               , & ! IN    - !Assumed first soil layer thickness (m)
 !Used to calculate ground/snow heat flux   (D_G(:,1)) [m]
                                tmp_SNOWLIQ           , & ! INOUT - Snow layer(s) liquid water content (m) [m]
@@ -458,6 +467,10 @@ subroutine Crocus81_main(n)
                                tmp_SNOWMAK_PROP_BOOL , & ! IN    - Snowmaking and Grooming options [-]
                                tmp_PRODSNOWMAK_BOOL  , & ! INOUT - Snowmaking and Grooming options [-]
                                tmp_SLOPE_DIR        , &  ! IN    - !Typical slope aspect in the grid  (deg from N clockwise) [degrees]
+                               tmp_SAND              , & ! IN    - Soil sand fraction (-) [-]
+                               tmp_SILT              , & ! IN    - Soil silt fraction (-) [-]
+                               tmp_CLAY              , & ! IN    - Soil clay fraction (-) [-]
+                               tmp_POROSITY          , &   ! IN    - Soil porosity (m3 m-3) [m3/m3]
                                tmp_ZENITH ,&  ! added to read surfex parameter 
                                tmp_ANGL_ILLUM  , & ! added to read surfex parameter
                                tmp_EXNS , &            ! added to read surfex parameter

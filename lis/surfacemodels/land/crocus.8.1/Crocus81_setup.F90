@@ -26,6 +26,10 @@ subroutine Crocus81_setup()
 !
 !  This routine is the entry point to set up the parameters
 !  required for Crocus81.  These include: 
+!    SAND         - Soil sand fraction (-) [-]
+!    SILT         - Soil silt fraction (-) [-]
+!    CLAY         - Soil clay fraction (-) [-]
+!    POROSITY     - Soil porosity (m3 m-3) [m3/m3]
 ! 
 !  The routines invoked are:
 !  \begin{description}
@@ -48,6 +52,43 @@ subroutine Crocus81_setup()
         !------------------------------------!
         ! reading spatial spatial parameters !
         !------------------------------------!
+
+        ! read: SAND
+        write(LIS_logunit,*) "Crocus81: reading parameter SAND from ", trim(LIS_rc%paramfile(n))
+        call LIS_read_param(n, trim(CROCUS81_struc(n)%LDT_ncvar_SAND), placeholder)
+        do t = 1, LIS_rc%npatch(n, mtype)
+            col = LIS_surface(n, mtype)%tile(t)%col
+            row = LIS_surface(n, mtype)%tile(t)%row
+            CROCUS81_struc(n)%crocus81(t)%sand = placeholder(col, row)
+        enddo 
+
+        ! read: SILT
+        write(LIS_logunit,*) "Crocus81: reading parameter SILT from ", trim(LIS_rc%paramfile(n))
+        call LIS_read_param(n, trim(CROCUS81_struc(n)%LDT_ncvar_SILT), placeholder)
+        do t = 1, LIS_rc%npatch(n, mtype)
+            col = LIS_surface(n, mtype)%tile(t)%col
+            row = LIS_surface(n, mtype)%tile(t)%row
+            CROCUS81_struc(n)%crocus81(t)%silt = placeholder(col, row)
+        enddo 
+
+        ! read: CLAY
+        write(LIS_logunit,*) "Crocus81: reading parameter CLAY from ", trim(LIS_rc%paramfile(n))
+        call LIS_read_param(n, trim(CROCUS81_struc(n)%LDT_ncvar_CLAY), placeholder)
+        do t = 1, LIS_rc%npatch(n, mtype)
+            col = LIS_surface(n, mtype)%tile(t)%col
+            row = LIS_surface(n, mtype)%tile(t)%row
+            CROCUS81_struc(n)%crocus81(t)%clay = placeholder(col, row)
+        enddo 
+
+        ! read: POROSITY
+        write(LIS_logunit,*) "Crocus81: reading parameter POROSITY from ", trim(LIS_rc%paramfile(n))
+        call LIS_read_param(n, trim(CROCUS81_struc(n)%LDT_ncvar_POROSITY), placeholder)
+        do t = 1, LIS_rc%npatch(n, mtype)
+            col = LIS_surface(n, mtype)%tile(t)%col
+            row = LIS_surface(n, mtype)%tile(t)%row
+            CROCUS81_struc(n)%crocus81(t)%porosity = placeholder(col, row)
+        enddo 
+
         !----------------------------------------------!
         ! MULTILEVEL reading spatial spatial parameters !
         !----------------------------------------------!

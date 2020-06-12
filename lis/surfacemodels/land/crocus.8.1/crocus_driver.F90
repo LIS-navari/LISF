@@ -65,7 +65,7 @@ SUBROUTINE crocus_driver(n, &
                          Z0EFF, &
                          Z0HNAT, &
                          ALB, &
-                         SOILCOND, &
+                         !SOILCOND, &
                          D_G, &! D_G(:,1)
                          SNOWLIQ, &
                          SNOWTEMP, &
@@ -130,6 +130,10 @@ SUBROUTINE crocus_driver(n, &
                          SNOWMAK_PROP_BOOL, &! IO%LSNOWMAK_PROP
                          PRODSNOWMAK_BOOL, &! IO%LPRODSNOWMAK)
                          SLOPE_DIR, &  ! IN    - !Typical slope aspect in the grid  (deg from N clockwise) [degrees]
+                         SAND              , & ! IN    - Soil sand fraction (-) [-]
+                         SILT              , & ! IN    - Soil silt fraction (-) [-]
+                         CLAY              , & ! IN    - Soil clay fraction (-) [-]
+                         POROSITY          , &   ! IN    - Soil porosity (m3 m-3) [m3/m3]
                          tmp_ZENITH, &  ! added to read surfex parameter
                          tmp_ANGL_ILLUM, &  ! added to read surfex parameter
                          tmp_EXNS, &  ! added to read surfex parameter
@@ -171,6 +175,7 @@ SUBROUTINE crocus_driver(n, &
    USE MODE_THERMOS
    USE MODE_CRODEBUG
    USE MODD_REPROD_OPER
+   USE MODD_ISBA_PAR,   ONLY : XDRYWGHT, XSPHSOIL, XCONDQRTZ, XCONDOTH1, XCONDOTH2 ! for soil thermal conductivity  
 
    implicit none
 
@@ -265,9 +270,13 @@ SUBROUTINE crocus_driver(n, &
    REAL, INTENT(IN)   :: Z0EFF    !  Z0EFF = roughness length for momentum
    REAL, INTENT(IN)   :: Z0HNAT   !  Z0HNAT (PZOH)  = grid box average roughness length for heat
    REAL*8, INTENT(IN) :: ALB      !  ALB = soil/vegetation albedo
-   REAL*8, INTENT(IN) :: SOILCOND !  SOILCOND = soil thermal conductivity [W/(m K)]
+!   REAL*8, INTENT(IN) :: SOILCOND !  SOILCOND = soil thermal conductivity [W/(m K)] ! MN: moved to local var. for now will be computed using a sand fraction 
    REAL, INTENT(IN)   :: D_G      !  D_G  = Assumed first soil layer thickness (m)
 !                                  Used to calculate ground/snow heat flux
+   REAL*8 , INTENT(IN) :: SAND ! Soil SAND fraction [-]
+   REAL*8 , INTENT(IN) :: SILT ! Soil SILT fraction [-]
+   REAL*8 , INTENT(IN) :: CLAY ! Soil CLAY fraction [-]
+   REAL*8 , INTENT(IN) :: POROSITY ! Soil porosity (m3 m-3) [m3/m3]
    REAL*8, INTENT(INOUT)  :: SNOWLIQ(nsnow) !  SNOWLIQ  = Snow layer(s) liquid water content (m)
    REAL*8, INTENT(INOUT)  :: SNOWTEMP(nsnow)!  SNOWTEMP = Snow layer(s) temperature (m)
    REAL*8, INTENT(INOUT)  :: SNOWDZ(nsnow)  !  SNOWDZ = Snow layer(s) thickness (m)
@@ -411,6 +420,7 @@ SUBROUTINE crocus_driver(n, &
 ! ***************************************************************************
    REAL*8 :: ZP_GSFCSNOW  !heat flux between the surface and sub-surface
 !                                           snow layers (for energy budget diagnostics) (W/m2)
+   REAL*8 :: SOILCOND !  SOILCOND = soil thermal conductivity [W/(m K)]
 
 !KSIZE4 = 1  !SIZE(ZP_DIR_SW,2)
 
@@ -704,7 +714,28 @@ CONTAINS
       REAL*8, DIMENSION(1:KSIZE1) :: ZP_CDN  ! neutral drag coefficient for momentum (not used)
       REAL*8, DIMENSION(1:KSIZE1) :: ZP_AC  ! aerodynamical resistance(not used)
       REAL*8, DIMENSION(1:KSIZE1) :: ZP_RA  ! aerodynamical resistance(not used)
-
+      REAL*8 ::PCONDDRY ! soil dry thermal conductivity (W m-1 K-1) (MN: will not be used)  
+      REAL*8 ::ZCONDSLDZ  ! soil solids thermal conductivity (W m-1 K-1)
+      REAL*8 ::ZQUARTZ ! local variables for thermal conductivity  
+      REAL*8 ::ZGAMMAD ! local variables for thermal conductivity  
+      REAL*8 ::watsat ! local variables for thermal conductivity
+      REAL*8 ::tkm ! local variables for thermal conductivity
+      REAL*8 ::tkmg ! local variables for thermal conductivity
+      REAL*8 :: XCONDI !    = 2.22
+      REAL*8 :: XCONDWTR ! = 0.57   ! W/(m K)  Water thermal conductivity
+      ! local variables for thermal conductivity
+      REAL*8 :: XWGI          ! soil liquid water equivalent volumetric
+      REAL*8 :: XWG           ! soil volumetric water content profile   (m3/m3)
+      REAL*8 :: XWGMIN  ! = 0.001   ! (m3 m-3)
+      REAL*8 :: ZFROZEN2DF
+      REAL*8 :: ZUNFROZEN2DF
+      REAL*8 :: ZWORK1, ZWORK2 , ZWORK3
+      REAL*8 :: ZCONDSATDF
+      REAL*8 :: ZSATDEGDF
+      REAL*8 :: ZKERSTENDF
+      REAL*8 :: ZLOG_CONDI  ! = LOG(XCONDI)
+      REAL*8 :: ZLOG_CONDWTR ! = LOG(XCONDWTR)
+      REAL*8 ::  ZCONDDRYZ ! soil dry thermal conductivity (W m-1 K-1) 
 !_______________________________________________
 ! test : initialize to zero
 ! ______________________________________________
@@ -1035,6 +1066,127 @@ CONTAINS
 
 !XSTEFAN = ( 2.* XPI**5 / 15. ) * ( (XBOLTZ / XPLANCK)* XBOLTZ ) * (XBOLTZ/(XLIGHTSPEED*XPLANCK))**2  ! use ini_csts.F90
 
+! ___________________________________________ Thermal conductivity _________________________________________________
+! first method (thrmcondz.F90 from SURFEX-Crocus)
+! Compute thermal conductivity for dry soil (NOTE: for wet soil, we need to use SURFEX-Crocus soil.F90 in which needs LSM variables)
+! ---------------------------------------------------------------------
+! SAND(PSANDZ)     ! soil sand fraction (-)
+! POROSITY(PWSATZ)     ! soil porosity (m3 m-3)
+! PCONDDRY  ! soil dry thermal conductivity     (W m-1 K-1)
+! SOILCOND (PCONDSLD)  ! soil solids thermal  conductivity (W m-1 K-1)
+
+WRITE (*, '( A50 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 5(F10.6,1x) )') 'BF SAND, CLAY, POROSITY, PCONDDRY, SOILCOND ',  &
+                               TPTIME%TDATE%YEAR, &
+                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
+                               SAND, CLAY, POROSITY, PCONDDRY, SOILCOND
+WRITE (*, '( A51 , 5(F10.6,1x) )') 'XDRYWGHT, XSPHSOIL, XCONDQRTZ, XCONDOTH1, XCONDOTH2', &
+                               XDRYWGHT, XSPHSOIL, XCONDQRTZ, XCONDOTH1, XCONDOTH2
+
+!CALL THRMCONDZ(SAND,POROSITY,PCONDDRY,SOILCOND)
+! Part of thrmcondz.F90 from SURFEX-Crocus
+ZQUARTZ  = XUNDEF
+ZGAMMAD   = XUNDEF
+! SOILCOND  = XUNDEF ! A dummy argument with the INTENT(IN) attribute shall not be defined nor become undefined
+PCONDDRY  = XUNDEF
+! Quartz content estimated from sand fraction:
+IF (SAND/=XUNDEF) THEN  !  WHERE(SAND/=XUNDEF)
+   ZQUARTZ   = 0.038 + 0.95*SAND
+! Note, ZGAMMAD (soil dry density) can be supplied from obs, but
+! for mesoscale modeling, we use the following approximation
+! from Peters-Lidard et al. 1998:
+   ZGAMMAD   = (1.0-POROSITY)*XDRYWGHT
+END IF ! WHERE
+! Soil solids conductivity:
+IF (ZQUARTZ >  0.20 .AND. SAND/=XUNDEF) THEN  ! WHERE(ZQUARTZ >  0.20 .AND. SAND/=XUNDEF)
+   SOILCOND  = (XCONDQRTZ**ZQUARTZ)*                        &
+                    (XCONDOTH1**(1.0-ZQUARTZ))
+! END  WHERE
+ELSE IF (ZQUARTZ <= 0.20 .AND. SAND/=XUNDEF) THEN ! WHERE(ZQUARTZ <= 0.20 .AND. SAND/=XUNDEF)
+   SOILCOND  = (XCONDQRTZ**ZQUARTZ)*                        &
+                    (XCONDOTH2**(1.0-ZQUARTZ))
+END IF !WHERE
+! Soil dry conductivity:
+IF (SAND/=XUNDEF) THEN  ! WHERE(SAND/=XUNDEF)
+   PCONDDRY     = (0.135*ZGAMMAD + 64.7)/                   &
+                         (XDRYWGHT - 0.947*ZGAMMAD)
+END IF !WHERE
+
+
+!print*, 'thrmcondz.F90  SOILCOND, PCONDDRY ', SOILCOND, PCONDDRY
+
+WRITE (*, '( A40 , 2(F10.6,1x) )') 'thrmcondz.F90  SOILCOND, PCONDDRY', &
+                                    SOILCOND, PCONDDRY                 
+
+
+
+ZCONDSLDZ = SOILCOND ! soil solids thermal  conductivity (W m-1 K-1)  --> use this thrid method 
+ZCONDDRYZ = PCONDDRY !  
+
+! ---------------------------------------------------------------------             
+! Second method (iniTimeConst.F90 from CLM2 )
+! ---------------------------------------------------------------------
+! tkmg   !thermal conductivity, soil minerals  [W/m-K]  (new)
+! tkdry  !thermal conductivity, dry soil       (W/m/Kelvin)
+! SOILCOND (tksatu) !thermal conductivity, saturated soil [W/m-K]  (new)     
+! watsat !volumetric soil water at saturation (porosity)
+              watsat = 0.489 - 0.00126*SAND*100.0
+              !if(SAND.eq.0.and.CLAY.eq.0) then
+              !   SAND = 0.00001
+              !   CLAY = 0.00001
+              !endif
+              tkm              = (8.80*SAND*100.0+2.92*&
+                   CLAY*100.0)/(SAND*100.0+CLAY*100.0) ! W/(m K)
+              !bd               = (1.-watsat)*2.7e3
+              tkmg   = tkm ** (1.- watsat)
+              SOILCOND = tkmg*0.57**watsat
+print *, 'CLM2 SOILCOND, watsat' , SOILCOND , watsat
+WRITE (*, '( A40 , 2(F10.6,1x) )') 'CLM2    SOILCOND , watsat', &
+                                    SOILCOND , watsat
+! ---------------------------------------------------------------------
+! Third method using soildif.F90 with some assumptions
+! ---------------------------------------------------------------------
+!
+XCONDI    = 2.22
+XCONDWTR  = 0.57   ! W/(m K)  Water thermal conductivity
+
+!XWGI          ! soil liquid water equivalent volumetric
+!XWG           ! soil volumetric water content profile   (m3/m3)
+XWGMIN   = 0.001   ! (m3 m-3)
+!POROSITY (XWSAT)          ! porosity profile                        (m3/m3)
+!ZFROZEN2DF
+!ZUNFROZEN2DF
+!ZWORK1, ZWORK2 , ZWORK3
+!ZCONDSATDF
+!ZSATDEGDF
+!ZKERSTENDF
+
+ZLOG_CONDI   = LOG(XCONDI)
+ZLOG_CONDWTR = LOG(XCONDWTR)
+! 
+      XWGI = 0.0 ! MN set to zero 
+      XWG = POROSITY * 0.8 ! MN assume volumetric soil water content of the snow covered ground is 80% of POROSITY (For Col de Porte it is between 72-85)
+      ZFROZEN2DF   = XWGI/( XWGI + MAX(XWG,XWGMIN))
+      ZUNFROZEN2DF = (1.0-ZFROZEN2DF)* POROSITY
+!
+      ZWORK1      = LOG(ZCONDSLDZ)*(1.0- POROSITY)
+      ZWORK2      = ZLOG_CONDI*( POROSITY-ZUNFROZEN2DF)
+      ZWORK3      = ZLOG_CONDWTR*ZUNFROZEN2DF
+      ZCONDSATDF  = EXP(ZWORK1+ZWORK2+ZWORK3)
+!
+      ZSATDEGDF   = MAX(0.1, (XWGI+XWG)/POROSITY)
+      ZSATDEGDF   = MIN(1.0,ZSATDEGDF)
+      ZKERSTENDF  = LOG10(ZSATDEGDF) + 1.0
+      ZKERSTENDF  = (1.0-ZFROZEN2DF)*ZKERSTENDF + ZFROZEN2DF *ZSATDEGDF
+!
+! Thermal conductivity of soil:
+!
+      SOILCOND = ZKERSTENDF*(ZCONDSATDF-ZCONDDRYZ) + ZCONDDRYZ
+
+WRITE (*, '( A45 , 3(F10.6,1x) )') 'soildif.F90  SOILCOND, ZKERSTENDF, ZCONDSATDF', &
+                                    SOILCOND, ZKERSTENDF, ZCONDSATDF
+! ---------------------------------------------------------------------
+! ---------------------------------------------------------------------
+
       TPTIME%TDATE%YEAR = year
       TPTIME%TDATE%MONTH = month
       TPTIME%TDATE%DAY = day
@@ -1054,13 +1206,13 @@ CONTAINS
 !1- add alocation for variable that has more than 1D
 !2- do we need to have these local variables for logical and character variables?
 
-WRITE (*, '( A5 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, 18(F10.6,1x) )') 'Input',  &
-                               TPTIME%TDATE%YEAR, &
-                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
-                                ZP_EXNSin, ZP_EXNAin,&
-                                SNDRIFTout, RI_nout, EMISNOWout, CDSNOWout, USTARSNOWout,         &
-                                TGin, SOILCONDin, ZP_PSN3Lin, ZP_RHOAin, ZP_RNSNOWout, ZP_HSNOWout, &
-                                ZP_GFLUXSNOWout, ZP_HPSNOWout, CHSNOWout,ZP_ZENITHin, ZP_ANGL_ILLUMin  !
+!WRITE (*, '( A5 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, 18(F10.6,1x) )') 'Input',  &
+!                               TPTIME%TDATE%YEAR, &
+!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
+!                                ZP_EXNSin, ZP_EXNAin,&
+!                                SNDRIFTout, RI_nout, EMISNOWout, CDSNOWout, USTARSNOWout,         &
+!                                TGin, SOILCONDin, ZP_PSN3Lin, ZP_RHOAin, ZP_RNSNOWout, ZP_HSNOWout, &
+!                                ZP_GFLUXSNOWout, ZP_HPSNOWout, CHSNOWout,ZP_ZENITHin, ZP_ANGL_ILLUMin  !
 !print *, 'ZP_HPSNOWout', ZP_HPSNOWout
 !WRITE (*, '( A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 2x,  9(A3, 1x) , 11(L1, 1x))') 'MN1',  &
 !                               TPTIME%TDATE%YEAR, &
@@ -1081,10 +1233,10 @@ WRITE (*, '( A5 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, 18(F10.6,1x) )') 'Input',  &
 !                               SNOWALBinout, ALBin, D_Gin
 
 
-WRITE (*, '( A25 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 5(F10.6,1x) )') 'PSN3L RI, CDSNOW, USTARSNOW, CHSNOW',  &
-                               TPTIME%TDATE%YEAR, &
-                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
-                               ZP_PSN3Lin , RI_nout, CDSNOWout, USTARSNOWout, CHSNOWout
+!WRITE (*, '( A25 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 5(F10.6,1x) )') 'PSN3L RI, CDSNOW, USTARSNOW, CHSNOW',  &
+!                               TPTIME%TDATE%YEAR, &
+!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
+!                               ZP_PSN3Lin , RI_nout, CDSNOWout, USTARSNOWout, CHSNOWout
 
 
 ! call model physics here

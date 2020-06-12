@@ -397,6 +397,10 @@ subroutine Crocus81_readcrd()
         !CROCUS81_struc(n)%LDT_ncvar_SOILCOND = 'Crocus_SOILCOND' !'CROCUS81_SOILCOND'
         !CROCUS81_struc(n)%LDT_ncvar_PERMSNOWFRAC = 'CROCUS81_PERMSNOWFRAC'
         !CROCUS81_struc(n)%LDT_ncvar_SLOPE_DIR = 'ASPECT'   ! 'CROCUS81_SLOPE_DIR'
+        CROCUS81_struc(n)%LDT_ncvar_SAND     = 'SAND' ! 'CROCUS81_SAND'
+        CROCUS81_struc(n)%LDT_ncvar_SILT     = 'SILT'
+        CROCUS81_struc(n)%LDT_ncvar_CLAY     = 'CLAY'
+        CROCUS81_struc(n)%LDT_ncvar_POROSITY = 'POROSITY'
     enddo
 
     ! set default restart format to netcdf

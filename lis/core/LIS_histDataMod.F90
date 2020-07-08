@@ -196,6 +196,7 @@ module LIS_histDataMod
   public :: LIS_MOC_MXSNALBEDO
   public :: LIS_MOC_GREENNESS 
   public :: LIS_MOC_TEMPBOT  
+  public :: LIS_MOC_GLACIERFRACTION
 
   public :: LIS_MOC_CCOND
   public :: LIS_MOC_RELSMC
@@ -621,7 +622,7 @@ public ::   LIS_MOC_SNOWSURFACEQ
    integer :: LIS_MOC_MXSNALBEDO = -9999
    integer :: LIS_MOC_GREENNESS  = -9999
    integer :: LIS_MOC_TEMPBOT   = -9999
-
+   integer :: LIS_MOC_GLACIERFRACTION = -9999
    ! NLDAS OUTPUT
    integer :: LIS_MOC_CCOND    = -9999
 
@@ -2937,6 +2938,20 @@ contains
             n,1,ntiles,(/"K"/),1,(/"-"/),1,1,1,&
             model_patch=.true.)
     endif
+
+    call ESMF_ConfigFindLabel(modelSpecConfig,"GLACIERFRAC:",rc=rc)
+    call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
+         "Glacierfrac",&
+         "Glacierfraction",&
+         "Glacierfraction",rc)
+    if ( rc == 1 ) then
+       call register_dataEntry(LIS_MOC_LSM_COUNT,LIS_MOC_GLACIERFRACTION,&
+            LIS_histData(n)%head_lsm_list,&
+            n,1,ntiles,(/"-"/),1,(/"-"/),1,1,1,&
+            model_patch=.true.)
+    endif
+
+
 
     call ESMF_ConfigFindLabel(modelSpecConfig,"PET_f:",rc=rc)
     call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &

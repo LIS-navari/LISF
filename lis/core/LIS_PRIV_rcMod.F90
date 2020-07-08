@@ -700,6 +700,7 @@ module LIS_PRIV_rcMod
      character*50, allocatable  :: useksatmap(:)
      character*50, allocatable  :: usebexpmap(:)
      character*50, allocatable  :: usequartzmap(:)
+     character*50, allocatable  :: useglacierfracmap(:)
      integer, allocatable       :: usesnowmap(:)
      
      integer, allocatable       :: soilsrc(:)

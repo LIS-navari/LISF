@@ -129,15 +129,16 @@ SUBROUTINE crocus_driver(n, &
                          SELF_PROD_BOOL, &! IO%LSELF_PROD
                          SNOWMAK_PROP_BOOL, &! IO%LSNOWMAK_PROP
                          PRODSNOWMAK_BOOL, &! IO%LPRODSNOWMAK)
-                         SLOPE_DIR, &  ! IN    - !Typical slope aspect in the grid  (deg from N clockwise) [degrees]
+                         SLOPE_DIR, &  ! IN    - !Typical slope aspect in the grid  (from N clockwise) [Radians]
                          SAND              , & ! IN    - Soil sand fraction (-) [-]
                          SILT              , & ! IN    - Soil silt fraction (-) [-]
                          CLAY              , & ! IN    - Soil clay fraction (-) [-]
-                         POROSITY          , &   ! IN    - Soil porosity (m3 m-3) [m3/m3]
-                         tmp_ZENITH, &  ! added to read surfex parameter
-                         tmp_ANGL_ILLUM, &  ! added to read surfex parameter
-                         tmp_EXNS, &  ! added to read surfex parameter
-                         tmp_EXNA)                 ! added to read surfex parameter
+                         POROSITY          , & ! IN    - Soil porosity (m3 m-3) [m3/m3]
+                         usemonalb )
+                         !tmp_ZENITH, &  ! added to read surfex parameter
+                         !tmp_ANGL_ILLUM, &  ! added to read surfex parameter
+                         !tmp_EXNS, &  ! added to read surfex parameter
+                         !tmp_EXNA)                 ! added to read surfex parameter
 
    USE LIS_coreMod, only: LIS_rc
    !USE LIS_logMod,  only  : LIS_logunit, LIS_endrun
@@ -269,7 +270,7 @@ SUBROUTINE crocus_driver(n, &
    REAL, INTENT(IN)    :: Z0NAT    !  Z0NAT (PZ0) = grid box average roughness length
    REAL, INTENT(IN)   :: Z0EFF    !  Z0EFF = roughness length for momentum
    REAL, INTENT(IN)   :: Z0HNAT   !  Z0HNAT (PZOH)  = grid box average roughness length for heat
-   REAL*8, INTENT(IN) :: ALB      !  ALB = soil/vegetation albedo
+   REAL*8, DIMENSION (12) :: ALB      !  ALB = soil/vegetation albedo
 !   REAL*8, INTENT(IN) :: SOILCOND !  SOILCOND = soil thermal conductivity [W/(m K)] ! MN: moved to local var. for now will be computed using a sand fraction 
    REAL, INTENT(IN)   :: D_G      !  D_G  = Assumed first soil layer thickness (m)
 !                                  Used to calculate ground/snow heat flux
@@ -390,10 +391,10 @@ SUBROUTINE crocus_driver(n, &
    LOGICAL, INTENT(IN)          :: SNOWMAK_PROP_BOOL
    LOGICAL, INTENT(INOUT)          :: PRODSNOWMAK_BOOL
    REAL, INTENT(IN)               :: SLOPE_DIR  ! typical slope aspect in the grid
-   REAL, INTENT(IN)               ::  tmp_ZENITH  ! added to read surfex parameter
-   REAL, INTENT(IN)               ::  tmp_ANGL_ILLUM  ! added to read surfex parameter
-   REAL, INTENT(IN)               ::  tmp_EXNS             ! added to read surfex parameter
-   REAL, INTENT(IN)               ::  tmp_EXNA            ! added to read surfex parameter
+   !REAL, INTENT(IN)               ::  tmp_ZENITH  ! added to read surfex parameter
+   !REAL, INTENT(IN)               ::  tmp_ANGL_ILLUM  ! added to read surfex parameter
+   !REAL, INTENT(IN)               ::  tmp_EXNS             ! added to read surfex parameter
+   !REAL, INTENT(IN)               ::  tmp_EXNA            ! added to read surfex parameter
 !REAL :: ZP_PEW_A_COEF(1) = 0  ! coefficients for atmospheric coupling. In offline mode, they are all equal to 0!
 !REAL :: ZP_PEW_B_COEF(1) = 0
 !REAL :: ZP_PET_A_COEF(1) = 0
@@ -434,6 +435,9 @@ SUBROUTINE crocus_driver(n, &
 !                                      ZSNOWFALL    = minimum equivalent snow depth
 !                                                     for snow falling during the
 !                                                     current time step (m)
+   logical, intent(in) :: usemonalb  ! if usemonalb == .true., then the alb value passed to 
+               !LDT will be used as the background snow-free albedo term.  
+               ! if usemonalb == .false., then alb will be sett to 0.2  
 
    ZP_LES3L = 0.0  ! 1
    ZP_LEL3L = 0.0  ! 1
@@ -736,6 +740,11 @@ CONTAINS
       REAL*8 :: ZLOG_CONDI  ! = LOG(XCONDI)
       REAL*8 :: ZLOG_CONDWTR ! = LOG(XCONDWTR)
       REAL*8 ::  ZCONDDRYZ ! soil dry thermal conductivity (W m-1 K-1) 
+      character(len=12)  :: nowdate ! the date of each time step, ( yyyymmddhhmm )
+      real, external     ::  crocus81_month_d  ! external function (follows this main program):  given an array (dimension 12)
+      !                                      ! representing monthly values for some parameter, return a value for 
+      !                                      ! a specified date.
+
 !_______________________________________________
 ! test : initialize to zero
 ! ______________________________________________
@@ -913,7 +922,7 @@ CONTAINS
       Z0NATin(1) = Z0NAT
       Z0EFFin(1) = Z0EFF
       Z0HNATin(1) = Z0HNAT
-      ALBin(1) = 0.2 ! ALB  !  soil/vegetation albedo   set to 0.2 in the SURFEX-Crocus
+      !ALBin(1) = 0.2 ! ALB  !  soil/vegetation albedo   set to 0.2 in the SURFEX-Crocus
       SOILCONDin(1) = SOILCOND
       D_Gin(1) = D_G
       SNOWLIQout(1, :) = SNOWLIQ
@@ -965,6 +974,20 @@ CONTAINS
       SLOPE_DIRin(1) = SLOPE_DIR
 
       ZP_BLOWSNWin(1, 1:4) = 0 ! No snow drift; set the value to zero
+
+  ! if the usemonalb flag is .true., we want to provide alb from the user-specified
+  ! trend through the year, rather than let lsmruc calculate it for us.
+  !
+  write(nowdate, "(i0.4,i0.2,i0.2,i0.2,i0.2)"), year, month, day, hour, minute ! yyyymmddhhmm
+  if (usemonalb .eqv. .true. ) then
+     ALBin(1) = crocus81_month_d(ALB, nowdate)
+  else
+     ALBin(1) = 0.2 ! soil/vegetation albedo (ALB) set to 0.2 in the SURFEX-Crocus
+  endif
+!print*, "ALB" , ALB(:)
+print*,"ALBin", ALBin
+
+
 ! ***************************************************************************
 ! Compute variables
 ! ***************************************************************************
@@ -976,6 +999,8 @@ CONTAINS
 ! Compute cosine of Slope
 ! ---------------------------------------------------
       ZP_DIRCOSZWin(1) = COS(SLOPEin(1))
+
+!print*, 'SLOPE, ASPECT, cos(SLOPE)', SLOPE, SLOPE_DIR, ZP_DIRCOSZWin 
 
 ! Compute the snow fraction (is it a fraction of total precip? or fraction of grid cell covered with snow?) : I think it is fraction of grid cell
 ! -------------------------------------------------------
@@ -1012,10 +1037,11 @@ CONTAINS
 ! ----------------------------------------------------------------------------------
 ! JJ --> (1,1)
 ! ZP_ZENITH & ZP_AZIMSOL from SUBROUTINE SUNPOS
-! SLOPE_DIR ! direction of S.S.O. (deg from N clockwise)
+! SLOPE_DIR ! Note: in SURFEX is defined as the direction of S.S.O. (deg from N clockwise) 
+! Here we use LDT output and ASPECT unit is in radians. So we need to edit the following equation
 
       ZP_ANGL_ILLUMin(1) = ACOS((COS(ZP_ZENITHin(1))*COS(ACOS(ZP_DIRCOSZWin(1)))) + &
-                                (SIN(ZP_ZENITHin(1))*SIN(ACOS(ZP_DIRCOSZWin(1))*COS(ZP_AZIMSOL(1) - (SLOPE_DIRin(1)*XPI/180)))))
+                                (SIN(ZP_ZENITHin(1))*SIN(ACOS(ZP_DIRCOSZWin(1))*COS(ZP_AZIMSOL(1) - (SLOPE_DIRin(1)))))) ! SLOPE_DIRin(1)*XPI/180 
 
 !  Initialize / compute implicit coefficients:
 ! Comes form SUBROUTINE COUPLING_ISBA_n
@@ -1075,12 +1101,12 @@ CONTAINS
 ! PCONDDRY  ! soil dry thermal conductivity     (W m-1 K-1)
 ! SOILCOND (PCONDSLD)  ! soil solids thermal  conductivity (W m-1 K-1)
 
-WRITE (*, '( A50 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 5(F10.6,1x) )') 'BF SAND, CLAY, POROSITY, PCONDDRY, SOILCOND ',  &
-                               TPTIME%TDATE%YEAR, &
-                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
-                               SAND, CLAY, POROSITY, PCONDDRY, SOILCOND
-WRITE (*, '( A51 , 5(F10.6,1x) )') 'XDRYWGHT, XSPHSOIL, XCONDQRTZ, XCONDOTH1, XCONDOTH2', &
-                               XDRYWGHT, XSPHSOIL, XCONDQRTZ, XCONDOTH1, XCONDOTH2
+!WRITE (*, '( A50 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 6(F10.6,1x) )') 'driver SAND,CLAY,SILT,POROSITY,PCONDDRY,SOILCOND',  &
+!                               year, &
+!                               month, day, hour,  &
+!                               SAND, CLAY, SILT, POROSITY, PCONDDRY, SOILCOND
+!WRITE (*, '( A51 , 5(F10.6,1x) )') 'XDRYWGHT, XSPHSOIL, XCONDQRTZ, XCONDOTH1, XCONDOTH2', &
+!                               XDRYWGHT, XSPHSOIL, XCONDQRTZ, XCONDOTH1, XCONDOTH2
 
 !CALL THRMCONDZ(SAND,POROSITY,PCONDDRY,SOILCOND)
 ! Part of thrmcondz.F90 from SURFEX-Crocus
@@ -1114,8 +1140,8 @@ END IF !WHERE
 
 !print*, 'thrmcondz.F90  SOILCOND, PCONDDRY ', SOILCOND, PCONDDRY
 
-WRITE (*, '( A40 , 2(F10.6,1x) )') 'thrmcondz.F90  SOILCOND, PCONDDRY', &
-                                    SOILCOND, PCONDDRY                 
+!WRITE (*, '( A40 , 2(F10.6,1x) )') 'thrmcondz.F90  SOILCOND, PCONDDRY', &
+!                                    SOILCOND, PCONDDRY                 
 
 
 
@@ -1139,11 +1165,21 @@ ZCONDDRYZ = PCONDDRY !
               !bd               = (1.-watsat)*2.7e3
               tkmg   = tkm ** (1.- watsat)
               SOILCOND = tkmg*0.57**watsat
-print *, 'CLM2 SOILCOND, watsat' , SOILCOND , watsat
-WRITE (*, '( A40 , 2(F10.6,1x) )') 'CLM2    SOILCOND , watsat', &
-                                    SOILCOND , watsat
+!print *, 'CLM2 SOILCOND, watsat' , SOILCOND , watsat
+!WRITE (*, '( A40 , 2(F10.6,1x) )') 'CLM2    SOILCOND , watsat', &
+!                                    SOILCOND , watsat
 ! ---------------------------------------------------------------------
 ! Third method using soildif.F90 with some assumptions
+! NOTE: In future when Crocus conected to the LSM we can get the soil thermal conductivity from the LSM
+! or we can get soil parameters from the LSM and compute the soil thermal conductivity using following 
+! equations from the soildif.F90
+! I have made two assumptions:   
+! 1-  The volumetric soil water content of the snow-covered ground is 80% of POROSITY
+! this assumption is based on the volumetric soil water content of the Col de Porte site for one year 
+! (the observed values are between 72%-85%). 
+! 2-  Soil does not freeze during the cold season. This assumption is based on the frozen and unfrozen
+! part of the soil matrix in the Col de Porte site. The maximum frozen fraction is less than 0.1 and 
+! the effect of the frozen thermal conductivity is negligible. 
 ! ---------------------------------------------------------------------
 !
 XCONDI    = 2.22
@@ -1196,10 +1232,10 @@ WRITE (*, '( A45 , 3(F10.6,1x) )') 'soildif.F90  SOILCOND, ZKERSTENDF, ZCONDSATD
 ! Over write these 4 parameters using SURFEX-Crocus data
       SOILCONDin = SOILCOND
       TGin = TG
-      ZP_ZENITHin = tmp_ZENITH   ! added to read surfex parameter
-      ZP_ANGL_ILLUMin = tmp_ANGL_ILLUM! added to read surfex parameter
-      ZP_EXNSin = tmp_EXNS             ! added to read surfex parameter
-      ZP_EXNAin = tmp_EXNA           ! added to read surfex parameter
+      !ZP_ZENITHin = tmp_ZENITH   ! added to read surfex parameter
+      !ZP_ANGL_ILLUMin = tmp_ANGL_ILLUM! added to read surfex parameter
+      !ZP_EXNSin = tmp_EXNS             ! added to read surfex parameter
+      !ZP_EXNAin = tmp_EXNA           ! added to read surfex parameter
       ZP_PSN3Lin(1) = 1   ! assume fraction is 1  (In SURFEX-Crocus is start from zero and in several time step it became 1.  I was not able to find out where is it computed)
 
 !$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -1238,6 +1274,22 @@ WRITE (*, '( A45 , 3(F10.6,1x) )') 'soildif.F90  SOILCOND, ZKERSTENDF, ZCONDSATD
 !                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
 !                               ZP_PSN3Lin , RI_nout, CDSNOWout, USTARSNOWout, CHSNOWout
 
+
+!WRITE (*, '( A25 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 3(F10.6,1x) )') 'TAin, TGin,SNOWTEMPinout ',  &
+!                               TPTIME%TDATE%YEAR, &
+!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
+!                               TAin, TGin, SNOWTEMPinout(1,1)
+
+!WRITE (*, '( A40 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 4(F10.6,1x) )') 'ZP_EXNSin, tmp_EXNS | ZP_EXNAin, tmp_EXNA',  &
+!                               TPTIME%TDATE%YEAR, &
+!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
+!                               ZP_EXNSin, tmp_EXNS, ZP_EXNAin, tmp_EXNA
+
+
+!WRITE (*, '( A60 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 4(F10.6,1x) )') 'ZP_ZENITHin, tmp_ZENITH | ZP_ANGL_ILLUMin, tmp_ANGL_ILLUM',  &
+!                               TPTIME%TDATE%YEAR, &
+!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
+!                               ZP_ZENITHin, tmp_ZENITH,  ZP_ANGL_ILLUMin, tmp_ANGL_ILLUM
 
 ! call model physics here
       CALL SNOWCRO(SNOWRES_opt, &
@@ -1355,11 +1407,11 @@ WRITE (*, '( A45 , 3(F10.6,1x) )') 'soildif.F90  SOILCOND, ZKERSTENDF, ZCONDSATD
 !                               SNOWHEATinout(1:1,1:4), SNOWRHOinout(1:1,1:4), SNOWSWEinout(1:1,1:4), &
 !                               SNOWGRAN1inout(1:1,1:4), SNOWGRAN2inout(1:1,1:4), &
 !                               SNOWTEMPinout(1:1,1:4), SNOWLIQout(1:1,1:4), SNOWDZout(1:1,1:4)  ! print_output_snowprofile
-WRITE (*, '(A10 , 1x, 5(F10.6,1x) )')'PSNOWDZ',SNOWDZout(1,1:5) ! MN
+!WRITE (*, '(A10 , 1x, 5(F10.6,1x) )')'PSNOWDZ',SNOWDZout(1,1:5) ! MN
 !WRITE (*, '(A10 , 1x, 5(F10.6,1x) )')'SNOWLIQout',SNOWLIQout(1,1:5) ! MN
 !WRITE (*, '(A10 , 1x, 5(F10.6,1x) )')'SNOWSWEinout',SNOWSWEinout(1,1:5) ! MN
 !WRITE (*, '(A10 , 1x, 5(F10.6,1x) )')'SNOWRHOinout',SNOWRHOinout(1,1:5) ! MN
-print*, 'snow depth'  , sum(SNOWDZout)
+!print*, 'snow depth'  , sum(SNOWDZout)
 !print*, 'snowfall', SRSNOWin
 !print*, 'rainfall', RRSNOWin
 !print*, 'runoff ' , THRUFALout
@@ -1444,6 +1496,61 @@ print*, 'snow depth'  , sum(SNOWDZout)
       PRODSNOWMAK_BOOL = PRODSNOWMAK_BOOLinout(1)
 
    END SUBROUTINE CALL_MODEL
+
 END SUBROUTINE crocus_driver
+
+
+!------------------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------------------
+real function crocus81_month_d(a12, nowdate) result (nowval)
+  !
+  ! given a set of 12 values, taken to be valid on the fifteenth of each month (jan through dec)
+  ! and a date in the form <yyyymmdd[hhmmss]> ....
+  ! 
+  ! return a value valid for the day given in <nowdate>, as an interpolation from the 12
+  ! monthly values.
+  !
+  use kwm_date_utilities_crocus81
+  implicit none
+  real*8, dimension(12), intent(in) :: a12 ! 12 monthly values, taken to be valid on the 15th of
+  !                                      ! the month
+  character(len=12), intent(in) :: nowdate ! date, in the form <yyyymmdd[hhmmss]>
+  integer :: nowy, nowm, nowd
+  integer :: prevm, postm
+  real    :: factor
+  integer, dimension(12) :: ndays = (/ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 /)
+
+  !
+  ! handle leap year by setting the number of days in february for the year in question.
+  !
+  read(nowdate(1:8),'(i4,i2,i2)') nowy, nowm, nowd
+  ndays(2) = nfeb(nowy)
+
+  !
+  ! do interpolation between the fifteenth of two successive months.
+  !
+  if (nowd .eq. 15) then
+     nowval = a12(nowm)
+     return
+  else if (nowd < 15) then
+     postm = nowm
+     prevm = nowm - 1
+     if (prevm .eq. 0) prevm = 12
+     factor = real(ndays(prevm)-15+nowd)/real(ndays(prevm))
+  else if (nowd > 15) then
+     prevm = nowm
+     postm = nowm + 1
+     if (postm .eq. 13) postm = 1
+     factor = real(nowd-15)/real(ndays(prevm))
+  endif
+
+  nowval = a12(prevm)*(1.0-factor) + a12(postm)*factor
+
+end function crocus81_month_d
+!------------------------------------------------------------------------------------------------
+!------------------------------------------------------------------------------------------------
+
+
+
 
 

@@ -160,8 +160,11 @@ subroutine Crocus81_readcrd()
         call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%PTSTEP, rc=rc)
         call LIS_verify(rc, "CROCUS81 PTSTEP: not defined")
     enddo
- 
-    ! Surface soil temperature (effective temperature the of layer lying below snow) (K)  (for snowcro.F90 we only use the surface layer ZP_TG(:,1))  (#nsoil depends on 2-L, 3-L DIF)
+
+! MN: For now we assume there is no energy transfer between snow and soil by setting surface 
+!      soil temperature to 273.15 in the lis.config in feature we will use surface soil temeprature from an LSM.  
+! Surface soil temperature (effective temperature the of layer lying below snow) (K)  (for snowcro.F90 
+!       we only use the surface layer ZP_TG(:,1))  (#nsoil depends on 2-L, 3-L DIF)
     call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 TG:", rc = rc)
     do n=1, LIS_rc%nnest
         call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%TG, rc=rc)
@@ -175,12 +178,14 @@ subroutine Crocus81_readcrd()
         call LIS_verify(rc, "CROCUS81 UREF: not defined")
     enddo
  
-    ! angle between the normal to the surface and the vertical  (MN:  replaced PDIRCOSZW with slope and computed the cosine in the driver)
-    call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 SLOPE:", rc = rc)
-    do n=1, LIS_rc%nnest
-        call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%SLOPE, rc=rc)
-        call LIS_verify(rc, "CROCUS81 SLOPE: not defined")
-    enddo
+! Use LDT output for slope 
+! angle between the normal to the surface and the vertical  (MN: replaced PDIRCOSZW with slope 
+! and computed the cosine in the driver)
+!    call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 SLOPE:", rc = rc)
+!    do n=1, LIS_rc%nnest
+!        call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%SLOPE, rc=rc)
+!        call LIS_verify(rc, "CROCUS81 SLOPE: not defined")
+!    enddo
 
     ! Reference height of the first atmospheric level (m)
     call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 ZREF:", rc = rc)
@@ -209,20 +214,31 @@ subroutine Crocus81_readcrd()
         call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%Z0HNAT, rc=rc)
         call LIS_verify(rc, "CROCUS81 Z0HNAT: not defined")
     enddo
- 
+
+! Use LDT output for soil/veg albedo  
     ! soil/vegetation albedo
-    call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 ALB:", rc = rc)
+!    call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 ALB:", rc = rc)
+!    do n=1, LIS_rc%nnest
+!        call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%ALB, rc=rc)
+!        call LIS_verify(rc, "CROCUS81 ALB: not defined")
+!    enddo
+
+    ! if usemonalb == .true., then the alb value passed to lsmcrocus will be used as the background snow-free albedo term.  
+    ! if usemonalb == .false., then alb will be set to 0.2 
+    call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 use monthly albedo map:", rc = rc)
     do n=1, LIS_rc%nnest
-        call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%ALB, rc=rc)
-        call LIS_verify(rc, "CROCUS81 ALB: not defined")
+        call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%use_monthly_albedo_map, rc=rc)
+        call LIS_verify(rc, "CROCUS81 use monthly albedo map: not defined")
     enddo
- 
-    ! soil thermal conductivity (W m-1 K-1)
-    call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 SOILCOND:", rc = rc)
-    do n=1, LIS_rc%nnest
-        call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%SOILCOND, rc=rc)
-        call LIS_verify(rc, "CROCUS81 SOILCOND: not defined")
-    enddo
+
+! Soil thermal conductivity will be computed in the crocus driver and no need to 
+!    read that as a constant value from the lis.config  
+!    ! soil thermal conductivity (W m-1 K-1)
+!    call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 SOILCOND:", rc = rc)
+!    do n=1, LIS_rc%nnest
+!        call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%SOILCOND, rc=rc)
+!        call LIS_verify(rc, "CROCUS81 SOILCOND: not defined")
+!    enddo
 
     ! !Assumed first soil layer thickness (m)
 !Used to calculate ground/snow heat flux   (D_G(:,1))
@@ -231,13 +247,16 @@ subroutine Crocus81_readcrd()
         call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%D_G, rc=rc)
         call LIS_verify(rc, "CROCUS81 D_G: not defined")
     enddo
- 
-    ! Fraction of permanet snow/ice                                                                    
-      call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 PERMSNOWFRAC:", rc = rc)                           
-      do n=1, LIS_rc%nnest                                                                               
-          call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%PERMSNOWFRAC, rc=rc)                
-          call LIS_verify(rc, "CROCUS81 PERMSNOWFRAC: not defined")                                      
-      enddo  
+
+! LIS will use LDT output for fraction of permanet snow/ice, and ne need to 
+!     read that from the lis.config file  
+!    ! Fraction of permanet snow/ice                                                             
+!      call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 PERMSNOWFRAC:", rc = rc)                          
+!      do n=1, LIS_rc%nnest                                                                               
+!          call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%PERMSNOWFRAC, rc=rc)                
+!          call LIS_verify(rc, "CROCUS81 PERMSNOWFRAC: not defined")                                      
+!      enddo  
+!print *, "Crocus81_readcrd.F90 CROCUS81_struc(n)%PERMSNOWFRAC", CROCUS81_struc(n)%PERMSNOWFRAC
 
     ! Mechanical transformation of snow grain and compaction + effect of wind on falling snow properties
 !	'NONE': No snowdrift scheme
@@ -380,23 +399,24 @@ subroutine Crocus81_readcrd()
         call LIS_verify(rc, "CROCUS81 PRODSNOWMAK_BOOL: not defined")
     enddo
  
-     ! !Typical slope aspect in the grid  (deg from N clockwise)                                        
-      call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 SLOPE_DIR:", rc = rc)                              
-      do n=1, LIS_rc%nnest                                                                               
-          call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%SLOPE_DIR, rc=rc)                   
-          call LIS_verify(rc, "CROCUS81 SLOPE_DIR: not defined")                                         
-      enddo  
+! Use ASPECT (SLOPE DIRECTION) from LDT output    
+!     ! !Typical slope aspect in the grid  (clockwise from N)                                         
+!      call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 SLOPE_DIR:", rc = rc)                              
+!      do n=1, LIS_rc%nnest                                                                               
+!          call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%SLOPE_DIR, rc=rc)                   
+!          call LIS_verify(rc, "CROCUS81 SLOPE_DIR: not defined")                                         
+!      enddo  
 
 
     ! The following lines hard code the LDT NetCDF variable names. 
     do n=1, LIS_rc%nnest
         !CROCUS81_struc(n)%LDT_ncvar_GLACIER_BOOL = 'CROCUS81_GLACIER_BOOL'
         !CROCUS81_struc(n)%LDT_ncvar_TG       = 'Crocus_TG' !'CROCUS81_TG'
-        !CROCUS81_struc(n)%LDT_ncvar_SLOPE    = 'SLOPE' !'CROCUS81_SLOPE'
-        !CROCUS81_struc(n)%LDT_ncvar_ALB      = 'ALBEDO'
+        CROCUS81_struc(n)%LDT_ncvar_SLOPE    = 'SLOPE' !'CROCUS81_SLOPE'
+        CROCUS81_struc(n)%LDT_ncvar_ALB      = 'ALBEDO'
         !CROCUS81_struc(n)%LDT_ncvar_SOILCOND = 'Crocus_SOILCOND' !'CROCUS81_SOILCOND'
-        !CROCUS81_struc(n)%LDT_ncvar_PERMSNOWFRAC = 'CROCUS81_PERMSNOWFRAC'
-        !CROCUS81_struc(n)%LDT_ncvar_SLOPE_DIR = 'ASPECT'   ! 'CROCUS81_SLOPE_DIR'
+        CROCUS81_struc(n)%LDT_ncvar_PERMSNOWFRAC =  'GLACIERFRAC' !  'CROCUS81_PERMSNOWFRAC'
+        CROCUS81_struc(n)%LDT_ncvar_SLOPE_DIR = 'ASPECT'   ! 'CROCUS81_SLOPE_DIR'
         CROCUS81_struc(n)%LDT_ncvar_SAND     = 'SAND' ! 'CROCUS81_SAND'
         CROCUS81_struc(n)%LDT_ncvar_SILT     = 'SILT'
         CROCUS81_struc(n)%LDT_ncvar_CLAY     = 'CLAY'

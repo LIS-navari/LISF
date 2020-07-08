@@ -94,7 +94,9 @@ subroutine Crocus81_main(n)
     REAL                 :: tmp_Z0NAT              ! grid box average roughness length (m) (roughness length for momentum) [m]
     REAL                 :: tmp_Z0EFF              ! roughness length for momentum (modd_diagn.F90 effective roughness length for heat(!?)) [m]
     REAL                 :: tmp_Z0HNAT             ! grid box average roughness length for heat [m]
-    REAL*8                 :: tmp_ALB !(:)             ! soil/vegetation albedo [-]
+    REAL*8, allocatable  :: tmp_ALB (:)             ! soil/vegetation albedo[-] (monthly value)
+    LOGICAL              :: tmp_use_monthly_albedo_map ! if usemonalb == .true., then the alb value passed to lsmcrocus will be used 
+                                                       ! as the background snow-free albedo term.  ! if usemonalb == .false., then alb will be set to 0.2
     REAL*8                 :: tmp_SOILCOND           ! soil thermal conductivity (W m-1 K-1) [W /(m K)]
     REAL                 :: tmp_D_G                ! !Assumed first soil layer thickness (m)
 !Used to calculate ground/snow heat flux   (D_G(:,1)) [m]
@@ -139,7 +141,7 @@ subroutine Crocus81_main(n)
     LOGICAL              :: tmp_SELF_PROD_BOOL     ! Snowmaking and Grooming options [-]
     LOGICAL              :: tmp_SNOWMAK_PROP_BOOL  ! Snowmaking and Grooming options [-]
     LOGICAL              :: tmp_PRODSNOWMAK_BOOL   ! Snowmaking and Grooming options [-]
-    REAL                 :: tmp_SLOPE_DIR          ! !Typical slope aspect in the grid  (deg from N clockwise) [degrees]
+    REAL                 :: tmp_SLOPE_DIR          ! !Typical slope aspect in the grid  (clockwise from N) [Radians]
     REAL*8                 :: tmp_SAND               ! Soil sand fraction (-) [-]
     REAL*8                 :: tmp_SILT               ! Soil silt fraction (-) [-]
     REAL*8                 :: tmp_CLAY               ! Soil clay fraction (-) [-]
@@ -165,7 +167,7 @@ subroutine Crocus81_main(n)
     allocate( tmp_SNOWHIST( CROCUS81_struc(n)%nsnow ) )
     allocate( tmp_SNOWAGE( CROCUS81_struc(n)%nsnow ) )
 !    allocate( tmp_TG( 12 ) )
-!    allocate( tmp_ALB( 12 ) )
+    allocate( tmp_ALB( 12 ) )
     allocate( tmp_SNOWLIQ( CROCUS81_struc(n)%nsnow ) )
     allocate( tmp_SNOWTEMP( CROCUS81_struc(n)%nsnow ) )
     allocate( tmp_SNOWDZ( CROCUS81_struc(n)%nsnow ) )
@@ -282,22 +284,25 @@ subroutine Crocus81_main(n)
             tmp_nimpur                              = CROCUS81_struc(n)%nimpur                          
             tmp_SNOWRES_opt                         = CROCUS81_struc(n)%SNOWRES_opt                     
             tmp_OMEB_BOOL                           = CROCUS81_struc(n)%OMEB_BOOL                       
-            tmp_GLACIER_BOOL                        =  CROCUS81_struc(n)%GLACIER_BOOL     !CROCUS81_struc(n)%crocus81(t)%GLACIER_BOOL                    
+            tmp_GLACIER_BOOL                        =  CROCUS81_struc(n)%GLACIER_BOOL     !CROCUS81_struc(n)%crocus81(t)%GLACIER_BOOL 
             tmp_HIMPLICIT_WIND_opt                  = CROCUS81_struc(n)%HIMPLICIT_WIND_opt              
             tmp_PTSTEP                              = CROCUS81_struc(n)%PTSTEP                          
             !tmp_TG(:)                               = CROCUS81_struc(n)%crocus81(t)%TG(:)   
-            tmp_TG                               = CROCUS81_struc(n)%TG                              
+            tmp_TG                                  = CROCUS81_struc(n)%TG                              
             tmp_UREF                                = CROCUS81_struc(n)%UREF                            
-            tmp_SLOPE                               = CROCUS81_struc(n)%SLOPE  ! CROCUS81_struc(n)%crocus81(t)%SLOPE                                 
+            !tmp_SLOPE                               = CROCUS81_struc(n)%SLOPE  !read from lis.config
+            tmp_SLOPE                               = CROCUS81_struc(n)%crocus81(t)%SLOPE ! reading from LDT output
             tmp_ZREF                                = CROCUS81_struc(n)%ZREF                            
             tmp_Z0NAT                               = CROCUS81_struc(n)%Z0NAT                           
             tmp_Z0EFF                               = CROCUS81_struc(n)%Z0EFF                           
             tmp_Z0HNAT                              = CROCUS81_struc(n)%Z0HNAT                          
-           ! tmp_ALB(:)                              = CROCUS81_struc(n)%crocus81(t)%ALB(:)  
-            tmp_ALB                             = CROCUS81_struc(n)%ALB                                                        
-            tmp_SOILCOND                     = CROCUS81_struc(n)%SOILCOND  !CROCUS81_struc(n)%crocus81(t)%SOILCOND                                    
+            tmp_ALB(:)                              = CROCUS81_struc(n)%crocus81(t)%ALB(:) ! reading from LDT output 
+            !tmp_ALB                                 = CROCUS81_struc(n)%ALB  ! read constant value from lis.config
+            tmp_use_monthly_albedo_map              = CROCUS81_struc(n)%use_monthly_albedo_map 
+            tmp_SOILCOND                            = CROCUS81_struc(n)%SOILCOND  !CROCUS81_struc(n)%crocus81(t)%SOILCOND
             tmp_D_G                                 = CROCUS81_struc(n)%D_G                             
-            tmp_PERMSNOWFRAC                        = CROCUS81_struc(n)%PERMSNOWFRAC    ! CROCUS81_struc(n)%crocus81(t)%PERMSNOWFRAC                  
+            !tmp_PERMSNOWFRAC                        = CROCUS81_struc(n)%PERMSNOWFRAC    ! read from lis.config 
+            tmp_PERMSNOWFRAC                        = CROCUS81_struc(n)%crocus81(t)%PERMSNOWFRAC  !read from LDT output                
             tmp_SNOWDRIFT_opt                       = CROCUS81_struc(n)%SNOWDRIFT_opt                   
             tmp_SNOWDRIFT_SUBLIM_BOOL               = CROCUS81_struc(n)%SNOWDRIFT_SUBLIM_BOOL           
             tmp_SNOW_ABS_ZENITH_BOOL                = CROCUS81_struc(n)%SNOW_ABS_ZENITH_BOOL            
@@ -317,7 +322,8 @@ subroutine Crocus81_main(n)
             tmp_SELF_PROD_BOOL                      = CROCUS81_struc(n)%SELF_PROD_BOOL                  
             tmp_SNOWMAK_PROP_BOOL                   = CROCUS81_struc(n)%SNOWMAK_PROP_BOOL               
             tmp_PRODSNOWMAK_BOOL                    = CROCUS81_struc(n)%PRODSNOWMAK_BOOL                
-            tmp_SLOPE_DIR                           = CROCUS81_struc(n)%SLOPE_DIR   ! CROCUS81_struc(n)%crocus81(t)%SLOPE_DIR                         
+            !tmp_SLOPE_DIR                           = CROCUS81_struc(n)%SLOPE_DIR  ! read from lis.config
+            tmp_SLOPE_DIR                           = CROCUS81_struc(n)%crocus81(t)%SLOPE_DIR ! read from LDT output
             tmp_SAND                                = CROCUS81_struc(n)%crocus81(t)%SAND                            
             tmp_SILT                                = CROCUS81_struc(n)%crocus81(t)%SILT                            
             tmp_CLAY                                = CROCUS81_struc(n)%crocus81(t)%CLAY                            
@@ -344,6 +350,17 @@ subroutine Crocus81_main(n)
             tmp_SNOWMAK_dz    = CROCUS81_struc(n)%crocus81(t)%SNOWMAK_dz
  
 
+! ---------------------------- Compute GLACIER_BOOL ---------------------------------
+! TODO check the threshold value
+! use a threshold value of 0.2  
+!print *, 'BF tmp_GLACIER_BOOL', tmp_GLACIER_BOOL
+if (tmp_PERMSNOWFRAC.gt.0.2)then
+      tmp_GLACIER_BOOL = .False.
+endif
+!print *, 'AF tmp_GLACIER_BOOL', tmp_GLACIER_BOOL
+!------------------------------------------------------------------------------------ 
+
+!print*, "Crocus81_main.F90 PERMSNOWFRAC lis.config, PERMSNOWFRAC_LDT " ,CROCUS81_struc(n)%PERMSNOWFRAC , CROCUS81_struc(n)%crocus81(t)%PERMSNOWFRAC 
           ! MN isba 
           !print*, '========================================================'
           !print*, 'name of surfex parameter file hard  coded in the Crocus81_main.F90' 
@@ -354,26 +371,31 @@ subroutine Crocus81_main(n)
          ! Var10                ,Var11              ,Var12                    ,Var13        ,Var14                ,Var15            ,Var16
          !  ZP_EMISNOW, ZP_CDSNOW,ZP_USTARSNOW, ZP_TG(:,1), ZP_SOILCOND, ZP_ZENITH, ZP_ANGL_ILLUM
 
-           INQUIRE(File="surfex_param_final.txt", Exist=file_exists)
-           if (file_exists) then
-              OPEN(UNIT=99,FILE="surfex_param_final.txt", &
-                           FORM="FORMATTED",STATUS="OLD",ACTION="READ")
-              do ii = 1 , CROCUS81_struc(n)%isba_param_count 
-                 read ( 99,*) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
-                 150 format(A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 11(F10.6,1x) )
-                 !write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
-              enddo
-!                 print*,'test'
-                 !write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
-              CLOSE(UNIT=99 )
-           endif
-           tmp_TG = Var13                           
-           tmp_SOILCOND  = Var14  
-           tmp_ZENITH = var15
-           tmp_ANGL_ILLUM = var16 
-           tmp_EXNS = var6
-           tmp_EXNA = var7
-print*, 'Crocus81_main.F90  SOILCOND', tmp_SOILCOND
+          ! INQUIRE(File="surfex_param_final.txt", Exist=file_exists)
+          ! if (file_exists) then
+          !    OPEN(UNIT=99,FILE="surfex_param_final.txt", &
+          !                 FORM="FORMATTED",STATUS="OLD",ACTION="READ")
+          !    do ii = 1 , CROCUS81_struc(n)%isba_param_count 
+          !       read ( 99,*) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
+          !       150 format(A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 11(F10.6,1x) )
+          !       !write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
+          !    enddo
+!         !        print*,'test'
+          !       !write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
+          !    CLOSE(UNIT=99 )
+          ! endif
+           !tmp_TG = Var13                           
+           !tmp_SOILCOND  = Var14  
+           !tmp_ZENITH = var15
+           !tmp_ANGL_ILLUM = var16 
+           !tmp_EXNS = var6
+           !tmp_EXNA = var7
+!print*, 'Crocus81_main.F90  SOILCOND', tmp_SOILCOND
+!WRITE (*, '( A50 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, I3, 1x, I3,  1x, 5(F10.6,1x) )') 'Crocus81_main.F90 SAND,CLAY,SILT,POROSITY,SOILCOND',  &
+!                               tmp_year, &
+!                               tmp_month, tmp_day, tmp_hour, tmp_minute,  &
+!                               tmp_SAND, tmp_CLAY, tmp_SILT, tmp_POROSITY, tmp_SOILCOND
+
 !WRITE (*, '( A10 , 1x , 1(F12.6, 1x))')  ' tmp_TG', tmp_TG 
 !print *, 'main , tmp_RRSNOW,  tmp_SRSNOW' , tmp_RRSNOW , tmp_SRSNOW ! MN
             ! call model physics 
@@ -466,21 +488,22 @@ print*, 'Crocus81_main.F90  SOILCOND', tmp_SOILCOND
                                tmp_SELF_PROD_BOOL    , & ! IN    - Snowmaking and Grooming options [-]
                                tmp_SNOWMAK_PROP_BOOL , & ! IN    - Snowmaking and Grooming options [-]
                                tmp_PRODSNOWMAK_BOOL  , & ! INOUT - Snowmaking and Grooming options [-]
-                               tmp_SLOPE_DIR        , &  ! IN    - !Typical slope aspect in the grid  (deg from N clockwise) [degrees]
+                               tmp_SLOPE_DIR        , &  ! IN    - !Typical slope aspect in the grid  (clockwise from N) [Radians]
                                tmp_SAND              , & ! IN    - Soil sand fraction (-) [-]
                                tmp_SILT              , & ! IN    - Soil silt fraction (-) [-]
                                tmp_CLAY              , & ! IN    - Soil clay fraction (-) [-]
-                               tmp_POROSITY          , &   ! IN    - Soil porosity (m3 m-3) [m3/m3]
-                               tmp_ZENITH ,&  ! added to read surfex parameter 
-                               tmp_ANGL_ILLUM  , & ! added to read surfex parameter
-                               tmp_EXNS , &            ! added to read surfex parameter
-                               tmp_EXNA)            ! added to read surfex parameter
+                               tmp_POROSITY          ,&  ! IN    - Soil porosity (m3 m-3) [m3/m3]
+                               tmp_use_monthly_albedo_map)
+                               !tmp_ZENITH ,&  ! added to read surfex parameter 
+                               !tmp_ANGL_ILLUM  , & ! added to read surfex parameter
+                               !tmp_EXNS , &            ! added to read surfex parameter
+                               !tmp_EXNA)            ! added to read surfex parameter
     
             ! save state variables from local variables to global variables
             CROCUS81_struc(n)%crocus81(t)%SNOWSWE(:)    = tmp_SNOWSWE(:)   
             CROCUS81_struc(n)%crocus81(t)%SNOWRHO(:)    = tmp_SNOWRHO(:)   
             CROCUS81_struc(n)%crocus81(t)%SNOWHEAT(:)   = tmp_SNOWHEAT(:)  
-            CROCUS81_struc(n)%crocus81(t)%SNOWALB       = tmp_SNOWALB      
+            CROCUS81_struc(n)%crocus81(t)%SNOWALB       = tmp_SNOWALB     
             CROCUS81_struc(n)%crocus81(t)%SNOWGRAN1(:)  = tmp_SNOWGRAN1(:) 
             CROCUS81_struc(n)%crocus81(t)%SNOWGRAN2(:)  = tmp_SNOWGRAN2(:) 
             CROCUS81_struc(n)%crocus81(t)%SNOWHIST(:)   = tmp_SNOWHIST(:)  
@@ -607,6 +630,11 @@ print*, 'Crocus81_main.F90  SOILCOND', tmp_SOILCOND
             ![ 21] output variable: QS (unit=kg/kg). *** surface humidity (kg/kg)
             call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWSURFACEQ, value = CROCUS81_struc(n)%crocus81(t)%QS, &
                                               vlevel=1, unit="kg kg-1", direction="-", surface_type = LIS_rc%lsm_index)
+
+            ![ 22] output variable: PERMSNOWFRAC (unit=-). *** Fraction of permanet snow/ice
+            call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_GLACIERFRACTION, value = CROCUS81_struc(n)%crocus81(t)%PERMSNOWFRAC, &
+                                              vlevel=1, unit="-", direction="", surface_type = LIS_rc%lsm_index)
+
             ! reset forcing variables to zeros
             CROCUS81_struc(n)%crocus81(t)%PPS = 0.0
             CROCUS81_struc(n)%crocus81(t)%SRSNOW = 0.0
@@ -631,7 +659,7 @@ print*, 'Crocus81_main.F90  SOILCOND', tmp_SOILCOND
     deallocate( tmp_SNOWHIST )
     deallocate( tmp_SNOWAGE )
 !    deallocate( tmp_TG )
-!    deallocate( tmp_ALB )
+    deallocate( tmp_ALB )
     deallocate( tmp_SNOWLIQ )
     deallocate( tmp_SNOWTEMP )
     deallocate( tmp_SNOWDZ )

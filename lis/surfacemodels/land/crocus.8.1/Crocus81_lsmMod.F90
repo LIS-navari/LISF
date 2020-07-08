@@ -39,6 +39,9 @@ module Crocus81_lsmMod
 !   LDT NetCDF variable name for Soil clay fraction (-)
 ! \item[LDT\_ncvar\_POROSITY]
 !   LDT NetCDF variable name for Soil porosity (m3 m-3)
+! \item[use\_monthly\_albedo\_map]
+! if usemonalb == .true., then the alb value passed to lsmcrocus will be used as the background snow-free albedo term.  
+! if usemonalb == .false., then alb will be set to 0.2 
 ! \item[ts]
 !   Crocus81 model time step in second
 ! \item[count]
@@ -92,11 +95,11 @@ module Crocus81_lsmMod
         !-------------------------------------------------------------------------
         !character*128      :: LDT_ncvar_GLACIER_BOOL
         !character*128      :: LDT_ncvar_TG
-        !character*128      :: LDT_ncvar_SLOPE
-        !character*128      :: LDT_ncvar_ALB
+        character*128      :: LDT_ncvar_SLOPE
+        character*128      :: LDT_ncvar_ALB
         !character*128      :: LDT_ncvar_SOILCOND
-        !character*128      :: LDT_ncvar_PERMSNOWFRAC
-        !character*128      :: LDT_ncvar_SLOPE_DIR
+        character*128      :: LDT_ncvar_PERMSNOWFRAC
+        character*128      :: LDT_ncvar_SLOPE_DIR
         character*128      :: LDT_ncvar_SAND
         character*128      :: LDT_ncvar_SILT
         character*128      :: LDT_ncvar_CLAY
@@ -138,20 +141,23 @@ module Crocus81_lsmMod
         integer            :: nimpur
         CHARACTER(len=3)   :: SNOWRES_opt
         LOGICAL            :: OMEB_BOOL
-        LOGICAL         :: GLACIER_BOOL    
+        LOGICAL            :: GLACIER_BOOL ! it is a spatial param. It will be computed 
+                                           ! for each grid cell in the driver using PERMSNOWFRAC    
         CHARACTER(len=3)   :: HIMPLICIT_WIND_opt
         REAL               :: PTSTEP
-        REAL            :: TG
+        REAL               :: TG
         REAL               :: UREF
-        REAL            :: SLOPE  
+        !REAL               :: SLOPE  
         REAL               :: ZREF
         REAL               :: Z0NAT
         REAL               :: Z0EFF
         REAL               :: Z0HNAT
-        REAL            :: ALB
-        REAL            :: SOILCOND
+        !REAL               :: ALB
+        logical            :: use_monthly_albedo_map
+        REAL               :: SOILCOND ! it is a spatial param. It will be computed 
+                                       ! for each grid cell in the driver using soil parameters 
         REAL               :: D_G
-        REAL             :: PERMSNOWFRAC          
+        !REAL               :: PERMSNOWFRAC          
         CHARACTER(len=4)   :: SNOWDRIFT_opt
         LOGICAL            :: SNOWDRIFT_SUBLIM_BOOL
         LOGICAL            :: SNOW_ABS_ZENITH_BOOL
@@ -171,7 +177,7 @@ module Crocus81_lsmMod
         LOGICAL            :: SELF_PROD_BOOL
         LOGICAL            :: SNOWMAK_PROP_BOOL
         LOGICAL            :: PRODSNOWMAK_BOOL
-        REAL               :: SLOPE_DIR  
+        !REAL               :: SLOPE_DIR  
         type(Crocus81dec), pointer :: crocus81(:)
     end type Crocus81_type_dec
 
@@ -234,6 +240,7 @@ contains
                 allocate(CROCUS81_struc(n)%crocus81(t)%SNOWLIQ(CROCUS81_struc(n)%nsnow))
                 allocate(CROCUS81_struc(n)%crocus81(t)%SNOWTEMP(CROCUS81_struc(n)%nsnow))
                 allocate(CROCUS81_struc(n)%crocus81(t)%SNOWDZ(CROCUS81_struc(n)%nsnow))
+                allocate(CROCUS81_struc(n)%crocus81(t)%ALB(12))
             enddo
             !------------------------------------------------------------------------
             ! Model timestep Alarm

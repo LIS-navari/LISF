@@ -94,7 +94,7 @@ module Crocus81_module
 !   \item[Z0HNAT]
 !     grid box average roughness length for heat. unit: m
 !   \item[ALB]
-!     soil/vegetation albedo. unit: -
+!     soil/vegetation albedo (monthly values). unit: -
 !   \item[SOILCOND]
 !     soil thermal conductivity (W m-1 K-1). unit: W /(m K)
 !   \item[D\_G]
@@ -214,11 +214,11 @@ module Crocus81_module
         !-------------------------------------------------------------------------
         ! spatial parameter
         !-------------------------------------------------------------------------
-        !logical            :: GLACIER_BOOL
+        !logical            :: GLACIER_BOOL ! will be computed in the driver using PERMSNOWFRAC
         real               :: SLOPE
-        !real               :: SOILCOND
-        !real               :: PERMSNOWFRAC
-        !real               :: SLOPE_DIR
+        !real               :: SOILCOND ! will be computed in the drvier using soil parameters
+        real               :: PERMSNOWFRAC
+        real               :: SLOPE_DIR
         real               :: SAND
         real               :: SILT
         real               :: CLAY
@@ -226,8 +226,9 @@ module Crocus81_module
         !-------------------------------------------------------------------------
         ! multilevel spatial parameter
         !-------------------------------------------------------------------------
-        real, pointer      :: TG(:)
-        real, pointer      :: ALB(:)
+        !real, pointer      :: TG(:) ! for now assume there is no energy exchange in the soil 
+                                     ! snow interface and read the variable from lis.config
+        real, pointer      :: ALB(:) 
         !-------------------------------------------------------------------------
         ! state
         !-------------------------------------------------------------------------

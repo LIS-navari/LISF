@@ -36,6 +36,7 @@ See the LIS Users' Guide for more informaion.
 #define MF_GFS
 #define MF_MERRA_LAND
 #define MF_MERRA2
+#define MF_ERA5
 #define MF_CMAP
 #define MF_CHIRPS2
 #define MF_TRMM_3B42RT

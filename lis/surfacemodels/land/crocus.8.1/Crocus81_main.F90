@@ -178,8 +178,8 @@ subroutine Crocus81_main(n)
      write(fnest,'(i3.3)') n  !MN  Bug in the toolkit 
     alarmCheck = LIS_isAlarmRinging(LIS_rc, "CROCUS81 model alarm "// trim(fnest)) !MN  Bug in the toolkit 
     if (alarmCheck) Then
-!        do t = 1, LIS_rc%npatch(n, LIS_rc%lsm_index)
-        do t = 1, 1  ! MN : to read test case  isba 
+        do t = 1, LIS_rc%npatch(n, LIS_rc%lsm_index)
+        !do t = 1, 1  ! MN : to read test case  isba 
 
             dt = LIS_rc%ts
             row = LIS_surface(n, LIS_rc%lsm_index)%tile(t)%row
@@ -354,8 +354,9 @@ subroutine Crocus81_main(n)
 ! TODO check the threshold value
 ! use a threshold value of 0.2  
 !print *, 'BF tmp_GLACIER_BOOL', tmp_GLACIER_BOOL
+tmp_GLACIER_BOOL = .False.
 if (tmp_PERMSNOWFRAC.gt.0.2)then
-      tmp_GLACIER_BOOL = .False.
+      tmp_GLACIER_BOOL = .True.
 endif
 !print *, 'AF tmp_GLACIER_BOOL', tmp_GLACIER_BOOL
 !------------------------------------------------------------------------------------ 
@@ -648,7 +649,7 @@ endif
         enddo ! end of tile (t) loop
         ! reset forcing counter to be zero
         CROCUS81_struc(n)%forc_count = 0 
-        CROCUS81_struc(n)%isba_param_count  =  CROCUS81_struc(n)%isba_param_count + 1  ! MN isba 
+        !CROCUS81_struc(n)%isba_param_count  =  CROCUS81_struc(n)%isba_param_count + 1  ! MN isba 
     endif ! end of alarmCheck loop 
     
     deallocate( tmp_SNOWSWE )

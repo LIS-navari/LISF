@@ -146,10 +146,12 @@ subroutine Crocus81_main(n)
     REAL*8                 :: tmp_SILT               ! Soil silt fraction (-) [-]
     REAL*8                 :: tmp_CLAY               ! Soil clay fraction (-) [-]
     REAL*8                 :: tmp_POROSITY           ! Soil porosity (m3 m-3) [m3/m3]
-    REAL                 ::  tmp_ZENITH            ! added for isba parameter 
-    REAL                 ::  tmp_ANGL_ILLUM        ! added fro isba parameter  
-    REAL                 ::  tmp_EXNS           ! added fro isba parameter   !compute this using presure at surface
-    REAL                 ::  tmp_EXNA           ! added fro isba parameter  
+    LOGICAL              :: tmp_Partition_total_precip_BOOL ! Boolean option to partition total precipitation into snowfall and rainfall using Jordan 1991 [-]
+    REAL                 :: FPICE
+    !REAL                 ::  tmp_ZENITH            ! added for isba parameter 
+    !REAL                 ::  tmp_ANGL_ILLUM        ! added fro isba parameter  
+    !REAL                 ::  tmp_EXNS           ! added fro isba parameter   !compute this using presure at surface
+    !REAL                 ::  tmp_EXNA           ! added fro isba parameter  
    ! Bug in toolkit
     character*3        :: fnest
 ! MN isba  
@@ -214,7 +216,31 @@ subroutine Crocus81_main(n)
  
             ! LW_RAD: atmospheric infrared radiation (W/m2)
             tmp_LW_RAD     = CROCUS81_struc(n)%crocus81(t)%LW_RAD / CROCUS81_struc(n)%forc_count
- 
+
+
+! TODO  add lis.config option to determine whether to partition total precipitation into snowfall and rainfall 
+            ! Use Jordan model to partition total precipitation into snowfall and rainfall 
+        ! Jordan (1991)
+        !print*,'Partition_total_precip_BOOL', CROCUS81_struc(n)%Partition_total_precip_BOOL 
+        !print*, 'main BF tmp_SRSNOW, tmp_RRSNOW', tmp_SRSNOW, tmp_RRSNOW
+            if (CROCUS81_struc(n)%Partition_total_precip_BOOL) then 
+              IF(tmp_TA > 273.16+2.5)THEN
+                  FPICE = 0.
+              ELSE
+                IF(tmp_TA <= 273.16+0.5)THEN
+                  FPICE = 1.0
+                ELSE IF(tmp_TA <= 273.16+2.)THEN
+                  FPICE = 1.-(-54.632 + 0.2*tmp_TA)
+                ELSE
+                  FPICE = 0.6
+                ENDIF
+              ENDIF
+              ! snow rate (SWE) [kg/(m2 s)]
+              tmp_SRSNOW  = tmp_RRSNOW * FPICE 
+              ! rain rate (SWE) [kg/(m2 s)]
+              tmp_RRSNOW  = tmp_RRSNOW - tmp_SRSNOW
+         !print*, 'main AF tmp_SRSNOW, tmp_RRSNOW', tmp_SRSNOW, tmp_RRSNOW 
+            endif
             ! 
             ! check validity of PPS
             if(tmp_PPS .eq. LIS_rc%udef) then

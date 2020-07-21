@@ -407,6 +407,12 @@ subroutine Crocus81_readcrd()
 !          call LIS_verify(rc, "CROCUS81 SLOPE_DIR: not defined")                                         
 !      enddo  
 
+    ! Boolean option to partition total precipitation into snowfall and rainfall using Jordan 1991
+    call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 boolean option to partition total precip:", rc = rc)
+    do n=1, LIS_rc%nnest
+        call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%Partition_total_precip_BOOL, rc=rc)
+        call LIS_verify(rc, "CROCUS81 boolean option to partition total precip: not defined")
+    enddo
 
     ! The following lines hard code the LDT NetCDF variable names. 
     do n=1, LIS_rc%nnest

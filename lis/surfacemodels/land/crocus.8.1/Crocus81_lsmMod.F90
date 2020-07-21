@@ -177,7 +177,8 @@ module Crocus81_lsmMod
         LOGICAL            :: SELF_PROD_BOOL
         LOGICAL            :: SNOWMAK_PROP_BOOL
         LOGICAL            :: PRODSNOWMAK_BOOL
-        !REAL               :: SLOPE_DIR  
+        !REAL               :: SLOPE_DIR 
+        LOGICAL            :: Partition_total_precip_BOOL     
         type(Crocus81dec), pointer :: crocus81(:)
     end type Crocus81_type_dec
 

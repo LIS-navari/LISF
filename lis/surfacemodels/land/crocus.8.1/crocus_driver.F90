@@ -447,8 +447,8 @@ SUBROUTINE crocus_driver(n, &
    ZP_HPSNOW = 0 ! 1
    THRUFAL = 0.0 ! 1 PTHRUFAL(:)    = 0.0
    ZP_EVAPCOR = 0.0 ! 1 PEVAPCOR(:)  = 0.0
-   QS = XUNDEF ! 1 QS(:)  = XUNDEF
-   RI_n = XUNDEF ! 1 PRI(:)  = XUNDEF
+   QS =  LIS_rc%udef !XUNDEF ! 1 QS(:)  = XUNDEF
+   RI_n = LIS_rc%udef !XUNDEF ! 1 PRI(:)  = XUNDEF
    EMISNOW = 0.99 ! NOTE:  snow makeing is not active, so we can use EMISNOWout(:) = 0.99
    ZP_SWNETSNOW = 0.0   ! 1    ZSWNET_N(:)       = 0.0
    ZP_SWNETSNOWS = 0.0 ! 1    ZSWNET_NS(:)     = 0.0
@@ -467,7 +467,7 @@ SUBROUTINE crocus_driver(n, &
    ZSNOWFALL = SRSNOW*PTSTEP/XRHOSMAX_ES    ! maximum possible snowfall depth (m)
 !print*, ' RRSNOW , SRSNOW,   ZSNOWFALL  ,PTSTEP, XRHOSMAX_ES ' , RRSNOW, SRSNOW,ZSNOWFALL , PTSTEP, XRHOSMAX_ES ! MN
 !WRITE(*,*) 'Driver SW',YEAR, MONTH, DAY, hour, minute , SW_RAD
-   WRITE (*, *) '*Driver ', YEAR, MONTH, DAY, hour, minute
+!   WRITE (*, *) '*Driver ', YEAR, MONTH, DAY, hour, minute
 !WRITE (*, '(A30 , 1x, 3(F10.6,1x) )') '**ZSNOW, ZSNOWFALL,XSNOWDMIN ' , ZSNOW, ZSNOWFALL, XSNOWDMIN ! MN
    IF (ZSNOW >= XSNOWDMIN .OR. ZSNOWFALL >= XSNOWDMIN) THEN
 
@@ -490,30 +490,30 @@ SUBROUTINE crocus_driver(n, &
 !THRUFAL = 0.0
       THRUFAL = MAX(0.0, sum(SNOWSWE)/PTSTEP + SRSNOW + RRSNOW) ! kg m-2 s-1   ! - PEVAP(:)*ZPSN(:)
 !print *, 'driver  THRUFAL' ,THRUFAL ! MN
-      SNOWALB = XUNDEF
+      SNOWALB = LIS_rc%udef !XUNDEF
       ZP_GSFCSNOW = 0.0
       ZP_EVAPCOR = 0.0
       ZP_GFLUXSNOW = 0 ! TO DO check snow3L_isba.F90!  NOTE: it has not been initialized in the CALL_MODEL but in the outpit it is zero
-      SNOWHMASS = 0.0  ! TO DO check snow3L_isba.F90
+      !SNOWHMASS = 0.0  ! TO DO check snow3L_isba.F90
       GRNDFLUX = 0.0
       SNOWSWE(:) = 0.0
 !Prognostic variables forced to XUNDEF for correct outputs
-      SNOWHEAT(:) = XUNDEF !1.0E+020 ! LIS_rc%udef
-      SNOWRHO(:) = XUNDEF ! 10000000000000 !LIS_rc%udef
-      SNOWAGE(:) = XUNDEF !LIS_rc%udef
+      SNOWHEAT(:) = LIS_rc%udef ! XUNDEF !1.0E+020 ! LIS_rc%udef
+      SNOWRHO(:) = LIS_rc%udef !  XUNDEF ! 10000000000000 !LIS_rc%udef
+      SNOWAGE(:) = LIS_rc%udef !  XUNDEF !LIS_rc%udef
 
 !Print *, 'XUNDEF' , XUNDEF  ! MN
 
       SNOWTEMP(:) = 273.16 !LIS_rc%udef
-      SNOWLIQ(:) = XUNDEF ! LIS_rc%udef
+      SNOWLIQ(:) = LIS_rc%udef !  XUNDEF ! LIS_rc%udef
       SNOWDZ(:) = 0.0
 !ZP_SNOWIMPUR (:,:,:) = 0
-      SNOWGRAN1(:) = XUNDEF ! LIS_rc%udef
-      SNOWGRAN2(:) = XUNDEF ! LIS_rc%udef
-      SNOWHIST(:) = XUNDEF ! LIS_rc%udef
+      SNOWGRAN1(:) = LIS_rc%udef ! XUNDEF ! LIS_rc%udef
+      SNOWGRAN2(:) = LIS_rc%udef ! XUNDEF ! LIS_rc%udef
+      SNOWHIST(:) = LIS_rc%udef !  XUNDEF ! LIS_rc%udef
 ! MN added
 !EMISNOW = 0.99 !
-      SNOWHMASS = XUNDEF ! LIS_rc%udef
+      SNOWHMASS = LIS_rc%udef !  XUNDEF ! LIS_rc%udef
 
    ENDIF
 
@@ -833,8 +833,8 @@ CONTAINS
 ! end test : initialize to zero
 ! ______________________________________________
       USTARSNOW = 0 ! it has not been initialized in the CALL_MODEL
-      CHSNOW = 0 ! it has not been initialized in the CALL_MODEL
-      SNOWHMASS = 0 ! it has not been initialized in the CALL_MODEL
+      !CHSNOW = 0 ! it has not been initialized in the CALL_MODEL
+      !SNOWHMASS = 0 ! it has not been initialized in the CALL_MODEL
       XRIMAX = 0.2 ! in surfex it is defined in the namelist
 
       CALL ini_csts ! routine to initialize the module MODD_CST
@@ -985,7 +985,7 @@ CONTAINS
      ALBin(1) = 0.2 ! soil/vegetation albedo (ALB) set to 0.2 in the SURFEX-Crocus
   endif
 !print*, "ALB" , ALB(:)
-print*,"ALBin", ALBin
+!print*,"ALBin", ALBin
 
 
 ! ***************************************************************************
@@ -1007,7 +1007,6 @@ print*,"ALBin", ALBin
 !if (SRSNOWin(1) /= 0. ) then
 ! ZP_PSN3Lin(1)= SRSNOWin(1) /(SRSNOWin(1) +RRSNOWin(1))
 !endif
-
 ! Compute air density
 ! -----------------------------------------
       XRD = XAVOGADRO*XBOLTZ/XMD
@@ -1110,12 +1109,12 @@ print*,"ALBin", ALBin
 
 !CALL THRMCONDZ(SAND,POROSITY,PCONDDRY,SOILCOND)
 ! Part of thrmcondz.F90 from SURFEX-Crocus
-ZQUARTZ  = XUNDEF
-ZGAMMAD   = XUNDEF
+ZQUARTZ  = LIS_rc%udef ! XUNDEF
+ZGAMMAD   = LIS_rc%udef !XUNDEF
 ! SOILCOND  = XUNDEF ! A dummy argument with the INTENT(IN) attribute shall not be defined nor become undefined
-PCONDDRY  = XUNDEF
+PCONDDRY  = LIS_rc%udef !XUNDEF
 ! Quartz content estimated from sand fraction:
-IF (SAND/=XUNDEF) THEN  !  WHERE(SAND/=XUNDEF)
+IF (SAND/=LIS_rc%udef) THEN  !  WHERE(SAND/=XUNDEF)
    ZQUARTZ   = 0.038 + 0.95*SAND
 ! Note, ZGAMMAD (soil dry density) can be supplied from obs, but
 ! for mesoscale modeling, we use the following approximation
@@ -1123,16 +1122,16 @@ IF (SAND/=XUNDEF) THEN  !  WHERE(SAND/=XUNDEF)
    ZGAMMAD   = (1.0-POROSITY)*XDRYWGHT
 END IF ! WHERE
 ! Soil solids conductivity:
-IF (ZQUARTZ >  0.20 .AND. SAND/=XUNDEF) THEN  ! WHERE(ZQUARTZ >  0.20 .AND. SAND/=XUNDEF)
+IF (ZQUARTZ >  0.20 .AND. SAND/=LIS_rc%udef) THEN  ! WHERE(ZQUARTZ >  0.20 .AND. SAND/=XUNDEF)
    SOILCOND  = (XCONDQRTZ**ZQUARTZ)*                        &
                     (XCONDOTH1**(1.0-ZQUARTZ))
 ! END  WHERE
-ELSE IF (ZQUARTZ <= 0.20 .AND. SAND/=XUNDEF) THEN ! WHERE(ZQUARTZ <= 0.20 .AND. SAND/=XUNDEF)
+ELSE IF (ZQUARTZ <= 0.20 .AND. SAND/=LIS_rc%udef) THEN ! WHERE(ZQUARTZ <= 0.20 .AND. SAND/=XUNDEF)
    SOILCOND  = (XCONDQRTZ**ZQUARTZ)*                        &
                     (XCONDOTH2**(1.0-ZQUARTZ))
 END IF !WHERE
 ! Soil dry conductivity:
-IF (SAND/=XUNDEF) THEN  ! WHERE(SAND/=XUNDEF)
+IF (SAND/=LIS_rc%udef) THEN  ! WHERE(SAND/=XUNDEF)
    PCONDDRY     = (0.135*ZGAMMAD + 64.7)/                   &
                          (XDRYWGHT - 0.947*ZGAMMAD)
 END IF !WHERE
@@ -1218,8 +1217,8 @@ ZLOG_CONDWTR = LOG(XCONDWTR)
 !
       SOILCOND = ZKERSTENDF*(ZCONDSATDF-ZCONDDRYZ) + ZCONDDRYZ
 
-WRITE (*, '( A45 , 3(F10.6,1x) )') 'soildif.F90  SOILCOND, ZKERSTENDF, ZCONDSATDF', &
-                                    SOILCOND, ZKERSTENDF, ZCONDSATDF
+!WRITE (*, '( A45 , 3(F10.6,1x) )') 'soildif.F90  SOILCOND, ZKERSTENDF, ZCONDSATDF', &
+!                                    SOILCOND, ZKERSTENDF, ZCONDSATDF
 ! ---------------------------------------------------------------------
 ! ---------------------------------------------------------------------
 

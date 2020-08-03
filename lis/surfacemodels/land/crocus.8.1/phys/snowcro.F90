@@ -109,7 +109,7 @@
 !!                                          * SNOWCROALB is now called by SNOWCRORAD to remove duplicated code
 !!                                          * Parameters for albedo are moved to modd_snow_par
 !!                                          * PSNOWAGE is stored as an age
-!!                                            (days since snowfall) and not as a date
+!!                                            (   days since snowfall) and not as a date
 !!                                            to allow spinup simulations
 !!                                          * New rules for optimal discretization of very thick snowpacks
 !!                                          * Optional outputs for debugging
@@ -5561,6 +5561,10 @@ ENDDO
 IF ( ABS( ZSNOWHEAN-ZSNOWHEAO )>0.0001 .OR. ABS( ZMASTOTN-ZMASTOTO )>0.0001 .OR. &
      ABS( ZPSNOW_NEW-ZPSNOW_OLD )> 0.0001 ) THEN 
   WRITE(*,*) 'Warning diff', ZSNOWHEAN-ZSNOWHEAO,ZMASTOTN-ZMASTOTO,ZPSNOW_NEW-ZPSNOW_OLD
+  WRITE (*, '( A15 , 1x ,I4, 1x, I2, 1x,  I3 ,2( 1x, F10.4))') 'PXLAT,PXLON',  &
+                               TPTIME%TDATE%YEAR, & 
+                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600., PXLAT,PXLON
+
 ENDIF
 !
 ! 5. Update mass (density and thickness) and heat:

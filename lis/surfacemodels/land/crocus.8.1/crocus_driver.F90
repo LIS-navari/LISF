@@ -1406,6 +1406,11 @@ ZLOG_CONDWTR = LOG(XCONDWTR)
 !                               SNOWHEATinout(1:1,1:4), SNOWRHOinout(1:1,1:4), SNOWSWEinout(1:1,1:4), &
 !                               SNOWGRAN1inout(1:1,1:4), SNOWGRAN2inout(1:1,1:4), &
 !                               SNOWTEMPinout(1:1,1:4), SNOWLIQout(1:1,1:4), SNOWDZout(1:1,1:4)  ! print_output_snowprofile
+
+!WRITE (*, '( A20 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 1(F10.6,1x) )') 'sum(SNOWDZout) ',  &
+!                               TPTIME%TDATE%YEAR, &
+!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600., sum(SNOWDZout) 
+
 !WRITE (*, '(A10 , 1x, 5(F10.6,1x) )')'PSNOWDZ',SNOWDZout(1,1:5) ! MN
 !WRITE (*, '(A10 , 1x, 5(F10.6,1x) )')'SNOWLIQout',SNOWLIQout(1,1:5) ! MN
 !WRITE (*, '(A10 , 1x, 5(F10.6,1x) )')'SNOWSWEinout',SNOWSWEinout(1,1:5) ! MN

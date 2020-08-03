@@ -187,6 +187,10 @@ module Crocus81_module
 !     Soil clay fraction (-). unit: -
 !   \item[POROSITY]
 !     Soil porosity (m3 m-3). unit: m3/m3
+!   \item[SD\_1D]
+!     Total snow depth, temporally added. unit: m
+!   \item[SWE\_1D]
+!     Total SWE, temporally added. unit: kg/m2
 !   \end{description}
 !
 ! !REVISION HISTORY:
@@ -257,5 +261,7 @@ module Crocus81_module
         real               :: EMISNOW
         real               :: SNOWHMASS
         real               :: QS
+        real               :: SD_1D
+        real               :: SWE_1D
     end type crocus81dec
 end module Crocus81_module

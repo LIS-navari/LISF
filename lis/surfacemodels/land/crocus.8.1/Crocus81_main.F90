@@ -147,6 +147,8 @@ subroutine Crocus81_main(n)
     REAL*8                 :: tmp_CLAY               ! Soil clay fraction (-) [-]
     REAL*8                 :: tmp_POROSITY           ! Soil porosity (m3 m-3) [m3/m3]
     LOGICAL              :: tmp_Partition_total_precip_BOOL ! Boolean option to partition total precipitation into snowfall and rainfall using Jordan 1991 [-]
+    REAL                 :: tmp_SD_1D              ! Total snow depth, temporally added [m]  
+    REAL                 :: tmp_SWE_1D             ! Total SWE, temporally added [kg/m2] 
     REAL                 :: FPICE
     !REAL                 ::  tmp_ZENITH            ! added for isba parameter 
     !REAL                 ::  tmp_ANGL_ILLUM        ! added fro isba parameter  
@@ -161,6 +163,7 @@ subroutine Crocus81_main(n)
     integer              ::err , ii , var2, var3, var4
     real                 :: var5, var6, var7, var8, var9, var10, var11, var12,  var14, var15, var16   
     real*8  :: var13
+    real*8    :: tmp
     allocate( tmp_SNOWSWE( CROCUS81_struc(n)%nsnow ) )
     allocate( tmp_SNOWRHO( CROCUS81_struc(n)%nsnow ) )
     allocate( tmp_SNOWHEAT( CROCUS81_struc(n)%nsnow ) )
@@ -520,7 +523,7 @@ endif
                                tmp_SILT              , & ! IN    - Soil silt fraction (-) [-]
                                tmp_CLAY              , & ! IN    - Soil clay fraction (-) [-]
                                tmp_POROSITY          ,&  ! IN    - Soil porosity (m3 m-3) [m3/m3]
-                               tmp_use_monthly_albedo_map)
+                               tmp_use_monthly_albedo_map)! ,& ! IN    - Boolean option to partition total precipitation into snowfall and rainfall using Jordan 1991 
                                !tmp_ZENITH ,&  ! added to read surfex parameter 
                                !tmp_ANGL_ILLUM  , & ! added to read surfex parameter
                                !tmp_EXNS , &            ! added to read surfex parameter
@@ -551,13 +554,28 @@ endif
             CROCUS81_struc(n)%crocus81(t)%EMISNOW      = tmp_EMISNOW     
             CROCUS81_struc(n)%crocus81(t)%SNOWHMASS    = tmp_SNOWHMASS   
             CROCUS81_struc(n)%crocus81(t)%QS           = tmp_QS          
- 
+            tmp = 0.0 
+            tmp = sum(tmp_SNOWDZ)
+            CROCUS81_struc(n)%crocus81(t)%SD_1D        = tmp
+            !print*, 'tmp , %SD_1d ', tmp , CROCUS81_struc(n)%crocus81(t)%SD_1D
+            tmp = 0.0
+            tmp = sum(tmp_SNOWSWE)
+            CROCUS81_struc(n)%crocus81(t)%SWE_1D       = tmp
+            
             !print*, 'Crocus81_main tmp_THRUFAL' , tmp_THRUFAL  ! MN  
             ![ 1] output variable: SNOWSWE (unit=kg/m2). *** Snow layer(s) liquid Water Equivalent (SWE:kg m-2)
             do i=1, CROCUS81_struc(n)%nsnow
                 call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWLIQPROF, value = CROCUS81_struc(n)%crocus81(t)%SNOWSWE(i), &
                                                   vlevel=i, unit="kg m-2", direction="-", surface_type = LIS_rc%lsm_index)
             end do
+
+            ![1] Writing out the snowprofile is a bottleneck and significantly increases the simulation time. For now 
+            !     sum up the layer values and only write out the cumulative value.  
+            !CROCUS81_struc(n)%crocus81(t)%SNOWSWE(1) = sum(tmp_SNOWSWE)
+            !tmp = sum(tmp_SNOWSWE) 
+            !call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWLIQPROF, value = tmp, &
+            !                                  vlevel=1, unit="kg m-2", direction="-", surface_type = LIS_rc%lsm_index)
+
             
             ![ 2] output variable: SNOWHEAT (unit=J/m2). *** Snow layer(s) Heat content (J/m2)
             do i=1, CROCUS81_struc(n)%nsnow
@@ -617,6 +635,13 @@ endif
                                                   vlevel=i, unit="m", direction="-", surface_type = LIS_rc%lsm_index)
             end do
             
+            ![11] Writing out the snowprofile is a bottleneck and significantly increases the simulation time. For now 
+            !     sum up the layer values and only write out the cumulative value.  
+            ! CROCUS81_struc(n)%crocus81(t)%SNOWDZ(1) = sum(tmp_SNOWDZ)   
+            !tmp = sum(tmp_SNOWDZ)
+            !call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWHIGHTPROF, value = tmp, &
+            !                                  vlevel=1, unit="m", direction="-", surface_type = LIS_rc%lsm_index)
+            !print*, 'sum(tmp_SNOWDZ)', sum(tmp_SNOWDZ) ! MN  
             ![ 12] output variable: THRUFAL (unit=kg/(m2 s)). *** Rate that liquid water leaves snow pack: paritioned into soil infiltration/runoff  by ISBA [kg/(m2 s)]
             call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWQS, value = CROCUS81_struc(n)%crocus81(t)%THRUFAL, &
                                               vlevel=1, unit="kg m-2 s-1", direction="OUT", surface_type = LIS_rc%lsm_index)
@@ -661,6 +686,16 @@ endif
             ![ 22] output variable: PERMSNOWFRAC (unit=-). *** Fraction of permanet snow/ice
             call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_GLACIERFRACTION, value = CROCUS81_struc(n)%crocus81(t)%PERMSNOWFRAC, &
                                               vlevel=1, unit="-", direction="", surface_type = LIS_rc%lsm_index)
+
+            ! Writing out the snowprofile is a bottleneck and significantly increases the simulation time. For now 
+            !     sum up the layer values and only write out the cumulative value.  
+              ![ 23] output variable: SD_1D (unit=m). *** Total snow depth, temporally added 
+              call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SD_1D, value = CROCUS81_struc(n)%crocus81(t)%SD_1D, &                
+                                                vlevel=1, unit="m", direction="-", surface_type = LIS_rc%lsm_index)                
+              
+              ![ 24] output variable: SWE_1D (unit=kg/m2). *** Total SWE, temporally added                                         
+              call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SWE_1D, value = CROCUS81_struc(n)%crocus81(t)%SWE_1D, &              
+                                                vlevel=1, unit="kg m-2", direction="-", surface_type = LIS_rc%lsm_index)      
 
             ! reset forcing variables to zeros
             CROCUS81_struc(n)%crocus81(t)%PPS = 0.0

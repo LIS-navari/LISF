@@ -476,7 +476,8 @@ public ::   LIS_MOC_SNOWHEATDRAG
 public ::   LIS_MOC_SNOWDELTAHEAT
 public ::   LIS_MOC_SNOWSURFACEQ
 !public ::   LIS_MOC_SNOWWIND_DIR
-
+public ::   LIS_MOC_SD_1D
+public ::   LIS_MOC_SWE_1D
   
   integer :: LIS_MOC_JULES_STHZW = -9999
   integer :: LIS_MOC_JULES_STHU = -9999
@@ -925,7 +926,8 @@ public ::   LIS_MOC_SNOWSURFACEQ
     integer :: LIS_MOC_SNOWHEATDRAG = -9999
     integer :: LIS_MOC_SNOWDELTAHEAT
     integer :: LIS_MOC_SNOWSURFACEQ = -9999
-
+    integer :: LIS_MOC_SD_1D = -9999
+    integer :: LIS_MOC_SWE_1D = -9999
 #if 0
    ! SPECIAL CASE INDICES
    ! These are required because Min/Max support cannot be generically
@@ -5317,6 +5319,31 @@ contains
             n,1,ntiles,(/"kg/kg"/),1,(/"-"/),1,1,1,&
             model_patch=.true.)
     endif
+
+    call ESMF_ConfigFindLabel(modelSpecConfig,"SD_1D:",rc=rc)
+    call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
+         "TotalSnowDepth",&
+         "Total_Snow_Depth",&
+         "Total Snow Depth",rc)
+    if ( rc == 1 ) then
+       call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SD_1D,&
+            LIS_histData(n)%head_lsm_list,&
+            n,1,ntiles,(/"m"/),1,(/"-"/),1,1,1,&
+            model_patch=.true.)
+    endif
+
+    call ESMF_ConfigFindLabel(modelSpecConfig,"SWE_1D:",rc=rc)
+    call get_moc_attributes(modelSpecConfig, LIS_histData(n)%head_lsm_list, &
+         "TotalSWE",&
+         "Total_SWE",&
+         "Total SWE",rc)
+    if ( rc == 1 ) then
+       call register_dataEntry(LIS_MOC_LSM_COUNT, LIS_MOC_SWE_1D,&
+            LIS_histData(n)%head_lsm_list,&
+            n,1,ntiles,(/"kg/m2"/),1,(/"-"/),1,1,1,&
+            model_patch=.true.)
+    endif
+
 !  snow model 
 
     !<- RUC addition ->

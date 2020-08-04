@@ -106,6 +106,7 @@ See the LIS Users' Guide for more informaion.
 #define DA_ENKS
 #define DA_PF
 #define DA_OBS_SYNTHETICSM
+#define DA_OBS_SYNTHETICWL
 #define DA_OBS_SYNTHETICSND
 #define DA_OBS_SYNTHETICSNOWTB
 #define DA_OBS_SNODEP

@@ -150,20 +150,9 @@ subroutine Crocus81_main(n)
     REAL                 :: tmp_SD_1D              ! Total snow depth, temporally added [m]  
     REAL                 :: tmp_SWE_1D             ! Total SWE, temporally added [kg/m2] 
     REAL                 :: FPICE
-    !REAL                 ::  tmp_ZENITH            ! added for isba parameter 
-    !REAL                 ::  tmp_ANGL_ILLUM        ! added fro isba parameter  
-    !REAL                 ::  tmp_EXNS           ! added fro isba parameter   !compute this using presure at surface
-    !REAL                 ::  tmp_EXNA           ! added fro isba parameter  
-   ! Bug in toolkit
-    character*3        :: fnest
-! MN isba  
-    logical :: file_exists
-    character*80       :: isba_filename
-    character*3       ::var1
-    integer              ::err , ii , var2, var3, var4
-    real                 :: var5, var6, var7, var8, var9, var10, var11, var12,  var14, var15, var16   
-    real*8  :: var13
+    character*3        :: fnest ! MN Bug in toolkit (added to this code)
     real*8    :: tmp
+    
     allocate( tmp_SNOWSWE( CROCUS81_struc(n)%nsnow ) )
     allocate( tmp_SNOWRHO( CROCUS81_struc(n)%nsnow ) )
     allocate( tmp_SNOWHEAT( CROCUS81_struc(n)%nsnow ) )
@@ -184,7 +173,6 @@ subroutine Crocus81_main(n)
     alarmCheck = LIS_isAlarmRinging(LIS_rc, "CROCUS81 model alarm "// trim(fnest)) !MN  Bug in the toolkit 
     if (alarmCheck) Then
         do t = 1, LIS_rc%npatch(n, LIS_rc%lsm_index)
-        !do t = 1, 1  ! MN : to read test case  isba 
 
             dt = LIS_rc%ts
             row = LIS_surface(n, LIS_rc%lsm_index)%tile(t)%row
@@ -198,10 +186,10 @@ subroutine Crocus81_main(n)
  
             ! SRSNOW: snow rate (SWE) [kg/(m2 s)]
             tmp_SRSNOW     = CROCUS81_struc(n)%crocus81(t)%SRSNOW / CROCUS81_struc(n)%forc_count
-            !print*, 'tmp_SRSNOW   main ', tmp_SRSNOW  ! MN
+
             ! RRSNOW: rain rate [kg/(m2 s)]
             tmp_RRSNOW     = CROCUS81_struc(n)%crocus81(t)%RRSNOW / CROCUS81_struc(n)%forc_count
-            !print*, 'tmp_RRSNOW   main ', tmp_RRSNOW  ! MN
+            
             ! TA: atmospheric temperature at level za (K)
             tmp_TA         = CROCUS81_struc(n)%crocus81(t)%TA     / CROCUS81_struc(n)%forc_count
  
@@ -221,11 +209,10 @@ subroutine Crocus81_main(n)
             tmp_LW_RAD     = CROCUS81_struc(n)%crocus81(t)%LW_RAD / CROCUS81_struc(n)%forc_count
 
 
-! TODO  add lis.config option to determine whether to partition total precipitation into snowfall and rainfall 
-            ! Use Jordan model to partition total precipitation into snowfall and rainfall 
+        ! Added lis.config option to determine whether to partition total precipitation into snowfall and rainfall 
+       
+        ! Use Jordan model to partition total precipitation into snowfall and rainfall 
         ! Jordan (1991)
-        !print*,'Partition_total_precip_BOOL', CROCUS81_struc(n)%Partition_total_precip_BOOL 
-        !print*, 'main BF tmp_SRSNOW, tmp_RRSNOW', tmp_SRSNOW, tmp_RRSNOW
             if (CROCUS81_struc(n)%Partition_total_precip_BOOL) then 
               IF(tmp_TA > 273.16+2.5)THEN
                   FPICE = 0.
@@ -242,7 +229,6 @@ subroutine Crocus81_main(n)
               tmp_SRSNOW  = tmp_RRSNOW * FPICE 
               ! rain rate (SWE) [kg/(m2 s)]
               tmp_RRSNOW  = tmp_RRSNOW - tmp_SRSNOW
-         !print*, 'main AF tmp_SRSNOW, tmp_RRSNOW', tmp_SRSNOW, tmp_RRSNOW 
             endif
             ! 
             ! check validity of PPS
@@ -379,56 +365,17 @@ subroutine Crocus81_main(n)
             tmp_SNOWMAK_dz    = CROCUS81_struc(n)%crocus81(t)%SNOWMAK_dz
  
 
-! ---------------------------- Compute GLACIER_BOOL ---------------------------------
+! Compute GLACIER_BOOL 
 ! TODO check the threshold value
 ! use a threshold value of 0.2  
-!print *, 'BF tmp_GLACIER_BOOL', tmp_GLACIER_BOOL
 tmp_GLACIER_BOOL = .False.
 if (tmp_PERMSNOWFRAC.gt.0.2)then
       tmp_GLACIER_BOOL = .True.
 endif
-!print *, 'AF tmp_GLACIER_BOOL', tmp_GLACIER_BOOL
+
+
 !------------------------------------------------------------------------------------ 
-
-!print*, "Crocus81_main.F90 PERMSNOWFRAC lis.config, PERMSNOWFRAC_LDT " ,CROCUS81_struc(n)%PERMSNOWFRAC , CROCUS81_struc(n)%crocus81(t)%PERMSNOWFRAC 
-          ! MN isba 
-          !print*, '========================================================'
-          !print*, 'name of surfex parameter file hard  coded in the Crocus81_main.F90' 
-          !print*, 'WANNING :  code uses  surfex_param_final.txt'  
-          !print*, '========================================================'
-          ! Var1 ,Var2  ,Var3        ,Var4  ,Var5          ,Var6         ,Var7          ,Var8             ,Var9  
-          ! MN1,YEAR, MONTH, DAY, TIME/3600., ZP_EXNS, ZP_EXNA,ZP_SNDRIFT, ZP_RI,
-         ! Var10                ,Var11              ,Var12                    ,Var13        ,Var14                ,Var15            ,Var16
-         !  ZP_EMISNOW, ZP_CDSNOW,ZP_USTARSNOW, ZP_TG(:,1), ZP_SOILCOND, ZP_ZENITH, ZP_ANGL_ILLUM
-
-          ! INQUIRE(File="surfex_param_final.txt", Exist=file_exists)
-          ! if (file_exists) then
-          !    OPEN(UNIT=99,FILE="surfex_param_final.txt", &
-          !                 FORM="FORMATTED",STATUS="OLD",ACTION="READ")
-          !    do ii = 1 , CROCUS81_struc(n)%isba_param_count 
-          !       read ( 99,*) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
-          !       150 format(A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 11(F10.6,1x) )
-          !       !write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
-          !    enddo
-!         !        print*,'test'
-          !       !write (*,150) var1, var2, var3, var4, var5, var6, var7, var8, var9, var10, var11, var12, var13, var14, var15, var16
-          !    CLOSE(UNIT=99 )
-          ! endif
-           !tmp_TG = Var13                           
-           !tmp_SOILCOND  = Var14  
-           !tmp_ZENITH = var15
-           !tmp_ANGL_ILLUM = var16 
-           !tmp_EXNS = var6
-           !tmp_EXNA = var7
-!print*, 'Crocus81_main.F90  SOILCOND', tmp_SOILCOND
-!WRITE (*, '( A50 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, I3, 1x, I3,  1x, 5(F10.6,1x) )') 'Crocus81_main.F90 SAND,CLAY,SILT,POROSITY,SOILCOND',  &
-!                               tmp_year, &
-!                               tmp_month, tmp_day, tmp_hour, tmp_minute,  &
-!                               tmp_SAND, tmp_CLAY, tmp_SILT, tmp_POROSITY, tmp_SOILCOND
-
-!WRITE (*, '( A10 , 1x , 1(F12.6, 1x))')  ' tmp_TG', tmp_TG 
-!print *, 'main , tmp_RRSNOW,  tmp_SRSNOW' , tmp_RRSNOW , tmp_SRSNOW ! MN
-            ! call model physics 
+! call model physics 
             call crocus_driver(tmp_n                 , & ! IN    - nest id [-]
                                tmp_nsnow             , & ! IN    - number of snow layer []
                                tmp_nimpur            , & ! IN    - number of impurtites []
@@ -524,10 +471,6 @@ endif
                                tmp_CLAY              , & ! IN    - Soil clay fraction (-) [-]
                                tmp_POROSITY          ,&  ! IN    - Soil porosity (m3 m-3) [m3/m3]
                                tmp_use_monthly_albedo_map)! ,& ! IN    - Boolean option to partition total precipitation into snowfall and rainfall using Jordan 1991 
-                               !tmp_ZENITH ,&  ! added to read surfex parameter 
-                               !tmp_ANGL_ILLUM  , & ! added to read surfex parameter
-                               !tmp_EXNS , &            ! added to read surfex parameter
-                               !tmp_EXNA)            ! added to read surfex parameter
     
             ! save state variables from local variables to global variables
             CROCUS81_struc(n)%crocus81(t)%SNOWSWE(:)    = tmp_SNOWSWE(:)   
@@ -562,20 +505,11 @@ endif
             tmp = sum(tmp_SNOWSWE)
             CROCUS81_struc(n)%crocus81(t)%SWE_1D       = tmp
             
-            !print*, 'Crocus81_main tmp_THRUFAL' , tmp_THRUFAL  ! MN  
             ![ 1] output variable: SNOWSWE (unit=kg/m2). *** Snow layer(s) liquid Water Equivalent (SWE:kg m-2)
             do i=1, CROCUS81_struc(n)%nsnow
                 call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWLIQPROF, value = CROCUS81_struc(n)%crocus81(t)%SNOWSWE(i), &
                                                   vlevel=i, unit="kg m-2", direction="-", surface_type = LIS_rc%lsm_index)
             end do
-
-            ![1] Writing out the snowprofile is a bottleneck and significantly increases the simulation time. For now 
-            !     sum up the layer values and only write out the cumulative value.  
-            !CROCUS81_struc(n)%crocus81(t)%SNOWSWE(1) = sum(tmp_SNOWSWE)
-            !tmp = sum(tmp_SNOWSWE) 
-            !call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWLIQPROF, value = tmp, &
-            !                                  vlevel=1, unit="kg m-2", direction="-", surface_type = LIS_rc%lsm_index)
-
             
             ![ 2] output variable: SNOWHEAT (unit=J/m2). *** Snow layer(s) Heat content (J/m2)
             do i=1, CROCUS81_struc(n)%nsnow
@@ -635,13 +569,6 @@ endif
                                                   vlevel=i, unit="m", direction="-", surface_type = LIS_rc%lsm_index)
             end do
             
-            ![11] Writing out the snowprofile is a bottleneck and significantly increases the simulation time. For now 
-            !     sum up the layer values and only write out the cumulative value.  
-            ! CROCUS81_struc(n)%crocus81(t)%SNOWDZ(1) = sum(tmp_SNOWDZ)   
-            !tmp = sum(tmp_SNOWDZ)
-            !call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWHIGHTPROF, value = tmp, &
-            !                                  vlevel=1, unit="m", direction="-", surface_type = LIS_rc%lsm_index)
-            !print*, 'sum(tmp_SNOWDZ)', sum(tmp_SNOWDZ) ! MN  
             ![ 12] output variable: THRUFAL (unit=kg/(m2 s)). *** Rate that liquid water leaves snow pack: paritioned into soil infiltration/runoff  by ISBA [kg/(m2 s)]
             call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SNOWQS, value = CROCUS81_struc(n)%crocus81(t)%THRUFAL, &
                                               vlevel=1, unit="kg m-2 s-1", direction="OUT", surface_type = LIS_rc%lsm_index)
@@ -687,14 +614,14 @@ endif
             call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_GLACIERFRACTION, value = CROCUS81_struc(n)%crocus81(t)%PERMSNOWFRAC, &
                                               vlevel=1, unit="-", direction="", surface_type = LIS_rc%lsm_index)
 
-            ! Writing out the snowprofile is a bottleneck and significantly increases the simulation time. For now 
-            !     sum up the layer values and only write out the cumulative value.  
-              ![ 23] output variable: SD_1D (unit=m). *** Total snow depth, temporally added 
-              call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SD_1D, value = CROCUS81_struc(n)%crocus81(t)%SD_1D, &                
+            !TODO Writing out the snow profile is a bottleneck and significantly increases the simulation time. For now 
+            !     option added to the OUTPUT.TBL to be able to write out the cumulative value.  
+            ![ 23] output variable: SD_1D (unit=m). *** Total snow depth, temporally added 
+            call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SD_1D, value = CROCUS81_struc(n)%crocus81(t)%SD_1D, &                
                                                 vlevel=1, unit="m", direction="-", surface_type = LIS_rc%lsm_index)                
               
-              ![ 24] output variable: SWE_1D (unit=kg/m2). *** Total SWE, temporally added                                         
-              call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SWE_1D, value = CROCUS81_struc(n)%crocus81(t)%SWE_1D, &              
+            ![ 24] output variable: SWE_1D (unit=kg/m2). *** Total SWE, temporally added                                         
+            call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SWE_1D, value = CROCUS81_struc(n)%crocus81(t)%SWE_1D, &              
                                                 vlevel=1, unit="kg m-2", direction="-", surface_type = LIS_rc%lsm_index)      
 
             ! reset forcing variables to zeros
@@ -710,7 +637,6 @@ endif
         enddo ! end of tile (t) loop
         ! reset forcing counter to be zero
         CROCUS81_struc(n)%forc_count = 0 
-        !CROCUS81_struc(n)%isba_param_count  =  CROCUS81_struc(n)%isba_param_count + 1  ! MN isba 
     endif ! end of alarmCheck loop 
     
     deallocate( tmp_SNOWSWE )

@@ -509,27 +509,6 @@ INTEGER :: IDEBUG
 
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
-! MN
-! MN
-!WRITE (*, '( A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2)') 'MN1',  &
-!                               TPTIME%TDATE%YEAR, & 
-!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.
-!print*, 'PQA    snowcro' , PQA  
-!print*,' snowcro     PSNOWFLUX', PSNOWFLUX
-!print *, 'PPS, PTA, PSW_RAD, PQA, PVMOD, PLW_RAD, PSR, PRR ' , PPS, PTA, PSW_RAD, PQA, PVMOD, PLW_RAD, PSR, PRR 
-!print *, '***PSR, PRR ' , PSR, PRR 
-!WRITE (*, '(A60 , 1x, 9(F10.6,1x) )')'***PSR PRR PLW_RAD PSW_RAD  P_DIR_SW  P_SCA_SW   T  PQA PVMOD' , PSR, PRR, PLW_RAD, PSW_RAD, P_DIR_SW, P_SCA_SW, PTA , PQA, PVMOD
-!WRITE (*, '(A45 , 1x, 4(F10.6,1x) )')  '===PSNOWALB, PTHRUFAL,  PEVAPCOR,  PGFLXCOR' ,PSNOWALB, PTHRUFAL,  PEVAPCOR,  PGFLXCOR
-!WRITE (*, '(A35 , 1x,4(F10.6,1x) )')  '+=+PEVAP,PRNSNOW, PCDSNOW, PUSTAR', PEVAP,PRNSNOW, PCDSNOW, PUSTAR
-!WRITE (*, '(A50 , 1x, 5(F10.6,1x) )')  '###PHSNOW, PGFLUXSNOW, PLES3L, PLEL3L, PHPSNOW',PHSNOW, PGFLUXSNOW, PLES3L, PLEL3L, PHPSNOW                                 
-
-!print *, 'PTG, PSOILCOND, PD_G, PPSN3L', PTG, PSOILCOND, PD_G, PPSN3L
-!WRITE (*, '(A40 , 1x, 5(F10.6,1x) )')  '+PZREF, PUREF , PZ0, PZ0EFF, PZ0H', PZREF, PUREF , PZ0, PZ0EFF, PZ0H
-!WRITE (*, '(A65 , 1x, 6(F10.6,1x) )')  '++PEXNS, PEXNA, PDIRCOSZW, PRHOA, PALB, PPERMSNOWFRAC', PEXNS, PEXNA, PDIRCOSZW, PRHOA, PALB, PPERMSNOWFRAC
-!print *, '************'
-! MN
-
-!WRITE (*, '(A5 , 1x, 1(F10.6,1x) )')'1 PTA ' , PTA ! MN
 
 IF (LHOOK) CALL DR_HOOK('SNOWCRO',0,ZHOOK_HANDLE)
 !
@@ -713,7 +692,6 @@ IF (GCRODEBUGPRINTATM) THEN
                        PRR(IDEBUG),PSR(IDEBUG),PSW_RAD(IDEBUG),PLW_RAD(IDEBUG),  &
                        PTG(IDEBUG),PSOILCOND(IDEBUG),PD_G(IDEBUG),PPSN3L(IDEBUG) )
 END IF
-!WRITE (*, '(A5 , 1x, 1(F10.6,1x) )')'2 PTA ' , PTA ! MN
 !***************************************DEBUG OUT********************************************
 !
 !*       1.     Snow total depth
@@ -746,10 +724,6 @@ ENDIF
                         HSNOWDRIFT,PZ0EFF,ZUREF,                                &
                         PBLOWSNW,HSNOWMETAMO, HSNOWFALL, PQA, PSNOWTEMP,        &
                         PSNOWMAK, OSNOWMAK_BOOL, OSNOWMAK_PROP)
-!WRITE (*, '(A35 , 1x, 4(F10.6,1x) )')'PSR,PTA,PVMOD,PSNOWALB,PSNOWHMASS',PSR,PTA,PVMOD,PSNOWALB,PSNOWHMASS  ! MN
-!WRITE (*, '(A10 , 1x, 4(F10.6,1x) )')'PSNOWRHO',PSNOWRHO(1,1:4) ! MN
-!WRITE (*, '(A10 , 1x, 4(F10.6,1x) )')'PSNOWDZ',PSNOWDZ(1,1:4) ! MN
-!print*, 'PSNOWHEAT',PSNOWHEAT(1,1:4) ! MN
 !
 !***************************************DEBUG IN**********************************************
 IF (GCRODEBUGDETAILSPRINT) THEN
@@ -1106,9 +1080,6 @@ IF (OMEB) THEN
                 ZCT,ZTSTERM1,ZTSTERM2,PGFLUXSNOW)
 
 ELSE
-!WRITE (*, '(A85 , 1x, 4(F10.6,1x) )') 'Input   PPEW_A_COEF, PPEW_B_COEF,  &
-!PPET_A_COEF, PPEQ_A_COEF, PPET_B_COEF, PPEQ_B_COEF ', & 
-!PPEW_A_COEF, PPEW_B_COEF, PPET_A_COEF, PPEQ_A_COEF, PPET_B_COEF, PPEQ_B_COEF    ! MN 
 
  CALL SNOWCROEBUD(HSNOWRES, HIMPLICIT_WIND,                                    &
                   PPEW_A_COEF, PPEW_B_COEF,                                    &
@@ -1124,10 +1095,6 @@ ELSE
                   ZCT,PEMISNOW,PRHOA,ZTSTERM1,ZTSTERM2,ZRA,PCDSNOW,PCHSNOW,    &
                   ZQSAT, ZDQSAT, ZRSRA, ZUSTAR2_IC, PRI,                       &
                   ZPET_A_COEF_T,ZPEQ_A_COEF_T,ZPET_B_COEF_T,ZPEQ_B_COEF_T      )
-
-!WRITE (*, '(A65, 1x, 4(F10.6,1x) )') 'OUTPUT ZPET_A_COEF_T, ZPEQ_A_COEF_T, &
-!ZPET_B_COEF_T, ZPEQ_B_COEF_T', & 
-!ZPET_A_COEF_T, ZPEQ_A_COEF_T, ZPET_B_COEF_T, ZPEQ_B_COEF_T  ! MN  
 
 !
 ENDIF
@@ -1148,14 +1115,11 @@ ENDIF
 ZSNOWTEMPO1(:) = ZSNOWTEMP(:,1) ! save surface snow temperature before update
 !
 ZGRNDFLUXI(:)  = PGRNDFLUX(:) ! on sauvegarde le flux imposé par MEB
-!print*, 'BF   SNOWCROSOLVT   --> PGFLUXSNOW ZTA_IC',PGFLUXSNOW, ZTA_IC  ! MN
-!print*, 'BF   SNOWCROSOLVT   --> PSNOWFLUX', PSNOWFLUX
  CALL SNOWCROSOLVT(OMEB,PTSTEP,XSNOWDZMIN,PSNOWDZ,ZSCOND,ZSCAP,PTG,           &
                    PSOILCOND,PD_G,ZRADSINK,ZCT,ZTSTERM1,ZTSTERM2,             &
                    ZPET_A_COEF_T,ZPEQ_A_COEF_T,ZPET_B_COEF_T,ZPEQ_B_COEF_T,   &
                    ZTA_IC,ZQA_IC,PGRNDFLUX, ZSNOWTEMP ,PSNOWFLUX,             &
                    INLVLS_USE                                                 ) 
-!print*, 'AF   SNOWCROSOLVT   --> PGFLUXSNOW ZTA_IC',PGFLUXSNOW, ZTA_IC  ! MN
 !
 !***************************************DEBUG IN**********************************************
 IF (GCRODEBUGDETAILSPRINT) THEN
@@ -1175,8 +1139,6 @@ ENDIF
 ! recomputed for the case when T>Tf), Only call if MEB not in use:
 
 IF (.NOT. OMEB) THEN
-!print*, 'BF   SNOWCROFLUX   --> PGFLUXSNOW ZTA_IC',PGFLUXSNOW, ZTA_IC  ! MN
-!print*, 'BF   SNOWCROFLUX   --> PSNOWFLUX', PSNOWFLUX
  CALL SNOWCROFLUX(ZSNOWTEMP(:,1),PSNOWDZ(:,1),PEXNS,PEXNA,            &
                   ZUSTAR2_IC,                                         &
                   PTSTEP,PSNOWALB,PSW_RAD,PEMISNOW,PLW_RAD,           &
@@ -1185,7 +1147,6 @@ IF (.NOT. OMEB) THEN
                   ZQSAT,ZDQSAT,ZRSRA,                                 &
                   PRNSNOW,PHSNOW,PGFLUXSNOW,PLES3L,PLEL3L,PEVAP,      &
                   PUSTAR                                              ) 
-!print*, 'AF   SNOWCROFLUX   --> PGFLUXSNOW ZTA_IC',PGFLUXSNOW, ZTA_IC  ! MN
 END IF
 !
 !***************************************DEBUG IN**********************************************
@@ -1196,7 +1157,6 @@ IF (GCRODEBUGDETAILSPRINT) THEN
                            PSNOWGRAN2(IDEBUG,:),PSNOWHIST(IDEBUG,:),PSNOWAGE(IDEBUG,:),     &
                            HSNOWMETAMO)
 ENDIF
-!WRITE (*, '(A5 , 1x, 1(F10.6,1x) )')'5 PTA ' , PTA ! MN
 !***************************************DEBUG OUT********************************************
 !
 !*       9.     Snow melt
@@ -1217,7 +1177,6 @@ IF (GCRODEBUGDETAILSPRINT) THEN
                            PSNOWGRAN2(IDEBUG,:),PSNOWHIST(IDEBUG,:),PSNOWAGE(IDEBUG,:),     &
                            HSNOWMETAMO)
 ENDIF
-!WRITE (*, '(A5 , 1x, 1(F10.6,1x) )')'6 PTA ' , PTA ! MN
 !***************************************DEBUG OUT********************************************
 !
 ! Add radiation not absorbed by snow to soil/vegetation interface flux
@@ -1304,7 +1263,6 @@ IF (GCRODEBUGDETAILSPRINT) THEN
                            PSNOWGRAN2(IDEBUG,:),PSNOWHIST(IDEBUG,:),PSNOWAGE(IDEBUG,:),     &
                            HSNOWMETAMO,HSNOWRAD,PSNOWIMPUR(IDEBUG,:,:))
 ENDIF
-!WRITE (*, '(A5 , 1x, 1(F10.6,1x) )')'7 PTA ' , PTA ! MN
 !***************************************DEBUG OUT********************************************
 !
 !*      12.     Update surface albedo:
@@ -1328,7 +1286,6 @@ ELSEIF ( HSNOWRAD=='T17') THEN
   END DO
 ENDIF
 !
-!WRITE (*, '(A5 , 1x, 1(F10.6,1x) )')'8 PTA ' , PTA ! MN
 !*      13.     Update snow heat content:
 !               -------------------------
 ! Update the heat content (variable stored each time step)
@@ -1573,7 +1530,6 @@ ENDIF
 !
 IF (LHOOK) CALL DR_HOOK('SNOWCRO',1,ZHOOK_HANDLE)
 !
-!WRITE (*, '(A5 , 1x, 1(F10.6,1x) )')'9 PTA ' , PTA ! MN
 
 CONTAINS
 !
@@ -3192,19 +3148,6 @@ INTEGER :: INLVLS
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 
-!WRITE (*, '(A10 , 1x, 4(F10.6,1x) )')'PSNOWDZ', PSNOWDZ(1,4)
-!WRITE (*, '(A10 , 1x, 4(F10.6,1x) )')'PSCOND', PSCOND(1,4)
-!WRITE (*, '(A10 , 1x, 4(F10.6,1x) )')'PSCAP', PSCAP(1,4)
-!WRITE (*, '(A10 , 1x, 4(F10.6,1x) )')'PRADSINK', PRADSINK(1,4) 
-!WRITE (*, '(A10 , 1x, 4(F10.6,1x) )')'PSNOWTEMP', PSNOWTEMP(1,4)
-
-
-!WRITE (*, '(A33 , 1x, 4(F10.6,1x) )')'@@@PSNOWDZMIN,PTG,PSOILCOND,PD_G' , & 
-!PSNOWDZMIN,PTG, PSOILCOND,PD_G 
-
-!WRITE (*, '(A46 , 1x, 7(F10.6,1x) )')'$$$$ PCT,PTERM1,PTERM2,  PTA_IC, PQA_IC, PGBAS' , & 
-!PCT,PTERM1,PTERM2,  PTA_IC, PQA_IC, PGBAS
-!print*, 'PSNOWFLUX', PSNOWFLUX
 
 IF (LHOOK) CALL DR_HOOK('SNOWCROSOLVT',0,ZHOOK_HANDLE)
 !
@@ -3374,7 +3317,6 @@ ENDDO
 !
 IF(.NOT. OMEB) THEN
 !
-!print*, 'PPET_B_COEF_T(:) + PPET_A_COEF_T(:) * PSNOWTEMP(:,1)' , PPET_B_COEF_T, PPET_A_COEF_T, PSNOWTEMP(:,1) ! MN 
   PTA_IC(:) = PPET_B_COEF_T(:) + PPET_A_COEF_T(:) * PSNOWTEMP(:,1)
 !
   PQA_IC(:) = PPEQ_B_COEF_T(:) + PPEQ_A_COEF_T(:) * PSNOWTEMP(:,1)
@@ -3676,7 +3618,6 @@ DO JJ = 1,SIZE(PSNOWDZ,1)  ! loop JJ grid points
   ! Rate water leaves the snowpack [kg/(m2 s)]:
   !
   PTHRUFAL(JJ)  = PTHRUFAL(JJ) + ZFLOWLIQ(JJ,KNLVLS_USE(JJ)) * XRHOLW / PTSTEP
-  !print*, 'snowcro PTHRUFAL,ZFLOWLIQ', PTHRUFAL(JJ),ZFLOWLIQ(JJ,KNLVLS_USE(JJ))  ! MN   
 !
 ENDDO ! loop JJ grid points
 !
@@ -3759,16 +3700,6 @@ REAL :: ZSMSNOW, ZGFLUX
 INTEGER :: JJ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
-
-
-!WRITE (*, '(A17 , 1x, 2(F10.6,1x) )')'10 PAT , PSNOWTEMP' , PTA, PSNOWTEMP ! MN
-
-!WRITE (*, '(A73 , 1x, 7(F10.6,1x) )')'@@@PSNOWDZ, PSNOWTEMPO1, PSNOWFLUX, PCT, PRADSINK, PEXNS, PEXNA, PSNOWTEMP' , & 
-!PSNOWDZ, PSNOWTEMPO1, PSNOWFLUX, PCT, PRADSINK, PEXNS, PEXNA, PSNOWTEMP 
-!WRITE (*, '(A50 , 1x,6(F10.6,1x) )')'$$$PALBT, PSW_RAD, PEMIST, PLW_RAD, PTA, PSFCFRZ ' , &
-!PALBT, PSW_RAD, PEMIST, PLW_RAD, PTA, PSFCFRZ 
-!WRITE (*, '(A50 , 1x,6(F10.6,1x) )')'%%%PQA, PHPSNOW, & PQSAT, PDQSAT, PRSRA, PUSTAR2_IC ' , &
-! PHPSNOW, PQSAT, PDQSAT, PRSRA, PUSTAR2_IC 
 
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('SNOWCROFLUX',0,ZHOOK_HANDLE)
@@ -3893,29 +3824,18 @@ ZDELTAT   = PSNOWTEMP - PSNOWTEMPO1   ! surface T time change:
 ZLWUPSNOW = PEMIST * XSTEFAN * ZSNOWTO3 * ( PSNOWTEMPO1 + 4.*ZDELTAT )
 !
 PRN       = ( 1.-PALBT )*PSW_RAD + PEMIST*PLW_RAD - ZLWUPSNOW
-!write(*, '(A40, 1x, 5(F16.6,1x))'),'PALBT,PSW_RAD,PEMIST,PLW_RAD,ZLWUPSNOW', & 
-!PALBT,PSW_RAD , PEMIST,PLW_RAD,ZLWUPSNOW  ! MN
 !
 PH        = PRSRA * XCPD * ( PSNOWTEMP/PEXNS - PTA/PEXNA )
-!write(*, '(A40, 1x, 6(F16.6,1x))'), 'PRSRA,XCPD,PSNOWTEMP,PEXNS ,PTA,PEXNA' , &
-!PRSRA,XCPD,PSNOWTEMP,PEXNS ,PTA,PEXNA  ! MN
 !
 PEVAPC    = PRSRA * ( (PQSAT - PQA) + PDQSAT*ZDELTAT )
-!write(*, '(A43, 1x, 6(F16.6,1x))'), 'PEVAPC, PRSRA, PQSAT, PQA, PDQSAT,  ZDELTAT', &
-!PEVAPC,PRSRA,PQSAT,PQA,PDQSAT, ZDELTAT ! MN
 !
 PLES3L    = PSFCFRZ      * XLSTT * PEVAPC
-!write(*, '(A30, 1x, 4(F16.6,1x))'), 'PLES3L ,PSFCFRZ ,XLSTT,PEVAPC', &
-!PLES3L ,PSFCFRZ ,XLSTT,PEVAPC ! MN
 !
 PLEL3L    = (1.-PSFCFRZ) * XLVTT * PEVAPC
-!write(*, '(A30, 1x, 4(F16.6,1x))'), 'PLEL3L ,PSFCFRZ, XLVTT, PEVAPC', &
-!PLEL3L ,PSFCFRZ, XLVTT, PEVAPC ! MN
 !
 ZLE       = PLES3L + PLEL3L
 !
 PGFLUX    = PRN - PH - ZLE + PHPSNOW
-!write(*, '(A35, 1x, 5(F16.6,1x))'), 'PGFLUX,PRN,PH,ZLE ,PHPSNOW' , PGFLUX , PRN , PH , ZLE  , PHPSNOW  ! MN
 !
 IF (LHOOK) CALL DR_HOOK('SNOWCRO:GET_FLUX',1,ZHOOK_HANDLE)
 !
@@ -4108,13 +4028,11 @@ PTHRUFAL(:) = 0.
 !
 DO JJ=1, SIZE(ZRADSINK)
   !
-! print*, 'ISNOWGONE_DELTA' ,ISNOWGONE_DELTA  ! MN
   IF(ISNOWGONE_DELTA(JJ) == 0 ) THEN
     PTHRUFAL(JJ) = PTHRUFAL(JJ) + &
                    SUM( PSNOWRHO(JJ,1:INLVLS_USE(JJ))*PSNOWDZ(JJ,1:INLVLS_USE(JJ)) ) / PTSTEP 
 ! takes into account rain and condensation/evaporation
     PTHRUFAL(JJ) = PTHRUFAL(JJ) + PRR(JJ) - PLEL3L(JJ)/XLVTT
-!    print*, 'snowcro PTHRUFAL, PRR,PLEL3L', PTHRUFAL, PRR,PLEL3L  ! MN
     PSNOWTEMP(JJ,:) = XTT
     PSNOWDZ  (JJ,:) = 0.
     PSNOWLIQ (JJ,:) = 0.
@@ -4840,17 +4758,13 @@ ENDDO
 !  penser a changer 0.000001 par XUEPSI
 IF(OGLACIER)THEN
   ZANSMAX(:) = XAGLAMAX * PPERMSNOWFRAC(:) + XANSMAX * (1.0-PPERMSNOWFRAC(:))
-!print*, '1 ZANSMAX, XAGLAMAX, PPERMSNOWFRAC', ZANSMAX,XAGLAMAX, PPERMSNOWFRAC ! MN
 ELSE
   ZANSMAX(:) = XANSMAX
-!print*, '2 ZANSMAX', ZANSMAX ! MN
 ENDIF
 !
 WHERE( GSNOWFALL(:) .AND. ABS(PSNOW(:)-ZSNOWFALL(:))< XUEPSI )
   PSNOWALB(:) = ZANSMAX(:)
-!print*, '3 PSNOW, ZSNOWFALL, ZANSMAX', PSNOW, ZSNOWFALL, ZANSMAX ! MN
 END WHERE
-!print*, '3 PSNOW, ZSNOWFALL, ZANSMAX', PSNOW, ZSNOWFALL, ZANSMAX ! MN
 !
 ! Computation of the new grid size
 ! It starts with successive exclusive cases

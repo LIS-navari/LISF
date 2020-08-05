@@ -465,31 +465,21 @@ SUBROUTINE crocus_driver(n, &
       ZSNOW = ZSNOW + SNOWSWE(JWRK)/SNOWRHO(JWRK)
    END DO
    ZSNOWFALL = SRSNOW*PTSTEP/XRHOSMAX_ES    ! maximum possible snowfall depth (m)
-!print*, ' RRSNOW , SRSNOW,   ZSNOWFALL  ,PTSTEP, XRHOSMAX_ES ' , RRSNOW, SRSNOW,ZSNOWFALL , PTSTEP, XRHOSMAX_ES ! MN
-!WRITE(*,*) 'Driver SW',YEAR, MONTH, DAY, hour, minute , SW_RAD
-!   WRITE (*, *) '*Driver ', YEAR, MONTH, DAY, hour, minute
-!WRITE (*, '(A30 , 1x, 3(F10.6,1x) )') '**ZSNOW, ZSNOWFALL,XSNOWDMIN ' , ZSNOW, ZSNOWFALL, XSNOWDMIN ! MN
    IF (ZSNOW >= XSNOWDMIN .OR. ZSNOWFALL >= XSNOWDMIN) THEN
 
       CALL CALL_MODEL(1, nsnow, 1)
-!print *,'1, RHO,DZ,SWE,LIQ,TEMP' , SNOWRHO(1:2)  ,SNOWDZ (1:2) ,SNOWSWE(1:2),SNOWLIQ(1:2) ,SNOWTEMP(1:2)
-!print *,'1, RHO' , SNOWRHO(1:9)
-!print *,'1,DZ', SNOWDZ (1:9)
-!print *,'1, SWE' , SNOWSWE(1:9)
-!print *,'1, LIQ,TEMP' , SNOWLIQ(1:9)
-!print *,'1, TEMP' , SNOWTEMP(1:9)
-!print*, 'AFTER MODEL CALL THRUFALL' , THRUFAL ! MN
    ELSE
 
 ! Remove trace amounts of snow and reinitialize snow prognostic variables
 ! if snow cover is ablated.
+! MN: TODO For now set these variables to ZERO and UNDIFF
+! TODO look at snow3L_isba.F90 for details
 
       ZP_LES3L = 0.0
       ZP_LEL3L = 0.0
       ZP_EVAP = 0.0
 !THRUFAL = 0.0
       THRUFAL = MAX(0.0, sum(SNOWSWE)/PTSTEP + SRSNOW + RRSNOW) ! kg m-2 s-1   ! - PEVAP(:)*ZPSN(:)
-!print *, 'driver  THRUFAL' ,THRUFAL ! MN
       SNOWALB = LIS_rc%udef !XUNDEF
       ZP_GSFCSNOW = 0.0
       ZP_EVAPCOR = 0.0
@@ -501,8 +491,6 @@ SUBROUTINE crocus_driver(n, &
       SNOWHEAT(:) = LIS_rc%udef ! XUNDEF !1.0E+020 ! LIS_rc%udef
       SNOWRHO(:) = LIS_rc%udef !  XUNDEF ! 10000000000000 !LIS_rc%udef
       SNOWAGE(:) = LIS_rc%udef !  XUNDEF !LIS_rc%udef
-
-!Print *, 'XUNDEF' , XUNDEF  ! MN
 
       SNOWTEMP(:) = 273.16 !LIS_rc%udef
       SNOWLIQ(:) = LIS_rc%udef !  XUNDEF ! LIS_rc%udef
@@ -516,38 +504,7 @@ SUBROUTINE crocus_driver(n, &
       SNOWHMASS = LIS_rc%udef !  XUNDEF ! LIS_rc%udef
 
    ENDIF
-
-!print *,'2, RHO' , SNOWRHO
-!print *,'2,DZ', SNOWDZ
-!print *,'2, SWE' , SNOWSWE
-!print *,'2, LIQ,TEMP' , SNOWLIQ
-!print *,'2, TEMP' , SNOWTEMP
-
 ! ===============================================================
-!
-! Remove trace amounts of snow and reinitialize snow prognostic variables
-! if snow cover is ablated.
-
-   !Prognostic variables forced to XUNDEF for correct outputs
-!SNOWDZ (:) = LIS_rc%udef
-!SNOWTEMP(:) = LIS_rc%udef
-!SNOWLIQ(:) = LIS_rc%udef
-!SNOWHEAT(:) = LIS_rc%udef
-!SNOWRHO(:) = 10000000000000 !LIS_rc%udef
-!SNOWAGE(:) = LIS_rc%udef
-!SNOWGRAN1(:)= LIS_rc%udef
-!SNOWGRAN2(:)= LIS_rc%udef
-!SNOWHIST(:) = LIS_rc%udef
-
-! MN: For now set these variables to UNDIFF
-! TO DO  look at snow3L_isba.F90 for details
-
-!SNOWSWE(:) = LIS_rc%udef
-
-!THRUFAL = LIS_rc%udef
-!EMISNOW = LIS_rc%udef
-!SNOWHMASS = LIS_rc%udef
-!QS = LIS_rc%udef
 
 !================================================================
 CONTAINS
@@ -794,7 +751,7 @@ CONTAINS
       THRUFALout(:) = 0
       ZP_GSFCSNOWout(:) = 0.0
       ZP_EVAPCORout(:) = 0
-!ZP_GFLXCORout(:) = 0
+      !ZP_GFLXCORout(:) = 0
       GRNDFLUXinout(:) = 0
       ZP_SWNETSNOWout(:) = 0
       ZP_SWNETSNOWSout(:) = 0
@@ -930,7 +887,6 @@ CONTAINS
       SNOWTEMPinout(1, :) = SNOWTEMP
       THRUFALout(1) = THRUFAL
       ZP_GSFCSNOWout(1) = ZP_GSFCSNOW
-!print*, 'deriver  ZP_GSFCSNOWout , ZP_GSFCSNOW ', ZP_GSFCSNOWout , ZP_GSFCSNOW  ! MN
       ZP_EVAPCORout(1) = ZP_EVAPCOR
       ZP_GFLXCORout(1) = 0 ! this is a local variable and set to zero after CALL to 'snowcor'
       GRNDFLUXinout(1) = 0 ! GRNDFLUX   , update: it is 0 in the SURFEX-Crocus
@@ -984,8 +940,6 @@ CONTAINS
   else
      ALBin(1) = 0.2 ! soil/vegetation albedo (ALB) set to 0.2 in the SURFEX-Crocus
   endif
-!print*, "ALB" , ALB(:)
-!print*,"ALBin", ALBin
 
 
 ! ***************************************************************************
@@ -1000,7 +954,6 @@ CONTAINS
 ! ---------------------------------------------------
       ZP_DIRCOSZWin(1) = COS(SLOPEin(1))
 
-!print*, 'SLOPE, ASPECT, cos(SLOPE)', SLOPE, SLOPE_DIR, ZP_DIRCOSZWin 
 
 ! Compute the snow fraction (is it a fraction of total precip? or fraction of grid cell covered with snow?) : I think it is fraction of grid cell
 ! -------------------------------------------------------
@@ -1046,13 +999,11 @@ CONTAINS
 ! Comes form SUBROUTINE COUPLING_ISBA_n
       ZP_PEW_A_COEF(1) = 0.
       ZP_PEW_B_COEF(1) = SQRT(Wind_Ein(1)**2 + Wind_Nin(1)**2)
-!print*, 'ZP_VMODin', ZP_VMODin
 ! Comes form MODULE MODE_COUPLING_CANOPY
       ZP_PET_A_COEF(1) = 0.
       ZP_PET_B_COEF(1) = TAin(1)/(ZP_PAin(1)/XP00)**(XRD/XCPD)
       ZP_PEQ_A_COEF(1) = 0.
       ZP_PEQ_B_COEF(1) = QAin(1)
-!print*, 'QAin, TAin' , QAin, TAin
 ! Compute (Recharson number)
 ! ---------------------------------------------------------------
 ! RI (Recharson number) >0.2-0.25 (a threshold beyond which the turbulence is suppressed)
@@ -1092,7 +1043,7 @@ CONTAINS
 !XSTEFAN = ( 2.* XPI**5 / 15. ) * ( (XBOLTZ / XPLANCK)* XBOLTZ ) * (XBOLTZ/(XLIGHTSPEED*XPLANCK))**2  ! use ini_csts.F90
 
 ! ___________________________________________ Thermal conductivity _________________________________________________
-! first method (thrmcondz.F90 from SURFEX-Crocus)
+! First method (thrmcondz.F90 from SURFEX-Crocus)
 ! Compute thermal conductivity for dry soil (NOTE: for wet soil, we need to use SURFEX-Crocus soil.F90 in which needs LSM variables)
 ! ---------------------------------------------------------------------
 ! SAND(PSANDZ)     ! soil sand fraction (-)
@@ -1100,14 +1051,6 @@ CONTAINS
 ! PCONDDRY  ! soil dry thermal conductivity     (W m-1 K-1)
 ! SOILCOND (PCONDSLD)  ! soil solids thermal  conductivity (W m-1 K-1)
 
-!WRITE (*, '( A50 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 6(F10.6,1x) )') 'driver SAND,CLAY,SILT,POROSITY,PCONDDRY,SOILCOND',  &
-!                               year, &
-!                               month, day, hour,  &
-!                               SAND, CLAY, SILT, POROSITY, PCONDDRY, SOILCOND
-!WRITE (*, '( A51 , 5(F10.6,1x) )') 'XDRYWGHT, XSPHSOIL, XCONDQRTZ, XCONDOTH1, XCONDOTH2', &
-!                               XDRYWGHT, XSPHSOIL, XCONDQRTZ, XCONDOTH1, XCONDOTH2
-
-!CALL THRMCONDZ(SAND,POROSITY,PCONDDRY,SOILCOND)
 ! Part of thrmcondz.F90 from SURFEX-Crocus
 ZQUARTZ  = LIS_rc%udef ! XUNDEF
 ZGAMMAD   = LIS_rc%udef !XUNDEF
@@ -1137,12 +1080,6 @@ IF (SAND/=LIS_rc%udef) THEN  ! WHERE(SAND/=XUNDEF)
 END IF !WHERE
 
 
-!print*, 'thrmcondz.F90  SOILCOND, PCONDDRY ', SOILCOND, PCONDDRY
-
-!WRITE (*, '( A40 , 2(F10.6,1x) )') 'thrmcondz.F90  SOILCOND, PCONDDRY', &
-!                                    SOILCOND, PCONDDRY                 
-
-
 
 ZCONDSLDZ = SOILCOND ! soil solids thermal  conductivity (W m-1 K-1)  --> use this thrid method 
 ZCONDDRYZ = PCONDDRY !  
@@ -1164,14 +1101,12 @@ ZCONDDRYZ = PCONDDRY !
               !bd               = (1.-watsat)*2.7e3
               tkmg   = tkm ** (1.- watsat)
               SOILCOND = tkmg*0.57**watsat
-!print *, 'CLM2 SOILCOND, watsat' , SOILCOND , watsat
-!WRITE (*, '( A40 , 2(F10.6,1x) )') 'CLM2    SOILCOND , watsat', &
-!                                    SOILCOND , watsat
+
 ! ---------------------------------------------------------------------
 ! Third method using soildif.F90 with some assumptions
-! NOTE: In future when Crocus conected to the LSM we can get the soil thermal conductivity from the LSM
+! NOTE: In future when Crocus conected to a LSM we can get the soil thermal conductivity from the LSM
 ! or we can get soil parameters from the LSM and compute the soil thermal conductivity using following 
-! equations from the soildif.F90
+! equations from the soildif.F90 (SURFEX-Crocus)
 ! I have made two assumptions:   
 ! 1-  The volumetric soil water content of the snow-covered ground is 80% of POROSITY
 ! this assumption is based on the volumetric soil water content of the Col de Porte site for one year 
@@ -1188,12 +1123,6 @@ XCONDWTR  = 0.57   ! W/(m K)  Water thermal conductivity
 !XWG           ! soil volumetric water content profile   (m3/m3)
 XWGMIN   = 0.001   ! (m3 m-3)
 !POROSITY (XWSAT)          ! porosity profile                        (m3/m3)
-!ZFROZEN2DF
-!ZUNFROZEN2DF
-!ZWORK1, ZWORK2 , ZWORK3
-!ZCONDSATDF
-!ZSATDEGDF
-!ZKERSTENDF
 
 ZLOG_CONDI   = LOG(XCONDI)
 ZLOG_CONDWTR = LOG(XCONDWTR)
@@ -1217,8 +1146,6 @@ ZLOG_CONDWTR = LOG(XCONDWTR)
 !
       SOILCOND = ZKERSTENDF*(ZCONDSATDF-ZCONDDRYZ) + ZCONDDRYZ
 
-!WRITE (*, '( A45 , 3(F10.6,1x) )') 'soildif.F90  SOILCOND, ZKERSTENDF, ZCONDSATDF', &
-!                                    SOILCOND, ZKERSTENDF, ZCONDSATDF
 ! ---------------------------------------------------------------------
 ! ---------------------------------------------------------------------
 
@@ -1227,69 +1154,12 @@ ZLOG_CONDWTR = LOG(XCONDWTR)
       TPTIME%TDATE%DAY = day
       TPTIME%TIME = hour*3600 + minute*60
 
-!WRITE (*, '( A10 , 1x ,  2(F12.6, 1x))') 'TGin, TG', TGin  , TG
-! Over write these 4 parameters using SURFEX-Crocus data
       SOILCONDin = SOILCOND
-      TGin = TG
-      !ZP_ZENITHin = tmp_ZENITH   ! added to read surfex parameter
-      !ZP_ANGL_ILLUMin = tmp_ANGL_ILLUM! added to read surfex parameter
-      !ZP_EXNSin = tmp_EXNS             ! added to read surfex parameter
-      !ZP_EXNAin = tmp_EXNA           ! added to read surfex parameter
-      ZP_PSN3Lin(1) = 1   ! assume fraction is 1  (In SURFEX-Crocus is start from zero and in several time step it became 1.  I was not able to find out where is it computed)
-
-!$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-!1- add alocation for variable that has more than 1D
-!2- do we need to have these local variables for logical and character variables?
-
-!WRITE (*, '( A5 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, 18(F10.6,1x) )') 'Input',  &
-!                               TPTIME%TDATE%YEAR, &
-!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
-!                                ZP_EXNSin, ZP_EXNAin,&
-!                                SNDRIFTout, RI_nout, EMISNOWout, CDSNOWout, USTARSNOWout,         &
-!                                TGin, SOILCONDin, ZP_PSN3Lin, ZP_RHOAin, ZP_RNSNOWout, ZP_HSNOWout, &
-!                                ZP_GFLUXSNOWout, ZP_HPSNOWout, CHSNOWout,ZP_ZENITHin, ZP_ANGL_ILLUMin  !
-!print *, 'ZP_HPSNOWout', ZP_HPSNOWout
-!WRITE (*, '( A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 2x,  9(A3, 1x) , 11(L1, 1x))') 'MN1',  &
-!                               TPTIME%TDATE%YEAR, &
-!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
-!                               SNOWRES_opt, HIMPLICIT_WIND_opt, SNOWMETAMO_opt, SNOWRAD_opt, SNOWFALL_opt, &
-!                               SNOWCOND_opt, SNOWHOLD_opt, SNOWCOMP_opt, SNOWZREF_opt, &
-!                               OMEB_BOOL, GLACIER_BOOL, SNOWDRIFT_SUBLIM_BOOL,SNOWCOMPACT_BOOL,&
-!                               SNOWMAK_BOOL, SNOWTILLER_BOOL, SELF_PROD_BOOL, SNOWMAK_PROP_BOOL,   &
-!                           PRODSNOWMAK_BOOLinout, SNOW_ABS_ZENITH_BOOL, ATMORAD_BOOL  ! mn_character_logical input
-
-!WRITE (*, '(A92 , 1x, 4(F10.6,1x) )') ' driver ZP_PEW_A_COEF, ZP_PEW_B_COEF, ZP_PET_A_COEF, &
-!ZP_PEQ_A_COEF, ZP_PET_B_COEF, ZP_PEQ_B_COEF', &
-!ZP_PEW_A_COEF, ZP_PEW_B_COEF, ZP_PET_A_COEF, &
-!ZP_PEQ_A_COEF, ZP_PET_B_COEF, ZP_PEQ_B_COEF! MN
-!WRITE (*, '( A25 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, 3(F10.6,1x) )') 'SNOWALBinout, ALBin, D_Gin',  &
-!                               TPTIME%TDATE%YEAR, &
-!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
-!                               SNOWALBinout, ALBin, D_Gin
+      ZP_PSN3Lin(1) = 1   !TODO  assume fraction is 1  (In SURFEX-Crocus is start from zero and in several time step it became 1.  I was not able to find out where is it computed)
 
 
-!WRITE (*, '( A25 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 5(F10.6,1x) )') 'PSN3L RI, CDSNOW, USTARSNOW, CHSNOW',  &
-!                               TPTIME%TDATE%YEAR, &
-!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
-!                               ZP_PSN3Lin , RI_nout, CDSNOWout, USTARSNOWout, CHSNOWout
-
-
-!WRITE (*, '( A25 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 3(F10.6,1x) )') 'TAin, TGin,SNOWTEMPinout ',  &
-!                               TPTIME%TDATE%YEAR, &
-!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
-!                               TAin, TGin, SNOWTEMPinout(1,1)
-
-!WRITE (*, '( A40 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 4(F10.6,1x) )') 'ZP_EXNSin, tmp_EXNS | ZP_EXNAin, tmp_EXNA',  &
-!                               TPTIME%TDATE%YEAR, &
-!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
-!                               ZP_EXNSin, tmp_EXNS, ZP_EXNAin, tmp_EXNA
-
-
-!WRITE (*, '( A60 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 4(F10.6,1x) )') 'ZP_ZENITHin, tmp_ZENITH | ZP_ANGL_ILLUMin, tmp_ANGL_ILLUM',  &
-!                               TPTIME%TDATE%YEAR, &
-!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
-!                               ZP_ZENITHin, tmp_ZENITH,  ZP_ANGL_ILLUMin, tmp_ANGL_ILLUM
-
+! ---------------------------------------------------------------------
+! ---------------------------------------------------------------------
 ! call model physics here
       CALL SNOWCRO(SNOWRES_opt, &
                    TPTIME, &
@@ -1393,33 +1263,6 @@ ZLOG_CONDWTR = LOG(XCONDWTR)
 !
       ZP_GFLXCORout = 0.0 ! see snow3L_isba.F90
 
-!WRITE (*, '( A3 , 1x ,I4, 1x, I2, 1x,  I3 , 1x , F6.2 , 1x, 4(F10.6,1x), 1(F16.6,1x), 3(F10.6,1x), 1(F16.6,1x), 3(F10.6,1x)  )') 'MN1',  &
-!                               TPTIME%TDATE%YEAR, &
-!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
-!                               SNOWALBinout, THRUFALout,  ZP_EVAPCORout,  ZP_GFLXCORout, GRNDFLUXinout, &
-!                               ZP_SWNETSNOWout, ZP_LWNETSNOWout, ZP_SWNETSNOWSout, SNOWHMASSout, &
-!                               QSout, ZP_SPEC_ALBout, ZP_DIFF_RATIOout   ! print_output_1
-!print *, '========================================='
-!WRITE (*, '( A11 , 1x ,I4, 1x, I2, 1x,  I3 , 1x , F6.2 , 1x,4(F16.6,1x) , 28(F10.6,1x))') 'snowprofile',  &
-!                               TPTIME%TDATE%YEAR, &
-!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600.,  &
-!                               SNOWHEATinout(1:1,1:4), SNOWRHOinout(1:1,1:4), SNOWSWEinout(1:1,1:4), &
-!                               SNOWGRAN1inout(1:1,1:4), SNOWGRAN2inout(1:1,1:4), &
-!                               SNOWTEMPinout(1:1,1:4), SNOWLIQout(1:1,1:4), SNOWDZout(1:1,1:4)  ! print_output_snowprofile
-
-!WRITE (*, '( A20 , 1x ,I4, 1x, I2, 1x,  I3 , 1x, F6.2, 1x, 1(F10.6,1x) )') 'sum(SNOWDZout) ',  &
-!                               TPTIME%TDATE%YEAR, &
-!                               TPTIME%TDATE%MONTH, TPTIME%TDATE%DAY, TPTIME%TIME/3600., sum(SNOWDZout) 
-
-!WRITE (*, '(A10 , 1x, 5(F10.6,1x) )')'PSNOWDZ',SNOWDZout(1,1:5) ! MN
-!WRITE (*, '(A10 , 1x, 5(F10.6,1x) )')'SNOWLIQout',SNOWLIQout(1,1:5) ! MN
-!WRITE (*, '(A10 , 1x, 5(F10.6,1x) )')'SNOWSWEinout',SNOWSWEinout(1,1:5) ! MN
-!WRITE (*, '(A10 , 1x, 5(F10.6,1x) )')'SNOWRHOinout',SNOWRHOinout(1,1:5) ! MN
-!print*, 'snow depth'  , sum(SNOWDZout)
-!print*, 'snowfall', SRSNOWin
-!print*, 'rainfall', RRSNOWin
-!print*, 'runoff ' , THRUFALout
-!print *, '+++++++++++++++++++++++++++++++++++++++++'
 
 ! --------------------------------------------------------------------------------------------------------------
       SNOWHEAT(:) = SNOWHEATinout(1, :)
@@ -1431,29 +1274,9 @@ ZLOG_CONDWTR = LOG(XCONDWTR)
       SNOWHIST(:) = SNOWHISTinout(1, :)
       SNOWAGE(:) = SNOWAGEinout(1, :)
 !ZP_SNOWIMPUR   = ZP_SNOWIMPURinout(1,nsnow,nimpur)
-!PPS                   = PPSin(1,1)
-!SRSNOW           = SRSNOWin(1,1)
-!RRSNOW           = RRSNOWin(1,1)
-
 !ZP_PSN3L                = ZP_PSN3Lin(1,1)
-!TA                   = TAin(1,1)!
-!TG                   = TGin(1,1)
-!SW_RAD           = SW_RADin(1,1)
-!QA                   = QAin(1,1)
-!ZP_VMOD                = ZP_VMODin(1,1)
-!LW_RAD          = LW_RADin(1,1)
 !ZP_RHOA                = ZP_RHOAin(1,1)
-!UREF                = UREFin(1,1)
-!ZP_EXNS                = ZP_EXNSin(1,1)
-!ZP_EXNA                = ZP_EXNAin(1,1)
-!ZP_DIRCOSZW           = ZP_DIRCOSZWin(1,1)
-!ZREF                = ZREFin(1,1)
-!Z0NAT                = Z0NATin(1,1)
-!Z0EFF                = Z0EFFin(1,1)
-!Z0HNAT           = Z0HNATin(1,1)
-!ALB                = ALBin(1,1)
 !SOILCOND           = SOILCONDin(1,1)
-!D_G                = D_Gin(1,1)
       SNOWLIQ(:) = SNOWLIQout(1, :)
       SNOWDZ(:) = SNOWDZout(1, :)
       SNOWTEMP(:) = SNOWTEMPinout(1, :)
@@ -1468,7 +1291,6 @@ ZLOG_CONDWTR = LOG(XCONDWTR)
       ZP_RNSNOW = ZP_RNSNOWout(1)
       ZP_HSNOW = ZP_HSNOWout(1)
       ZP_GFLUXSNOW = ZP_GFLUXSNOWout(1)
-!print*, 'ZP_GFLUXSNOWout', ZP_GFLUXSNOWout
       ZP_HPSNOW = ZP_HPSNOWout(1)
       ZP_LES3L = ZP_LES3Lout(1)
       ZP_LEL3L = ZP_LEL3Lout(1)
@@ -1481,7 +1303,6 @@ ZLOG_CONDWTR = LOG(XCONDWTR)
       CHSNOW = CHSNOWout(1)
       SNOWHMASS = SNOWHMASSout(1)
       QS = QSout(1)
-!print*, 'QS , QSout(1)' , QS , QSout   ! MN
 !PERMSNOWFRAC= PERMSNOWFRACin(1,1)
 !ZP_ZENITH               = ZP_ZENITHin(1,1)
 !ZP_ANGL_ILLUM   = ZP_ANGL_ILLUMin(1,1)

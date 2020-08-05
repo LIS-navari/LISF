@@ -259,18 +259,15 @@ contains
             call LIS_registerAlarm("CROCUS81 restart alarm "//trim(fnest),&
                                    CROCUS81_struc(n)%ts,&
                                    CROCUS81_struc(n)%rstInterval)
-! MN: ?
-!#if 0  
             !------------------------------------------------------------------------
             ! TODO: setup number of soil moisture/temperature layers and depth here  
             !------------------------------------------------------------------------
             ! TODO: set number of soil moisture layers in surface model
-            LIS_sfmodel_struc(n)%nsm_layers = 1     ! MN XXXX
+            LIS_sfmodel_struc(n)%nsm_layers = 1     
             ! TODO: set number of soil temperature layers in surface model
-            LIS_sfmodel_struc(n)%nst_layers = 1      ! MN XXXX
+            LIS_sfmodel_struc(n)%nst_layers = 1 
             allocate(LIS_sfmodel_struc(n)%lyrthk(1))
             LIS_sfmodel_struc(n)%lyrthk(1) = CROCUS81_struc(n)%D_G ! MN added 
-!#endif
 
             LIS_sfmodel_struc(n)%ts = CROCUS81_struc(n)%ts
         enddo

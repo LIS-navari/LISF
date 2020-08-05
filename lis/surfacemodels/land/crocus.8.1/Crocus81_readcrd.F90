@@ -119,19 +119,19 @@ subroutine Crocus81_readcrd()
     enddo
  
     ! SNOWRES_opt  = ISBA-SNOW3L turbulant exchange option
-!   'DEF' = Default: Louis (ISBA: Noilhan and Mahfouf 1996)
-!   'RIL' = Limit Richarson number under very stable
-! conditions (currently testing)
-!   'M98'  = Martin et Lejeune 1998 : older computation for turbulent fluxes coefficents in Crocus
+    !   'DEF' = Default: Louis (ISBA: Noilhan and Mahfouf 1996)
+    !   'RIL' = Limit Richarson number under very stable
+    ! conditions (currently testing)
+    !   'M98'  = Martin et Lejeune 1998 : older computation for turbulent fluxes coefficents in Crocus
     call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 SNOWRES_opt:", rc = rc)
     do n=1, LIS_rc%nnest
         call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%SNOWRES_opt, rc=rc)
         call LIS_verify(rc, "CROCUS81 SNOWRES_opt: not defined")
     enddo
  
-    ! !True = coupled to MEB. surface fluxes are IMPOSED
-! as an upper boundary condition to the explicit snow schemes. 
-!If = False, then energy budget and fluxes are computed herein.
+    ! True = coupled to MEB. surface fluxes are IMPOSED
+    ! as an upper boundary condition to the explicit snow schemes. 
+    ! If = False, then energy budget and fluxes are computed herein.
     call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 OMEB_BOOL:", rc = rc)
     do n=1, LIS_rc%nnest
         call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%OMEB_BOOL, rc=rc)
@@ -139,13 +139,13 @@ subroutine Crocus81_readcrd()
     enddo
  
 
-  !True = Over permanent snow and ice, initialise WGI=WSAT, Hsnow>=10m and allow 0.8<SNOALB<0.85     
-  ! False = No specific treatment                                                                        
-      call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 GLACIER_BOOL:", rc = rc)                  
-      do n=1, LIS_rc%nnest                                                                               
-          call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%GLACIER_BOOL, rc=rc)                
-          call LIS_verify(rc, "CROCUS81 GLACIER_BOOL: not defined")                                      
-      enddo 
+      ! True = Over permanent snow and ice, initialise WGI=WSAT, Hsnow>=10m and allow 0.8<SNOALB<0.85
+      ! False = No specific treatment 
+      call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 GLACIER_BOOL:", rc = rc) 
+      do n=1, LIS_rc%nnest 
+          call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%GLACIER_BOOL, rc=rc) 
+          call LIS_verify(rc, "CROCUS81 GLACIER_BOOL: not defined") 
+      enddo
 
     ! wind implicitation option  'OLD' = direct , 'NEW' = Taylor serie, order 1
     call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 HIMPLICIT_WIND_opt:", rc = rc)
@@ -161,10 +161,10 @@ subroutine Crocus81_readcrd()
         call LIS_verify(rc, "CROCUS81 PTSTEP: not defined")
     enddo
 
-! MN: For now we assume there is no energy transfer between snow and soil by setting surface 
-!      soil temperature to 273.15 in the lis.config in feature we will use surface soil temeprature from an LSM.  
-! Surface soil temperature (effective temperature the of layer lying below snow) (K)  (for snowcro.F90 
-!       we only use the surface layer ZP_TG(:,1))  (#nsoil depends on 2-L, 3-L DIF)
+    ! MN: For now we assume there is no energy transfer between snow and soil by setting surface 
+    !     soil temperature to 273.15 in the lis.config in feature we will use surface soil temperature from an LSM.  
+    !     Surface soil temperature (effective temperature the of layer lying below snow) (K)  (for snowcro.F90 
+    !     we only use the surface layer ZP_TG(:,1))  (#nsoil depends on 2-L, 3-L DIF)
     call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 TG:", rc = rc)
     do n=1, LIS_rc%nnest
         call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%TG, rc=rc)
@@ -178,14 +178,14 @@ subroutine Crocus81_readcrd()
         call LIS_verify(rc, "CROCUS81 UREF: not defined")
     enddo
  
-! Use LDT output for slope 
-! angle between the normal to the surface and the vertical  (MN: replaced PDIRCOSZW with slope 
-! and computed the cosine in the driver)
-!    call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 SLOPE:", rc = rc)
-!    do n=1, LIS_rc%nnest
-!        call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%SLOPE, rc=rc)
-!        call LIS_verify(rc, "CROCUS81 SLOPE: not defined")
-!    enddo
+    ! Use LDT output for slope 
+    ! angle between the normal to the surface and the vertical  (MN: replaced PDIRCOSZW with slope 
+    ! and computed the cosine in the driver)
+    !    call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 SLOPE:", rc = rc)
+    !    do n=1, LIS_rc%nnest
+    !        call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%SLOPE, rc=rc)
+    !        call LIS_verify(rc, "CROCUS81 SLOPE: not defined")
+    !    enddo
 
     ! Reference height of the first atmospheric level (m)
     call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 ZREF:", rc = rc)
@@ -215,13 +215,13 @@ subroutine Crocus81_readcrd()
         call LIS_verify(rc, "CROCUS81 Z0HNAT: not defined")
     enddo
 
-! Use LDT output for soil/veg albedo  
+    ! Use LDT output for soil/veg albedo  
     ! soil/vegetation albedo
-!    call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 ALB:", rc = rc)
-!    do n=1, LIS_rc%nnest
-!        call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%ALB, rc=rc)
-!        call LIS_verify(rc, "CROCUS81 ALB: not defined")
-!    enddo
+    !    call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 ALB:", rc = rc)
+    !    do n=1, LIS_rc%nnest
+    !        call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%ALB, rc=rc)
+    !        call LIS_verify(rc, "CROCUS81 ALB: not defined")
+    !    enddo
 
     ! if usemonalb == .true., then the alb value passed to lsmcrocus will be used as the background snow-free albedo term.  
     ! if usemonalb == .false., then alb will be set to 0.2 
@@ -231,38 +231,38 @@ subroutine Crocus81_readcrd()
         call LIS_verify(rc, "CROCUS81 use monthly albedo map: not defined")
     enddo
 
-! Soil thermal conductivity will be computed in the crocus driver and no need to 
-!    read that as a constant value from the lis.config  
-!    ! soil thermal conductivity (W m-1 K-1)
-!    call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 SOILCOND:", rc = rc)
-!    do n=1, LIS_rc%nnest
-!        call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%SOILCOND, rc=rc)
-!        call LIS_verify(rc, "CROCUS81 SOILCOND: not defined")
-!    enddo
+    ! Soil thermal conductivity will be computed in the crocus driver and no need to 
+    !    read that as a constant value from the lis.config  
+    !    soil thermal conductivity (W m-1 K-1)
+    !    call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 SOILCOND:", rc = rc)
+    !    do n=1, LIS_rc%nnest
+    !        call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%SOILCOND, rc=rc)
+    !        call LIS_verify(rc, "CROCUS81 SOILCOND: not defined")
+    !    enddo
 
-    ! !Assumed first soil layer thickness (m)
-!Used to calculate ground/snow heat flux   (D_G(:,1))
+    ! Assumed first soil layer thickness (m)
+    ! Used to calculate ground/snow heat flux   (D_G(:,1))
     call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 D_G:", rc = rc)
     do n=1, LIS_rc%nnest
         call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%D_G, rc=rc)
         call LIS_verify(rc, "CROCUS81 D_G: not defined")
     enddo
 
-! LIS will use LDT output for fraction of permanet snow/ice, and ne need to 
-!     read that from the lis.config file  
-!    ! Fraction of permanet snow/ice                                                             
-!      call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 PERMSNOWFRAC:", rc = rc)                          
-!      do n=1, LIS_rc%nnest                                                                               
-!          call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%PERMSNOWFRAC, rc=rc)                
-!          call LIS_verify(rc, "CROCUS81 PERMSNOWFRAC: not defined")                                      
-!      enddo  
+    ! LIS will use LDT output for fraction of permanet snow/ice, and ne need to 
+    !     read that from the lis.config file  
+    !     Fraction of permanet snow/ice                                                             
+    !      call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 PERMSNOWFRAC:", rc = rc)                          
+    !      do n=1, LIS_rc%nnest                                                                               
+    !          call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%PERMSNOWFRAC, rc=rc)                
+    !          call LIS_verify(rc, "CROCUS81 PERMSNOWFRAC: not defined")                                      
+    !      enddo  
 !print *, "Crocus81_readcrd.F90 CROCUS81_struc(n)%PERMSNOWFRAC", CROCUS81_struc(n)%PERMSNOWFRAC
 
     ! Mechanical transformation of snow grain and compaction + effect of wind on falling snow properties
-!	'NONE': No snowdrift scheme
-!	'DFLT': falling snow falls as purely dendritic
-! 	'GA01': Gallee et al 2001
-!	'VI13': Vionnet et al 2013
+    !	'NONE': No snowdrift scheme
+    !	'DFLT': falling snow falls as purely dendritic
+    ! 	'GA01': Gallee et al 2001
+    !	'VI13': Vionnet et al 2013
     call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 SNOWDRIFT_opt:", rc = rc)
     do n=1, LIS_rc%nnest
         call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%SNOWDRIFT_opt, rc=rc)
@@ -399,13 +399,13 @@ subroutine Crocus81_readcrd()
         call LIS_verify(rc, "CROCUS81 PRODSNOWMAK_BOOL: not defined")
     enddo
  
-! Use ASPECT (SLOPE DIRECTION) from LDT output    
-!     ! !Typical slope aspect in the grid  (clockwise from N)                                         
-!      call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 SLOPE_DIR:", rc = rc)                              
-!      do n=1, LIS_rc%nnest                                                                               
-!          call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%SLOPE_DIR, rc=rc)                   
-!          call LIS_verify(rc, "CROCUS81 SLOPE_DIR: not defined")                                         
-!      enddo  
+    ! Use ASPECT (SLOPE DIRECTION) from LDT output    
+    !  !Typical slope aspect in the grid  (clockwise from N)  
+    !      call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 SLOPE_DIR:", rc = rc)  
+    !      do n=1, LIS_rc%nnest 
+    !          call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%SLOPE_DIR, rc=rc)
+    !          call LIS_verify(rc, "CROCUS81 SLOPE_DIR: not defined") 
+    !      enddo 
 
     ! Boolean option to partition total precipitation into snowfall and rainfall using Jordan 1991
     call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 boolean option to partition total precip:", rc = rc)

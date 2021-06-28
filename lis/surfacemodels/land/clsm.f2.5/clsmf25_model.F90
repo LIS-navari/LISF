@@ -42,6 +42,7 @@
         use LIS_logMod
       use clsmf25_constants
       use clsmf25_sibalb_coeff
+      !use clsmf25_types ! MN:Added for coupling with Crcous
 
       IMPLICIT NONE
 
@@ -78,7 +79,8 @@
                      sfmc, rzmc, prmc, entot, wtot, WCHANGE, ECHANGE, HSNACC,  &
                      EVACC, SHACC,                                             &
                      SH_SNOW, AVET_SNOW, WAT_10CM, TOTWAT_SOIL, TOTICE_SOIL,   &
-                     LHACC, TC1_0, TC2_0, TC4_0, QA1_0, QA2_0, QA4_0, fices_out)
+                     LHACC, TC1_0, TC2_0, TC4_0, QA1_0, QA2_0, QA4_0, fices_out,&
+                     fice1)
         
 !      use  clsmf25_diagn_routines
 
@@ -129,7 +131,7 @@
                      HLWUP,SWLAND,HLATN,QINFIL,AR1, AR2, RZEQ,                 &
                      GHFLUX, TPSN1, ASNOW0, TP1, TP2, TP3, TP4, TP5, TP6,      &
                      sfmc, rzmc, prmc, entot, wtot, tsurf, WCHANGE, ECHANGE,   &
-                     HSNACC, EVACC, SHACC
+                     HSNACC, EVACC, SHACC, fice1
 
       REAL, INTENT(OUT), DIMENSION(NCH), OPTIONAL :: SH_SNOW, AVET_SNOW,       &
                      WAT_10CM, TOTWAT_SOIL, TOTICE_SOIL
@@ -532,7 +534,7 @@
         CALL GNDTP0(                                                           &
                     T1,phi,ZBAR,THETAF,                                        &
                     HT,                                                        &
-                    fh21w,fH21i,fh21d,dfh21w,dfh21i,dfh21D,tp                  &
+                    fh21w,fH21i,fh21d,dfh21w,dfh21i,dfh21D,tp,fice1(n)         &
                    )
 
         HFTDS1(N)=-FH21W
@@ -3385,7 +3387,7 @@
 
 
       subroutine gndtp0(t1,phi,zbar,thetaf,ht,fh21w,fh21i,fh21d,                   &
-                      dfh21w,dfh21i,dfh21d,tp)
+                      dfh21w,dfh21i,dfh21d,tp,fice1)
 
 ! using a diffusion equation this code generates ground temperatures
 ! with depth given t1
@@ -3409,7 +3411,7 @@
       REAL, INTENT(IN), DIMENSION(*) :: HT
       REAL, INTENT(IN), DIMENSION(N_SM) :: T1
 
-      REAL, INTENT(OUT) :: FH21W, FH21I, FH21D, DFH21W, DFH21I, DFH21D
+      REAL, INTENT(OUT) :: FH21W, FH21I, FH21D, DFH21W, DFH21I, DFH21D,fice1
       REAL, INTENT(OUT), DIMENSION(*) :: TP
 
       INTEGER L, K
@@ -3459,7 +3461,7 @@
 
       tp(1)=0.
       FICE(1) = AMAX1( 0., AMIN1( 1., -ht(1)/(fsn*xw) ) )
-
+      fice1 = FICE(1)!clsmf25_struc(:)%cat_param%fice = FICE(1) ! MN: Added for coupling with Crocus
       IF(FICE(1) .EQ. 1.) THEN
           tp(1)=(ht(1)+xw*fsn)/(shc(1)+xw*shi0)
         ELSEIF(FICE(1) .EQ. 0.) THEN

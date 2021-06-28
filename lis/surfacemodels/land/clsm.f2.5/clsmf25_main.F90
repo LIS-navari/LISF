@@ -909,7 +909,8 @@ subroutine clsmf25_main(nid)
           clsmf25_struc(nid)%cat_diagn%wtot,  &
           wchange, echange, hsnacc, evacc, shacc, &
           SH_SNOW, AVET_SNOW, WAT_10CM, TOTWAT_SOIL, TOTICE_SOIL,         &
-          lhacc,TC1_0, TC2_0, TC4_0, QA1_0, QA2_0, QA4_0, fices)
+          lhacc,TC1_0, TC2_0, TC4_0, QA1_0, QA2_0, QA4_0, fices, &
+          clsmf25_struc(nid)%cat_param%fice)
 
 !    if(LIS_localPet.eq.165) then 
 !       write(LIS_logunit,*) 'tp2 ',clsmf25_struc(nid)%cat_diagn(22527)%tpsn(1),&

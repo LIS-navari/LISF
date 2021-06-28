@@ -19,6 +19,7 @@ module LIS_sublsm_pluginMod
 !
 ! !REVISION HISTORY:
 !  09 Oct 03    Sujay Kumar  Initial Specification
+!  22 Jun 21    Mahdi Navari Modified for clsmf25
 !
 !EOP
   implicit none
@@ -145,6 +146,11 @@ contains
    external NoahMP401_setCROCUSimport
 #endif
 
+#if ( defined SM_CLSM_F2_5 )
+   external clsmf25_getCROCUSexport
+   external clsmf25_setCROCUSimport
+#endif
+
 #endif
 
 #if ( defined SM_Crocus_8_1 )
@@ -172,6 +178,16 @@ contains
    call registersublsm2lsmgetexport(trim(LIS_noahmp401Id)//"+"//&
         trim(LIS_Crocus81Id)//char(0),Crocus81_getLSMexport)
 #endif
+
+#if ( defined SM_CLSM_F2_5 )
+   call registerlsm2sublsmgetexport(trim(LIS_clsmf25Id)//"+"//&
+        trim(LIS_Crocus81Id)//char(0),clsmf25_getCROCUSexport)
+   call registerlsmsetsublsmimport(trim(LIS_clsmf25Id)//char(0),&
+        clsmf25_setCROCUSimport)
+   call registersublsm2lsmgetexport(trim(LIS_clsmf25Id)//"+"//&
+        trim(LIS_Crocus81Id)//char(0),Crocus81_getLSMexport)
+#endif
+
 #endif
   end subroutine LIS_sublsm_plugin
 

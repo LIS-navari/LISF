@@ -217,7 +217,8 @@ module clsmf25_types
      real :: LAIMAX
 
      real :: lai(12)
-
+! Added for coupling with Crocus - MN
+     real :: fice    ! the surface ice fraction 
   end type cat_param_type
   
   ! ---------------------------------------------------------
@@ -953,6 +954,7 @@ contains
     cat_param%tsb2   = scalar
     cat_param%atau   = scalar
     cat_param%btau   = scalar
+    cat_param%fice   = scalar
     
   end subroutine scalar2cat_param
     

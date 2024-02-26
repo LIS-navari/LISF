@@ -216,6 +216,7 @@ module LIS_pluginIndices
    character*50, public,  parameter :: LIS_ensrfId      = "EnSRF"
    character*50, public,  parameter :: LIS_enksId       = "EnKS"
    character*50, public,  parameter :: LIS_pfId         = "PF"
+   character*50, public,  parameter :: LIS_pbsId         = "PBS" ! MN
 !-------------------------------------------------------------------------
 ! perturbation algorithms
 !-------------------------------------------------------------------------

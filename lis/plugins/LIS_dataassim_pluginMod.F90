@@ -138,6 +138,13 @@ subroutine LIS_dataassim_plugin
                                    pf_increments, pf_update,           &
                                    pf_final,pf_diagnostics
 #endif
+
+! MN 
+#if ( defined DA_PBS )
+   use pbs_Mod,            only : pbs_init, pbs_setup,                  &
+                                   pbs_increments, pbs_update,           &
+                                   pbs_final,pbs_diagnostics
+#endif
 !----------------------------------------------------------------------
 ! The following convention is used to define the index of registered
 ! functions. The user may change these options, and the lis.config
@@ -205,6 +212,17 @@ subroutine LIS_dataassim_plugin
    call registerapplyincrements(trim(LIS_pfId)//char(0),pf_update)
    call registerdaoutput(trim(LIS_pfId)//char(0),pf_diagnostics)
    call registerdafinalize(trim(LIS_pfId)//char(0),pf_final)
+#endif
+
+! MN
+#if ( defined DA_PBS )
+   call registerdainit(trim(LIS_pbsId)//char(0),pbs_init)
+   call registerdasetup(trim(LIS_pbsId)//char(0),pbs_setup)
+   call registercomputeincrements(trim(LIS_pbsId)//char(0),&
+        pbs_increments)
+   call registerapplyincrements(trim(LIS_pbsId)//char(0),pbs_update)
+   call registerdaoutput(trim(LIS_pbsId)//char(0),pbs_diagnostics)
+   call registerdafinalize(trim(LIS_pbsId)//char(0),pbs_final)
 #endif
 
 end subroutine LIS_dataassim_plugin

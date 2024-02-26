@@ -22,7 +22,7 @@
 ! !INTERFACE:
 subroutine Crocus81_readrst()
 ! !USES:
-    use LIS_coreMod, only    : LIS_rc, LIS_masterproc
+    use LIS_coreMod, only    : LIS_rc, LIS_masterproc, LIS_localPet
     use LIS_historyMod, only : LIS_readvar_restart
     use LIS_logMod, only     : LIS_logunit, LIS_endrun, &
                                LIS_getNextUnitNumber,   &
@@ -81,12 +81,19 @@ subroutine Crocus81_readrst()
     real, allocatable :: tmptilen(:)
     logical           :: file_exists
     character*20      :: wformat
- 
+    external  :: read_IC
+
     do n=1, LIS_rc%nnest
         wformat = trim(CROCUS81_struc(n)%rformat)
         ! coldstart
-        if(LIS_rc%startcode .eq. "coldstart") then  
+        if(LIS_rc%startcode .eq. "coldstart" .and. &
+           CROCUS81_struc(n)%Init_Profile_from_MAR_BOOL .eq. .FALSE. ) then  
             call Crocus81_coldstart(LIS_rc%lsm_index)
+        elseif(LIS_rc%startcode .eq. "coldstart" .and. &
+           CROCUS81_struc(n)%Init_Profile_from_MAR_BOOL .eq. .TRUE. ) then
+           print*,'Crocus81_readrst LIS_localPet', LIS_localPet
+           write(LIS_logunit,*) "MSG: Crocus81_readrst -- read restart from MAR forcing"
+           call read_IC(n)
         ! restart
         elseif(LIS_rc%startcode .eq. "restart") then
             allocate(tmptilen(LIS_rc%npatch(n, LIS_rc%lsm_index)))

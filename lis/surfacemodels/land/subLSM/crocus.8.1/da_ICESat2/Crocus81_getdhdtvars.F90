@@ -61,10 +61,10 @@ subroutine Crocus81_getdhdtvars(n, LSM_State)
   !call LIS_verify(status)
   call ESMF_FieldGet(snodField,localDE=0,farrayPtr=snod,rc=status)
   call LIS_verify(status)
-
+print*,'getdhdtvars'
   do t=1,LIS_rc%npatch(n,LIS_rc%lsm_index)
-     !swe(t) = noahmp401_struc(n)%noahmp401(t)%sneqv
      snod(t) = CROCUS81_struc(n)%crocus81(t)%SD_1D
   enddo
+
 end subroutine Crocus81_getdhdtvars
 

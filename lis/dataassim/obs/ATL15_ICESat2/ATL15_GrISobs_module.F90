@@ -307,7 +307,7 @@ contains
        call LIS_verify(status,'Error ESMF_StateAdd: ATL15_GrISobs_setup')
 
        call ESMF_StateAdd(OBS_Pert_State(n),(/pertField(n)/),rc=status)
-       call LIS_verify(status,'Error ESMF_StateAdd: ATL15_GrISobs_setup at OBS_Pert_State ')  
+       call LIS_verify(status,'Error ESMF_StateAdd: ATL15_GrISobs_setup at OBS_Pert_State')  
 
     enddo
     

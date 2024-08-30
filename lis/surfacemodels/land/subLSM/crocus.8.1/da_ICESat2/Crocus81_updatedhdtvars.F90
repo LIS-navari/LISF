@@ -45,6 +45,7 @@ subroutine Crocus81_updatedhdtvars(n, LSM_State, LSM_Incr_State)
 !EOP
 
 ! TODO NOTE: we do not update the state variables in the PBS
+write(LIS_logunit,*)'[INFO] The PBS does not update the state variables @ updatedhdtvars' 
 #if 0
   type(ESMF_Field)       :: sweField, sweIncrField
   type(ESMF_Field)       :: snodField, snodIncrField

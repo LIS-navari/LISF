@@ -184,7 +184,8 @@ subroutine read_MAR(n, findex, order, yr, mon, da, hr, ferror)
    write(unit=cmo,fmt='(i2.2)') mon
      ! File name for data MARv3.12-ERA5-25km-hourly-year.nc
    infile = trim(MAR_struc(n)%MARdir)//'/'//&
-          'ICE.'//trim(cyr)//trim(cmo)//'.b85.nc'
+         'MARv3.14-ERA5-20km-'//trim(cyr)//'.nc'
+!          'ICE.'//trim(cyr)//trim(cmo)//'.b85.nc'
 !          'ICE.'//trim(cyr)//'.01-12.b85.nc'
 !         'MARv3.12-ERA5-25km-hourly-'//trim(cyr)//'.nc'
 

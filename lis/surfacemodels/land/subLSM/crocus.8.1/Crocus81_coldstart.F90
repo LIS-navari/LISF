@@ -38,61 +38,70 @@ subroutine Crocus81_coldstart(mtype)
     integer :: mtype
     integer :: t, l, n, i
     integer :: c, r
+    !external  :: read_IC
+
     do n=1, LIS_rc%nnest
         if (trim(LIS_rc%startcode) .eq. "coldstart") then
-            write(LIS_logunit,*) "MSG: Crocus81_coldstart -- cold-starting Crocus81"
-            do t=1, LIS_rc%npatch(n,mtype)
-                do l=1, CROCUS81_struc(n)%nsnow
-                    CROCUS81_struc(n)%crocus81(t)%SNOWSWE(l) = CROCUS81_struc(n)%init_SNOWSWE(l)
-                enddo
-                do l=1, CROCUS81_struc(n)%nsnow
-                    CROCUS81_struc(n)%crocus81(t)%SNOWRHO(l) = CROCUS81_struc(n)%init_SNOWRHO(l)
-                enddo
-                do l=1, CROCUS81_struc(n)%nsnow
-                    CROCUS81_struc(n)%crocus81(t)%SNOWHEAT(l) = CROCUS81_struc(n)%init_SNOWHEAT(l)
-                enddo
-                CROCUS81_struc(n)%crocus81(t)%SNOWALB = CROCUS81_struc(n)%init_SNOWALB
-                do l=1, CROCUS81_struc(n)%nsnow
-                    CROCUS81_struc(n)%crocus81(t)%SNOWGRAN1(l) = CROCUS81_struc(n)%init_SNOWGRAN1(l)
-                enddo
-                do l=1, CROCUS81_struc(n)%nsnow
-                    CROCUS81_struc(n)%crocus81(t)%SNOWGRAN2(l) = CROCUS81_struc(n)%init_SNOWGRAN2(l)
-                enddo
-                do l=1, CROCUS81_struc(n)%nsnow
-                    CROCUS81_struc(n)%crocus81(t)%SNOWHIST(l) = CROCUS81_struc(n)%init_SNOWHIST(l)
-                enddo
-                do l=1, CROCUS81_struc(n)%nsnow
-                    CROCUS81_struc(n)%crocus81(t)%SNOWAGE(l) = CROCUS81_struc(n)%init_SNOWAGE(l)
-                enddo
-                do l=1, CROCUS81_struc(n)%nsnow
-                    CROCUS81_struc(n)%crocus81(t)%SNOWLIQ(l) = CROCUS81_struc(n)%init_SNOWLIQ(l)
-                enddo
-                do l=1, CROCUS81_struc(n)%nsnow
-                    CROCUS81_struc(n)%crocus81(t)%SNOWTEMP(l) = CROCUS81_struc(n)%init_SNOWTEMP(l)
-                enddo
-                do l=1, CROCUS81_struc(n)%nsnow
-                    CROCUS81_struc(n)%crocus81(t)%SNOWDZ(l) = CROCUS81_struc(n)%init_SNOWDZ(l)
-                enddo
-                CROCUS81_struc(n)%crocus81(t)%GRNDFLUX = CROCUS81_struc(n)%init_GRNDFLUX
-                CROCUS81_struc(n)%crocus81(t)%SNDRIFT = CROCUS81_struc(n)%init_SNDRIFT
-                CROCUS81_struc(n)%crocus81(t)%RI_n = CROCUS81_struc(n)%init_RI_n
-                CROCUS81_struc(n)%crocus81(t)%CDSNOW = CROCUS81_struc(n)%init_CDSNOW
-                CROCUS81_struc(n)%crocus81(t)%USTARSNOW = CROCUS81_struc(n)%init_USTARSNOW
-                CROCUS81_struc(n)%crocus81(t)%CHSNOW = CROCUS81_struc(n)%init_CHSNOW
-                CROCUS81_struc(n)%crocus81(t)%SNOWMAK_dz = CROCUS81_struc(n)%init_SNOWMAK_dz
-            enddo
+           !if (CROCUS81_struc(n)%Init_Profile_from_MAR_BOOL .eq. .FALSE.) then
+              write(LIS_logunit,*) "MSG: Crocus81_coldstart -- cold-starting Crocus81"
+              do t=1, LIS_rc%npatch(n,mtype)
+                 do l=1, CROCUS81_struc(n)%nsnow
+                     CROCUS81_struc(n)%crocus81(t)%SNOWSWE(l) = CROCUS81_struc(n)%init_SNOWSWE(l)
+                 enddo
+                 do l=1, CROCUS81_struc(n)%nsnow
+                     CROCUS81_struc(n)%crocus81(t)%SNOWRHO(l) = CROCUS81_struc(n)%init_SNOWRHO(l)
+                 enddo
+                 do l=1, CROCUS81_struc(n)%nsnow
+                     CROCUS81_struc(n)%crocus81(t)%SNOWHEAT(l) = CROCUS81_struc(n)%init_SNOWHEAT(l)
+                 enddo
+                 CROCUS81_struc(n)%crocus81(t)%SNOWALB = CROCUS81_struc(n)%init_SNOWALB
+                 do l=1, CROCUS81_struc(n)%nsnow
+                     CROCUS81_struc(n)%crocus81(t)%SNOWGRAN1(l) = CROCUS81_struc(n)%init_SNOWGRAN1(l)
+                 enddo
+                 do l=1, CROCUS81_struc(n)%nsnow
+                     CROCUS81_struc(n)%crocus81(t)%SNOWGRAN2(l) = CROCUS81_struc(n)%init_SNOWGRAN2(l)
+                 enddo
+                 do l=1, CROCUS81_struc(n)%nsnow
+                     CROCUS81_struc(n)%crocus81(t)%SNOWHIST(l) = CROCUS81_struc(n)%init_SNOWHIST(l)
+                 enddo
+                 do l=1, CROCUS81_struc(n)%nsnow
+                     CROCUS81_struc(n)%crocus81(t)%SNOWAGE(l) = CROCUS81_struc(n)%init_SNOWAGE(l)
+                 enddo
+                 do l=1, CROCUS81_struc(n)%nsnow
+                     CROCUS81_struc(n)%crocus81(t)%SNOWLIQ(l) = CROCUS81_struc(n)%init_SNOWLIQ(l)
+                 enddo
+                 do l=1, CROCUS81_struc(n)%nsnow
+                     CROCUS81_struc(n)%crocus81(t)%SNOWTEMP(l) = CROCUS81_struc(n)%init_SNOWTEMP(l)
+                 enddo
+                 do l=1, CROCUS81_struc(n)%nsnow
+                     CROCUS81_struc(n)%crocus81(t)%SNOWDZ(l) = CROCUS81_struc(n)%init_SNOWDZ(l)
+                 enddo
+                 CROCUS81_struc(n)%crocus81(t)%GRNDFLUX = CROCUS81_struc(n)%init_GRNDFLUX
+                 CROCUS81_struc(n)%crocus81(t)%SNDRIFT = CROCUS81_struc(n)%init_SNDRIFT
+                 CROCUS81_struc(n)%crocus81(t)%RI_n = CROCUS81_struc(n)%init_RI_n
+                 CROCUS81_struc(n)%crocus81(t)%CDSNOW = CROCUS81_struc(n)%init_CDSNOW
+                 CROCUS81_struc(n)%crocus81(t)%USTARSNOW = CROCUS81_struc(n)%init_USTARSNOW
+                 CROCUS81_struc(n)%crocus81(t)%CHSNOW = CROCUS81_struc(n)%init_CHSNOW
+                 CROCUS81_struc(n)%crocus81(t)%SNOWMAK_dz = CROCUS81_struc(n)%init_SNOWMAK_dz
+              enddo
+
+           LIS_rc%yr = LIS_rc%syr
+           LIS_rc%mo = LIS_rc%smo
+           LIS_rc%da = LIS_rc%sda
+           LIS_rc%hr = LIS_rc%shr
+           LIS_rc%mn = LIS_rc%smn
+           LIS_rc%ss = LIS_rc%sss
+
+           call LIS_date2time(LIS_rc%time, LIS_rc%doy, LIS_rc%gmt, LIS_rc%yr,      &
+                              LIS_rc%mo, LIS_rc%da, LIS_rc%hr, LIS_rc%mn, LIS_rc%ss)
+           write(LIS_logunit,*) "[INFO]: Crocus81_coldstart -- ",     &
+                                "Using the specified start time ", LIS_rc%time
+
+           !else 
+           !   write(LIS_logunit,*) "MSG: Crocus81_coldstart -- read restart from MAR forcing" 
+           !   call read_IC(n)
+           !endif
         endif
-    
-        LIS_rc%yr = LIS_rc%syr
-        LIS_rc%mo = LIS_rc%smo
-        LIS_rc%da = LIS_rc%sda
-        LIS_rc%hr = LIS_rc%shr
-        LIS_rc%mn = LIS_rc%smn
-        LIS_rc%ss = LIS_rc%sss
-        
-        call LIS_date2time(LIS_rc%time, LIS_rc%doy, LIS_rc%gmt, LIS_rc%yr,      &
-                           LIS_rc%mo, LIS_rc%da, LIS_rc%hr, LIS_rc%mn, LIS_rc%ss)
-        write(LIS_logunit,*) "[INFO]: Crocus81_coldstart -- ",     &
-                             "Using the specified start time ", LIS_rc%time
     enddo
+
 end subroutine Crocus81_coldstart

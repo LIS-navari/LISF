@@ -21,7 +21,7 @@ subroutine Crocus81_qc_dhdtobs(n,k,OBS_State)
 ! !USES:
   use ESMF
   use LIS_coreMod
-  use LIS_logMod,  only : LIS_verify
+  use LIS_logMod,  only : LIS_verify, LIS_logunit
   use LIS_constantsMod, only : LIS_CONST_TKFRZ
   use LIS_DAobservationsMod
   use noahmp401_lsmMod
@@ -44,6 +44,6 @@ subroutine Crocus81_qc_dhdtobs(n,k,OBS_State)
 !  \end{description}
 !
 !EOP
-
+  write(LIS_logunit,*)'[INFO] No model-based QC for the observation'
 end subroutine Crocus81_qc_dhdtobs
 

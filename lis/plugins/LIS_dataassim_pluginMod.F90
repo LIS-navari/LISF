@@ -21,6 +21,7 @@ module LIS_dataassim_pluginMod
 !
 ! !REVISION HISTORY:
 !  27 Feb 2005;   Sujay Kumar  Initial Specification
+!  23 Aug 2024;   Mahdi Navari Particle batch smoother DA added
 !
 !EOP
   implicit none

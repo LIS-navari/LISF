@@ -158,7 +158,8 @@ subroutine LIS_lsmda_plugin
 
 #if ( ( defined DA_DIRECT_INSERTION ) || \
       ( defined DA_ENKS )             || \
-      ( defined DA_ENKF ) )
+      ( defined DA_ENKF )             || \
+      ( defined DA_PBS ) ) 
 
    use LIS_pluginIndices
 
@@ -208,12 +209,12 @@ subroutine LIS_lsmda_plugin
    use noahmp401_daveg_Mod
 #endif
 
-#if ( defined SM_Crocus_8_1 )
+!#if ( defined SM_Crocus_8_1 )
 !#if ( defined DA_OBS_ATL15GrIS )
-   use Crocus81_da_dhdt_Mod
-   use Crocus81_dhdt_DAlogMod, only : Crocus81_dhdt_DAlog
+!   use Crocus81_da_dhdt_Mod
+!   use Crocus81_dhdt_DAlogMod, only : Crocus81_dhdt_DAlog
 !#endif
-#endif 
+!#endif 
 
 #if ( defined SM_CLSM_F2_5 )
    use clsmf25_tws_DAlogMod, only : clsmf25_tws_DAlog
@@ -747,6 +748,7 @@ subroutine LIS_lsmda_plugin
 #endif
 #endif
 
+#if 0
 #if ( defined SM_Crocus_8_1 )
 !#if ( defined DA_OBS_ATL15GrIS ) 
    external Crocus81_getdhdtvars
@@ -760,7 +762,8 @@ subroutine LIS_lsmda_plugin
    external Crocus81_qc_dhdtobs
    external Crocus81_setparticleweight
 !#endif
-#endif 
+#endif
+#endif
 
 #if ( defined SM_NOAH_2_7_1 )
 #if ( defined DA_OBS_SNODEP )
@@ -4197,32 +4200,34 @@ subroutine LIS_lsmda_plugin
 #endif
 #endif 
 
+#if 0
 #if ( defined SM_Crocus_8_1 )
 !#if ( defined DA_OBS_ATL15GrIS ) 
-   call registerlsmdainit(trim(LIS_Crocus81Id)//"+"//&
-        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_da_dhdt_init)
-   call registerlsmdagetstatevar(trim(LIS_Crocus81Id)//"+"//&
-        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_getdhdtvars)
-   call registerlsmdasetstatevar(trim(LIS_Crocus81Id)//"+"//&
-        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_setdhdt)
-   call registerlsmdagetobspred(trim(LIS_Crocus81Id)//"+"//&
-        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_getdhdtpred)
-   call registerlsmdaqcstate(trim(LIS_Crocus81Id)//"+"//&
-        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_qcdhdt)
-   call registerlsmdascalestatevar(trim(LIS_Crocus81Id)//"+"//&
-        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_scale_dhdt)
-   call registerlsmdadescalestatevar(trim(LIS_Crocus81Id)//"+"//&
-        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_qc_dhdtobs)
-   call registerlsmdaupdatestate(trim(LIS_Crocus81Id)//"+"//&
-        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_updatedhdtvars)
-   call registerlsmdadiagnosevars(trim(LIS_Crocus81Id)//"+"//&
-        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_dhdt_DAlog) ! Crocus81_dhdt_DAlogMod)
-   call registerlsmdasetparticleweight(trim(LIS_Crocus81Id)//"+"//&
-        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_setparticleweight)
-!#endif
-#endif 
-
-
+!   call registerlsmdainit(trim(LIS_Crocus81Id)//"+"//&
+!        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_da_dhdt_init)
+!   call registerlsmdagetstatevar(trim(LIS_Crocus81Id)//"+"//&
+!        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_getdhdtvars)
+!   call registerlsmdasetstatevar(trim(LIS_Crocus81Id)//"+"//&
+!        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_setdhdt)
+!   call registerlsmdagetobspred(trim(LIS_Crocus81Id)//"+"//&
+!        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_getdhdtpred)
+!   call registerlsmdaqcstate(trim(LIS_Crocus81Id)//"+"//&
+!        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_qcdhdt)
+!   call registerlsmdascalestatevar(trim(LIS_Crocus81Id)//"+"//&
+!        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_scale_dhdt)
+!   call registerlsmdadescalestatevar(trim(LIS_Crocus81Id)//"+"//&
+!        trim(LIS_usafsiobsId)//char(0),Crocus81_descale_dhdt)
+!   call registerlsmdaqcobsstate(trim(LIS_Crocus81Id)//"+"//&
+!        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_qc_dhdtobs)
+!   call registerlsmdaupdatestate(trim(LIS_Crocus81Id)//"+"//&
+!        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_updatedhdtvars)
+!   call registerlsmdadiagnosevars(trim(LIS_Crocus81Id)//"+"//&
+!        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_dhdt_DAlog) ! Crocus81_dhdt_DAlogMod)
+!   call registerlsmdasetparticleweight(trim(LIS_Crocus81Id)//"+"//&
+!        trim(LIS_ATL15GrISdhdtobsId)//char(0),Crocus81_setparticleweight)
+!#endif 
+#endif  
+#endif
 
 #endif  !endif for DA_DIRECT_INSERTION, DA_ENKS, or DA_ENKF
 

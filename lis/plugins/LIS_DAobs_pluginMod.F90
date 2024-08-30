@@ -22,6 +22,7 @@ module LIS_DAobs_pluginMod
 ! !REVISION HISTORY: 
 !  27 Feb 2005;   Sujay Kumar  Initial Specification
 !  11 Aug 2016:   Mahdi Navari, PILDAS added 
+!  23 Aug 2024: Mahdi navari, ISESat2 ATL15 for Greenland Ice sheet added 
 ! 
 !EOP  
   implicit none
@@ -120,7 +121,8 @@ subroutine LIS_DAobs_plugin
 !EOP
 #if ( ( defined DA_DIRECT_INSERTION ) || \
       ( defined DA_ENKS )             || \
-      ( defined DA_ENKF ) )
+      ( defined DA_ENKF )             || \
+      ( defined DA_PBS ) ) 
 
    use LIS_pluginIndices
 

@@ -41,6 +41,8 @@ module LIS_lsmMod
 ! 
 ! !REVISION HISTORY: 
 !  14 Nov 2002    Sujay Kumar  Initial Specification
+!  23 Aug 2024    mahdi Navari : Added support for particle batch 
+!                 smoother and particle filter DA
 ! 
   use ESMF
   use LIS_coreMod
@@ -197,7 +199,9 @@ contains
          label="Number of subLSMs:",default=0,rc=rc)
     call LIS_verify(rc,'Number of subLSMs: option not specified in the config file')
 
-    allocate(LIS_rc%subLSM(LIS_rc%nSubLSMs))
+    if(.not.allocated(LIS_rc%subLSM)) then
+       allocate(LIS_rc%subLSM(LIS_rc%nSubLSMs))
+    endif 
 
     if(LIS_rc%nSubLSMs.ge.1) then        
        
@@ -328,7 +332,7 @@ contains
                    ! LIS does not read that from the attribute file. 
                    ParticleWeightField = ESMF_FieldCreate(grid=&
                         LIS_vecPatch(n,LIS_rc%lsm_index),&
-                        arrayspec=arrspec1,name=trim(ParticleWeight), rc=status) ! 
+                        arrayspec=arrspec1,name=trim("ParticleWeight"), rc=status) ! 
                    call LIS_verify(status,&
                         "ESMF_FieldCreate failed in LIS_lsm_init")
 
@@ -737,16 +741,29 @@ contains
 !------------------------------------------------------------------------
 !   apply the lsm perturbations to the the LSM state
 !------------------------------------------------------------------------
-                call lsmdagetstatevar(trim(LIS_rc%lsm)//"+"//&
-                     trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+                if (LIS_rc%DAforSubLSM .eqv. .false.) then
+                   call lsmdagetstatevar(trim(LIS_rc%lsm)//"+"//&
+                        trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+                else
+                   call sublsmdagetstatevar(trim(LIS_rc%sublsm(1))//"+"//&
+                        trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+                endif
                 call applyLSMPert(n, k, LIS_LSM_State(n,k),LIS_LSM_Pert_State(n,k))
 !------------------------------------------------------------------------
 !   Diagnose the perturbed state (updates the model prognostic states)
 !------------------------------------------------------------------------
-                call lsmdaqcstate(trim(LIS_rc%lsm)//"+"//&
-                     trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
-                call lsmdasetstatevar(trim(LIS_rc%lsm)//"+"//&
-                     trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k)) 
+                if (LIS_rc%DAforSubLSM .eqv. .false.) then
+                   call lsmdaqcstate(trim(LIS_rc%lsm)//"+"//&
+                        trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+                   call lsmdasetstatevar(trim(LIS_rc%lsm)//"+"//&
+                        trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+                else
+                   call sublsmdaqcstate(trim(LIS_rc%sublsm(1))//"+"//&
+                        trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+                   call sublsmdasetstatevar(trim(LIS_rc%sublsm(1))//"+"//&
+                        trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+                endif
+
              endif
           endif
        endif
@@ -1265,8 +1282,13 @@ contains
    TRACE_ENTER("lsm_diagDA")
    if(LIS_rc%ndas.gt.0) then
       do k=1, LIS_rc%nperts
-         call lsmdadiagnosevars(trim(LIS_rc%lsm)//"+"//&
-              trim(LIS_rc%daset(k))//char(0),n)      
+         if (LIS_rc%DAforSubLSM .eqv. .false.) then
+            call lsmdadiagnosevars(trim(LIS_rc%lsm)//"+"//&
+                 trim(LIS_rc%daset(k))//char(0),n)
+         else
+            call sublsmdadiagnosevars(trim(LIS_rc%sublsm(1))//"+"//&
+                 trim(LIS_rc%daset(k))//char(0),n)
+         endif
       enddo
    endif
    TRACE_EXIT("lsm_diagDA")
@@ -1304,8 +1326,13 @@ contains
     integer                :: m
 
     if(LIS_rc%LSM_DAinst_valid(k)) then
-       call lsmdagetobspred(trim(LIS_rc%lsm)//"+"//&
-            trim(LIS_rc%daset(k))//char(0),n, k, Obs_pred)
+       if (LIS_rc%DAforSubLSM .eqv. .false.) then
+          call lsmdagetobspred(trim(LIS_rc%lsm)//"+"//&
+               trim(LIS_rc%daset(k))//char(0),n, k, Obs_pred)
+       else
+          call sublsmdagetobspred(trim(LIS_rc%sublsm(1))//"+"//&
+               trim(LIS_rc%daset(k))//char(0),n, k, Obs_pred)
+       endif
     endif
   end subroutine LIS_lsm_DAGetObsPred
 
@@ -1336,8 +1363,13 @@ contains
 !EOP
 
     if(LIS_rc%LSM_DAinst_valid(k)) then
-       call lsmdagetstatevar(trim(LIS_rc%lsm)//"+"//&
-            trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+       if (LIS_rc%DAforSubLSM .eqv. .false.) then
+          call lsmdagetstatevar(trim(LIS_rc%lsm)//"+"//&
+               trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+       else
+          call sublsmdagetstatevar(trim(LIS_rc%sublsm(1))//"+"//&
+               trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+       endif
     endif
   end subroutine LIS_lsm_DAGetStateVar
 
@@ -1367,8 +1399,13 @@ contains
 !EOP
 
     if(LIS_rc%LSM_DAinst_valid(k)) then 
-       call lsmdasetstatevar(trim(LIS_rc%lsm)//"+"//&
-            trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+       if (LIS_rc%DAforSubLSM .eqv. .false.) then
+          call lsmdasetstatevar(trim(LIS_rc%lsm)//"+"//&
+              trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+       else
+          call sublsmdasetstatevar(trim(LIS_rc%sublsm(1))//"+"//&
+              trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+       endif
     endif
 
   end subroutine LIS_lsm_DASetStateVar
@@ -1400,8 +1437,13 @@ contains
 !EOP
 
     if(LIS_rc%LSM_DAinst_valid(k)) then
-       call lsmdasetparticleweight(trim(LIS_rc%lsm)//"+"//&
-            trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_particle_weight(n,k))
+       if (LIS_rc%DAforSubLSM .eqv. .false.) then
+          call lsmdasetparticleweight(trim(LIS_rc%lsm)//"+"//&
+               trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_particle_weight(n,k))
+       else
+          call sublsmdasetparticleweight(trim(LIS_rc%sublsm(1))//"+"//&
+               trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_particle_weight(n,k))
+       endif
     endif
 
   end subroutine LIS_lsm_DAsetParticleWeight
@@ -1432,8 +1474,13 @@ contains
 !EOP
 
     if(LIS_rc%LSM_DAinst_valid(k)) then 
-       call lsmdascalestatevar(trim(LIS_rc%lsm)//"+"//&
-            trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+       if (LIS_rc%DAforSubLSM .eqv. .false.) then
+          call lsmdascalestatevar(trim(LIS_rc%lsm)//"+"//&
+               trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+       else
+          call sublsmdascalestatevar(trim(LIS_rc%sublsm(1))//"+"//&
+               trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k))
+       endif
     endif
   end subroutine LIS_lsm_DAScaleStateVar
 
@@ -1461,9 +1508,15 @@ contains
 !EOP
 
     if(LIS_rc%LSM_DAinst_valid(k)) then 
-       call lsmdadescalestatevar(trim(LIS_rc%lsm)//"+"//&
-            trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k), &
-            LIS_LSM_Incr_State(n,k))
+       if (LIS_rc%DAforSubLSM .eqv. .false.) then
+          call lsmdadescalestatevar(trim(LIS_rc%lsm)//"+"//&
+               trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k), &
+               LIS_LSM_Incr_State(n,k))
+       else
+          call sublsmdadescalestatevar(trim(LIS_rc%sublsm(1))//"+"//&
+               trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k), &
+               LIS_LSM_Incr_State(n,k))
+       endif
     endif
 
   end subroutine LIS_lsm_DADescaleStateVar
@@ -1493,9 +1546,15 @@ contains
 !EOP
 
     if(LIS_rc%LSM_DAinst_valid(k)) then 
-       call lsmdaupdatestate(trim(LIS_rc%lsm)//"+"//&
-            trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k), &
-            LIS_LSM_Incr_State(n,k))
+       if (LIS_rc%DAforSubLSM .eqv. .false.) then
+          call lsmdaupdatestate(trim(LIS_rc%lsm)//"+"//&
+               trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k), &
+               LIS_LSM_Incr_State(n,k))
+       else
+          call sublsmdaupdatestate(trim(LIS_rc%sublsm(1))//"+"//&
+               trim(LIS_rc%daset(k))//char(0), n, LIS_LSM_State(n,k), &
+               LIS_LSM_Incr_State(n,k))
+       endif
     endif
   
   end subroutine LIS_lsm_DAUpdateState
@@ -1524,8 +1583,13 @@ contains
 !EOP
 
     if(LIS_rc%LSM_DAinst_valid(k)) then 
-       call lsmdaqcstate(trim(LIS_rc%lsm)//"+"//&
-            trim(LIS_rc%daset(k))//char(0),n,LIS_LSM_State(n,k))
+       if (LIS_rc%DAforSubLSM .eqv. .false.) then
+          call lsmdaqcstate(trim(LIS_rc%lsm)//"+"//&
+               trim(LIS_rc%daset(k))//char(0),n,LIS_LSM_State(n,k))
+       else
+          call sublsmdaqcstate(trim(LIS_rc%sublsm(1))//"+"//&
+               trim(LIS_rc%daset(k))//char(0),n,LIS_LSM_State(n,k))
+       endif
     endif
   end subroutine LIS_lsm_DAQCState
 
@@ -1809,23 +1873,24 @@ contains
 
     if(LIS_rc%LSM_DAinst_valid(k)) then
        allocate(lsm_state_objs(LIS_rc%nstvars(k)))
-
-       call ESMF_StateGet(LIS_LSM_State(n,k),itemNameList=lsm_state_objs,&
+       !call ESMF_StateGet(LIS_LSM_State(n,k),itemNameList=lsm_state_objs,&
+       !     rc=status)
+       call ESMF_StateGet(LIS_LSM_particle_weight(n,k),itemNameList=lsm_state_objs,&
             rc=status)
        call LIS_verify(status, &
-            "ESMF_StateGet failed in enkf_increments")
+            "ESMF_StateGet failed in pbs_particle_weight")
 
-       do v=1,LIS_rc%nstvars(k) 
+       do v=1,LIS_rc%nstvars(k)
 
           call ESMF_StateGet(LIS_LSM_particle_weight(n,k),trim(lsm_state_objs(v)),&
                lsm_weight_field(v),rc=status)
           call LIS_verify(status, &
-               "ESMF_StateGet failed in enkf_increments")
+               "ESMF_StateGet failed in pbs_particle_weight")
 
           call ESMF_FieldGet(lsm_weight_field(v),localDE=0,farrayPtr=weightdata,&
                rc=status)
           call LIS_verify(status, &
-               'ESMF_FieldGet failed in enkf_increments')
+               'ESMF_FieldGet failed in pbs_particle_weight')
 
           do t=1,LIS_rc%npatch(n,LIS_rc%lsm_index)
              !stdata(t) =  stvar(v,t)
@@ -1871,10 +1936,13 @@ contains
     integer                :: k
 
     if(LIS_rc%LSM_DAinst_valid(k)) then 
-
-       call lsmdaqcobsstate(trim(LIS_rc%lsm)//"+"&
-            //trim(LIS_rc%daset(k))//char(0),n, k, LIS_OBS_State(n,k))
-       
+       if (LIS_rc%DAforSubLSM .eqv. .false.) then
+          call lsmdaqcobsstate(trim(LIS_rc%lsm)//"+"&
+               //trim(LIS_rc%daset(k))//char(0),n, k, LIS_OBS_State(n,k))
+       else
+          call sublsmdaqcobsstate(trim(LIS_rc%sublsm(1))//"+"&
+               //trim(LIS_rc%daset(k))//char(0),n, k, LIS_OBS_State(n,k))
+       endif       
     endif
   end subroutine LIS_lsm_DAqcObsState
 

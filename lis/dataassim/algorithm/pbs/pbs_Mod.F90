@@ -154,7 +154,7 @@ contains
 ! !INTERFACE: 
   subroutine pbs_increments(n,k)
 ! !USES: 
-
+ use pbs_types
 ! !ARGUMENTS: 
     integer, intent(IN)    :: n 
     integer, intent(IN)    :: k
@@ -298,11 +298,16 @@ contains
 !----------------------------------------------------------------------------
 !  Retrieve Obs_pred : model's estimate of the observations
 !----------------------------------------------------------------------------
-       call LIS_surfaceModel_diagnoseVarsForDA(n) ! in enksgrace this call is in smootherDA_runMod.F90 (why??)
-
+       !Note1: For enksgrace LIS calls LIS_surfaceModel_diagnoseVarsForDA(n) 
+       !       is in smootherDA_runMod.F90
+       !Note2: For PF/PBS we call LIS_surfaceModel_diagnoseVarsForDA(n) 
+       !       within the subroutine LIS_surfaceModel_run(n), after LIS_lsm_run(n).
+       !       But we call the 
+       !       Crocus81_getdhdtpred when we need to perform the DA.          
+       !allocate(Obs_pert(Nobs,N_ens))
        allocate(Obs_pred(Nobs,N_ens))      
        call LIS_surfaceModel_DAGetObsPred(n,k,Obs_pred)
-
+       print*, Nobs,N_ens, size(Obs_pred, 1), size(Obs_pred, 2)
 !----------------------------------------------------------------------------
 !  Retrieve Obs_pert : observation perturbations
 !---------------------------------------------------------------------------- 
@@ -319,8 +324,11 @@ contains
 !----------------------------------------------------------------------------
 ! retrieve the state variables
 !----------------------------------------------------------------------------
+          print*, N_state,state_size
        allocate(stvar(N_state,state_size))
+          print*, N_state,state_size
        allocate(state_incr(N_state,state_size))
+          print*, N_state,state_size
        allocate(state_tmp(N_state,state_size))
        !allocate(ens_id_SIR(N_state,state_size))
        allocate(P_w_curr_ts(state_size))
@@ -339,27 +347,34 @@ contains
 
        state_incr = stvar
        state_tmp  = stvar     
-
+! !ARGUMENTS:
        do i=1,state_size/LIS_rc%nensem(n)
 
           obspred_flag = .true. 
           tileid = (i-1)*LIS_rc%nensem(n)+1
-! TODO start 
+! TODO start (done 8.7.2024) does not work 
+! The following call uses latlon_to_ij and ij_to_latlon, which have not been fully tested for PS projection yet.
+! Since both Obs and the model are in the same grid, we can bypass this call.
+! In the current call, we use tileid to get lat and lon, then row and col, and finally gid.
+! We set st_id = gid and en_id = gid.
+! We might be able to replace this call:
 !   
-! the following call uses latlon_to_ij and ij_to_latlon which has not been properly defined for PS projection yet. 
-! Since both Obs and model are in the same grid we need to find the way to bypass this call
-! in the call we use tileid to get lat and lon and them row and col and them gid and set st_id = gid and en_id = gid
-! check the possibility of replacing this   
           call LIS_surfaceModel_DAmapTileSpaceToObsSpace(&
                n, k, &
                tileid, st_id, en_id)
-! with this 
-          !row = LIS_surface(n, LIS_rc%lsm_index)%tile(tileid)%row
-          !col = LIS_surface(n, LIS_rc%lsm_index)%tile(tileid)%col
-          !gid = LIS_obs_domain(n,k)%gindex(col,row)
-          !st_id = gid
-          !en_id = gid
+    print*,'pbs_Mod.F90 LIS_localPet, state_size, tileid,st_id, en_id '
+    print*,LIS_localPet,state_size,tileid,st_id,en_id
+ ! with these lines:
+ !         gid = LIS_domain(n)%gindex(&
+ !              LIS_surface(n, LIS_rc%lsm_index)%tile(tileid)%col,&
+ !              LIS_surface(n, LIS_rc%lsm_index)%tile(tileid)%row)
+          !!row = LIS_surface(n, LIS_rc%lsm_index)%tile(tileid)%row
+          !!col = LIS_surface(n, LIS_rc%lsm_index)%tile(tileid)%col
+          !!gid = LIS_obs_domain(n,k)%gindex(col,row)
+!          st_id = gid
+!          en_id = gid
 ! TODO end
+
           if(st_id.lt.0.or.en_id.lt.0) then 
              assim = .false. 
           else

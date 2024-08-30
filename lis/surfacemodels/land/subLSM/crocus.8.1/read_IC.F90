@@ -27,7 +27,7 @@ subroutine read_IC(n)
   use LIS_constantsMod, only : LIS_CONST_PATH_LEN
   use LIS_timeMgrMod, only : LIS_tick
   use LIS_logMod
-  use LIS_coreMod, only      : LIS_rc, LIS_masterproc, LIS_localPet, LIS_config
+  use LIS_coreMod, only    : LIS_rc, LIS_masterproc, LIS_localPet, LIS_config
   use Crocus81_lsmMod
 
   implicit none
@@ -78,11 +78,8 @@ subroutine read_IC(n)
     write(unit=cyr,fmt='(i4.4)') yy
     write(unit=cmo,fmt='(i2.2)') mm
     filename = trim(MARdir)//'/'//&
-               'ICE.'//trim(cyr)//trim(cmo)//'.b85.nc'
-
-!     'ICE.'//trim(cyr)//'.01-12.b85.nc'
-!     'MARv3.12-ERA5-25km-hourly-'//trim(cyr)//'.nc'
-!      ICE.202207.b85.nc 
+                'MARv3.14-ERA5-20km-'//trim(cyr)//'.nc'
+!               'ICE.'//trim(cyr)//trim(cmo)//'.b85.nc'
 
     inquire(file=filename, exist=file_exists)
     if(.not. file_exists)then
@@ -112,7 +109,7 @@ subroutine read_IC_from_MAR(n,filename, timestep) ! TODO
     use ESMF
     use LIS_constantsMod, only : LIS_CONST_PATH_LEN
     use LIS_coreMod, only    : LIS_rc, LIS_domain, LIS_masterproc,&
-                               LIS_localPet, LIS_config, &
+                               LIS_localPet, LIS_config, LIS_surface,&
                                LIS_ews_halo_ind, LIS_ewe_halo_ind,&
                                LIS_nss_halo_ind, LIS_nse_halo_ind
     use LIS_historyMod, only : LIS_readvar_restart
@@ -395,18 +392,22 @@ subroutine read_IC_from_MAR(n,filename, timestep) ! TODO
 ! '1.DZSN1(SD)', '2.ROSN1(Rho)', '3.TISN1(SnowT)', '4.WASN1(SnowHum)', '5.G1SN1', '6.G2SN2', '7.AGSN1(Age)', '8.NHSN1(His)'
 !  9.LWC          10. SWE         11. SnowHeat
 
-  do nrow=1,LIS_rc%lnr(n)
-     do ncol=1,LIS_rc%lnc(n)
+
+  do t = 1, LIS_rc%npatch(n, LIS_rc%lsm_index)
+     ncol = LIS_surface(n, LIS_rc%lsm_index)%tile(t)%col
+     nrow = LIS_surface(n, LIS_rc%lsm_index)%tile(t)%row
+  !do nrow=1,LIS_rc%lnr(n)
+  !   do ncol=1,LIS_rc%lnc(n)
        !if (ncol .eq. 35 .and. nrow .eq. 9)then
        !print*, 'ncol, nrow', ncol, nrow
        !endif 
-        t = LIS_domain(n)%gindex(ncol,nrow)! there is one IC for each grid 
+       !t = LIS_domain(n)%gindex(ncol,nrow)! there is one IC for each grid 
         !do l = 1,SNOLAY  
         !   if (tmp2Cro(ncol,nrow,l,1) .LE. 0.000001) then
         !      tmp2Cro(ncol,nrow,l,2) = 10000000000
         !   endif
         !enddo 
-        if (LIS_domain(n)%gindex(ncol,nrow).ne.-1) then
+        !if (LIS_domain(n)%gindex(ncol,nrow).ne.-1) then
            N_active_layer = 0 !SNOLAY 
            do l = 1,SNOLAY  ! from bottom to top  
               if (tmp2Cro(ncol,nrow,l,1) .GE. 0.000001) then ! XSNOWDMIN = 0.000001  ! (m) to prevent numerical problems as snow becomes vanishingly thin.
@@ -472,9 +473,9 @@ subroutine read_IC_from_MAR(n,filename, timestep) ! TODO
 
                  !read: Snowmaking thickness (m)
                  CROCUS81_struc(n)%crocus81(t)%SNOWMAK_dz = 0
-        endif
-     enddo ! c
-  enddo ! r
+        !endif
+     !enddo ! c
+  enddo ! t   ! r
 
      deallocate(tmpAlb)
      deallocate(Alb2Cro)

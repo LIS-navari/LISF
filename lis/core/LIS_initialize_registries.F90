@@ -15,6 +15,7 @@
 ! !REVISION HISTORY:
 !  19 Aug 2010: Sujay Kumar; Initial specification
 !  17 Jan 2011: David Mocko, added max/min greenness & slope type
+!  27 Feb 2024: Mahdi Navari, added sublsmda_plugin
 !
 ! !INTERFACE:
 subroutine LIS_initialize_registries()
@@ -51,6 +52,7 @@ subroutine LIS_initialize_registries()
   use LIS_lsmda_pluginMod
   use LIS_routingda_pluginMod
   use LIS_perturb_pluginMod
+  use LIS_sublsmda_pluginMod 
 
 !
 ! !DESCRIPTION:
@@ -107,6 +109,7 @@ subroutine LIS_initialize_registries()
   call LIS_sublsm_plugin
   call LIS_lsmcpl_plugin
   call LIS_lsmda_plugin
+  call LIS_sublsmda_plugin   
   call LIS_routingda_plugin
   call LIS_lsmrtm_plugin
   call LIS_landslidemodel_plugin

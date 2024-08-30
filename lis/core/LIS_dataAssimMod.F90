@@ -58,6 +58,7 @@ module LIS_dataAssimMod
 !                                     read_Precip_climo_maxval
 !                                     read_Precip_climo
 !   1 Oct 2022    Yeosang Yoon; excluded RAPID from 'Routing_DAinst'
+!   Aug 20 2024   Mahdi Navari; Added initializations required for subLSM DA
 ! 
 ! !USES: 
   use ESMF
@@ -454,7 +455,7 @@ contains
 
 
     do m=1,LIS_rc%nsf_model_types
-       if(LIS_rc%sf_model_type_select(m).eq.LIS_rc%lsm_index) then 
+       if(LIS_rc%sf_model_type_select(m).eq.LIS_rc%lsm_index .and. LIS_rc%DAforSubLSM .eqv. .false.) then
           do i=1,LIS_rc%ndas
              if(LIS_rc%LSM_DAinst_valid(i)) then
                 call lsmdainit(trim(LIS_rc%lsm)//"+"//&
@@ -469,6 +470,17 @@ contains
                 endif
              endif
           enddo
+       elseif (LIS_rc%DAforSubLSM .eqv. .true. .and. LIS_rc%ndas.ge.1) then
+          do i=1,LIS_rc%ndas
+             if(LIS_rc%LSM_DAinst_valid(i)) then
+                call sublsmdainit(trim(LIS_rc%subLSM(1))//"+"//&  ! only support DA for the first SubLSM in config file
+                     trim(LIS_rc%daset(i))//char(0),i)
+             endif
+          enddo
+       elseif (LIS_rc%DAforSubLSM .eqv. .true. .and. LIS_rc%ndas.ge.1 ) then
+          write(LIS_logunit,*) '[ERR] The current version of the code only support DA for a single SubLSM'
+          write(LIS_logunit,*) '[ERR] program stopping ....'
+          call LIS_endrun
        endif
     enddo
 

@@ -30,6 +30,7 @@
 !  29 Dec 2007: Marv Freimund; Used trim on filenames
 !  17 Jan 2011: David Mocko, added max/min greenness & slope type
 !  15 May 2023  Sujay Kumar, added support for 1D lat/lon output for latlon and merc projections
+!  23 Aug 2024  Mahdi Navari, Added support for subLSM DA 
 !
 ! !INTERFACE:
 subroutine LIS_readConfig()
@@ -202,6 +203,20 @@ subroutine LIS_readConfig()
      call LIS_mapSurfaceModelType(LIS_rc%sf_model_type_name_select(i), &
           LIS_rc%sf_model_type_select(i))
   enddo
+
+  call ESMF_ConfigGetAttribute(LIS_config,LIS_rc%nSubLSMs,&
+         label="Number of subLSMs:",default=0,rc=rc)
+  call LIS_verify(rc,'Number of subLSMs: option not specified in the config file')
+  
+  allocate(LIS_rc%subLSM(LIS_rc%nSubLSMs))
+  
+  if(LIS_rc%nSubLSMs.ge.1) then
+     call ESMF_ConfigFindLabel(LIS_config,"subLSM models:",rc=rc)
+     do i=1,LIS_rc%nSubLSMs
+        call ESMF_ConfigGetAttribute(LIS_config,LIS_rc%subLSM(i),rc=rc)
+        call LIS_verify(rc,"subLSM models: not defined")
+     enddo
+   endif
 
   call ESMF_ConfigGetAttribute(LIS_config,LIS_rc%nmetforc,&
        label="Number of met forcing sources:",rc=rc)
@@ -600,6 +615,10 @@ subroutine LIS_readConfig()
 
   call LIS_parseTimeString(time,LIS_rc%twInterval)
 
+  call ESMF_ConfigGetAttribute(LIS_config,time,&
+       label="LIS observation interval:",default="7889400ss",rc=rc) ! ,default="7889400ss" the default value is for ICESat2-ATL15
+  call LIS_parseTimeString(time,LIS_rc%obsInterval)
+
   allocate(LIS_rc%nensem(LIS_rc%nnest))
 
   call ESMF_ConfigGetAttribute(LIS_config,LIS_rc%udef,label="Undefined value:",&
@@ -697,6 +716,10 @@ subroutine LIS_readConfig()
   call ESMF_ConfigGetAttribute(LIS_config,LIS_rc%ndas,&
        label="Number of data assimilation instances:",rc=rc)  
   call LIS_verify(rc,"Number of data assimilation instances: not defined")
+
+  call ESMF_ConfigGetAttribute(LIS_config,LIS_rc%DAforSubLSM,&
+       label="Assimilating observation into SubLSM:",default=.FALSE.,rc=rc)
+  call LIS_verify(rc,"Assimilating observation into SubLSM: not defined")
 
   ninsts = max(1,LIS_rc%ndas)
 !  ninsts_state  = max(LIS_rc%ndas, LIS_rc%npert_state)

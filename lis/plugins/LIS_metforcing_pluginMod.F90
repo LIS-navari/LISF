@@ -22,7 +22,7 @@ module LIS_metforcing_pluginMod
 ! !REVISION HISTORY: 
 !  11 Dec 2003   Sujay Kumar:  Initial Specification
 !  11 Oct 2014   K. Arsenault: Reorganzed for syncing with LDT
-! 
+!  23 Aug 2024   Mahdi navari; Added support for MAR forcing 
 !EOP  
   implicit none
   PRIVATE

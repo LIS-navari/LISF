@@ -200,7 +200,7 @@ contains
        end do
        ! pass to PBS_Mod
        P_w_curr_ts = Pw_norm_vec
-       
+       !write(LIS_logunit,*)' [INFO] Compute particles weight at PBS aigorithm'  
 
        do n_e=1,N_ens
           !generate random number between 0-1 (random dice roll)

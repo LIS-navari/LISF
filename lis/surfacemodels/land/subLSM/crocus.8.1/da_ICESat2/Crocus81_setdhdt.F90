@@ -39,7 +39,7 @@ subroutine Crocus81_setdhdt(n, LSM_State)
   real                   :: dsneqv,dsnowh
   integer                :: t
   integer                :: status
-  
+  write(LIS_logunit,*)'[INFO] The PBS does not update the state variable'  
 end subroutine Crocus81_setdhdt
 
 

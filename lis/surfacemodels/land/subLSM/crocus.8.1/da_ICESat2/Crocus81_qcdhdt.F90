@@ -54,8 +54,9 @@ subroutine Crocus81_qcdhdt(n, LSM_State)
   real                   :: sndens
   logical                :: update_flag(LIS_rc%ngrid(n))
 
-! TODO We may need iddferent QC 
+! TODO We may need different QC 
 
+  write(LIS_logunit,*)'[INFO] No QC for state prognostic variable'
 #if 0  
   !call ESMF_StateGet(LSM_State,"SWE",sweField,rc=status)
   !call LIS_verify(status)

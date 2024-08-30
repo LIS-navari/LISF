@@ -537,6 +537,8 @@ module LIS_PRIV_rcMod
 !  \item[ndas]
 !  Number of data assimilation instances
 !  \item[nperts]
+!  logic to specify whether to assimilate observation into LSM or SubLSM
+!  \DAforSubLSM
 !  Number of perturbation instances
 !  \item[daalg]
 !  Choice of data assimilation algorithm
@@ -616,6 +618,7 @@ module LIS_PRIV_rcMod
 !  19 Jan 2007; Chuck Alonge; Added Flag to output parameters
 !  17 Jan 2011: David Mocko, added max/min greenness & slope type
 !  02 May 2023: Sujay Kumar; Add lat/lon dimension variable
+!  20 Aug 2024: Mahd Navari; Added DAforSubLSM
 !
 !EOP
   use LIS_constantsMod, only : LIS_CONST_PATH_LEN
@@ -863,7 +866,7 @@ module LIS_PRIV_rcMod
      real*8                 :: etime               
      real                   :: egmt
      real                   :: twInterval
-
+     real                   :: obsInterval
      integer                :: monthCount
      integer                :: alrm_prev_mo
 
@@ -892,7 +895,8 @@ module LIS_PRIV_rcMod
      integer                :: ndas
      integer                :: nperts
      character*50, allocatable  :: daalg(:)
-     
+     logical                :: DAforSubLSM     
+
      integer, allocatable       :: useANNinDA(:)
      character*100, allocatable :: ANNdaFile(:)
 

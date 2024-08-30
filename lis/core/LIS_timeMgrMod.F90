@@ -66,6 +66,8 @@ module LIS_timeMgrMod
   PUBLIC :: LIS_resetClockForTimeWindow
   PUBLIC :: LIS_mon3char
   PUBLIC :: LIS_resetClockForPBSTimeWindow
+  PUBLIC :: LIS_compute_time_since_millennium
+  PUBLIC :: LIS_convert_seconds_to_date
 
   PUBLIC :: LIS_twStartTime
   PUBLIC :: LIS_twStopTime
@@ -499,7 +501,7 @@ contains
             mm = mo, &
             dd = da, &
             h  = hr, &
-            m  = 0,&
+            m  = mn,&
             s  = 0, &
             calendar = LIS_calendar, &
             rc = status)
@@ -3830,5 +3832,167 @@ end subroutine LIS_registerAlarm
     end select
 
   end subroutine LIS_mon3char
+
+!BOP
+! !ROUTINE: LIS_compute_time_since_millennium(
+! \label{LIS_compute_time_since_millennium(}
+!
+
+! !INTERFACE: 
+subroutine LIS_compute_time_since_millennium(year, month, day, hour, minute, second, time_in_seconds)
+    implicit none
+    integer, intent(in) :: year, month, day, hour, minute, second
+    real*8, intent(out)   :: time_in_seconds
+
+    ! May 1 2024: Mahdi Navari 
+    ! Calculate the time in seconds since the beginning of the 3rd millennium
+    ! 2000,1,1,0,0,0,0. 
+    ! e.g.,
+    ! compute_time_since_millennium(2001, 1, 1, 0, 0, 0, time_in_seconds) --> time_in_seconds 31622400 
+    ! use it at your own risk
+    time_in_seconds = (year - 2000) * 365 * 24 * 60 * 60 + &
+                      count_leap_years(2000, year - 1) * 24 * 60 * 60 + &
+                      count_days(year, month, day) * 24 * 60 * 60 + &
+                      hour * 60 * 60 + &
+                      minute * 60 + &
+                      second
+
+contains
+
+    ! Function to count the number of leap years between two years
+    integer function count_leap_years(start_year, end_year)
+        integer, intent(in) :: start_year, end_year
+        integer :: i
+
+        count_leap_years = 0
+        do i = start_year, end_year
+            if (mod(i, 4) == 0 .and. (mod(i, 100) /= 0 .or. mod(i, 400) == 0)) then
+                count_leap_years = count_leap_years + 1
+            endif
+        enddo
+    end function count_leap_years
+
+    ! Function to count the number of days in a given year, month, and day
+    integer function count_days(year, month, day)
+        integer, intent(in) :: year, month, day
+        integer :: i, days_in_month(12)
+
+        ! Define the number of days in each month
+        days_in_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+        ! Adjust February for leap years
+        if (mod(year, 4) == 0 .and. (mod(year, 100) /= 0 .or. mod(year, 400) == 0)) then
+            days_in_month(2) = 29
+        endif
+
+        count_days = 0
+        do i = 1, month - 1
+            count_days = count_days + days_in_month(i)
+        enddo
+        count_days = count_days + (day - 1)
+    end function count_days
+
+end subroutine LIS_compute_time_since_millennium
+
+!BOP
+! !ROUTINE: LIS_convert_seconds_to_date(time_in_seconds, year, month, day, hour, minute, second)
+! \label{LIS_convert_seconds_to_date(time_in_seconds, year, month, day, hour, minute, second)}
+!
+
+! !INTERFACE: 
+
+subroutine LIS_convert_seconds_to_date(time_in_seconds, year, month, day, hour, minute, second)
+    implicit none
+    real*8   , intent(in) :: time_in_seconds
+    integer, intent(out) :: year, month, day, hour, minute, second
+    integer :: sec_in_2000, sec_in_year, remaining_seconds
+    integer :: year_days(100), year_seconds(100)
+    integer :: current_year, total_years
+    logical :: is_leap
+
+    ! Define the number of seconds per day, hour, and minute
+    integer, parameter :: seconds_per_day = 24 * 60 * 60
+    integer, parameter :: seconds_per_hour = 60 * 60
+    integer, parameter :: seconds_per_minute = 60
+
+    ! May 1 2024: Mahdi Navari 
+    ! Calculate the date using number of seconds since the beginning of the 3rd millennium
+    ! 2000,1,1,0,0,0,0. 
+    ! e.g., 
+    ! LIS_convert_seconds_to_date(31622400, year, month, day, hour, minute, second)
+    ! Corresponding date and time:
+    ! Year:           2001
+    ! Month:          1
+    ! Day:            1
+    ! Hour:           0
+    ! Minute:         0
+    ! Second:         0
+    ! use it at your own risk
+
+    ! Compute the number of seconds in each year after 2000
+    current_year = 2000
+    total_years = 100 ! Set a maximum number of years (adjust as needed)
+    do year = 1, total_years
+        is_leap = is_leap_year(current_year)
+        year_days(year) = 365 + merge(1, 0, is_leap)
+        year_seconds(year) = year_days(year) * seconds_per_day
+        current_year = current_year + 1
+    end do
+    sec_in_2000 = sum(year_seconds(1:1)) ! Total seconds from 2000 to 2001
+
+    ! Determine the year
+    if (time_in_seconds < sec_in_2000) then
+        year = 2000
+        remaining_seconds = time_in_seconds
+    else
+        year = 2001
+        remaining_seconds = time_in_seconds - sec_in_2000
+    endif
+
+    ! Loop over years to find the correct year
+    do while (remaining_seconds >= 0 .and. year <= 2100) ! Adjust upper limit if needed
+        sec_in_year = year_seconds(year - 2000 + 1) ! Seconds in the current year
+        if (remaining_seconds >= sec_in_year) then
+            remaining_seconds = remaining_seconds - sec_in_year
+            year = year + 1
+        else
+            exit
+        endif
+    enddo
+    ! Calculate month and day
+    month = 1
+    do while (remaining_seconds >= seconds_per_day)
+        if (remaining_seconds < month_days(month, year) * seconds_per_day) then
+            exit
+        else
+            remaining_seconds = remaining_seconds - month_days(month, year) * seconds_per_day
+            month = month + 1
+        endif
+    enddo
+    day = remaining_seconds / seconds_per_day + 1
+    remaining_seconds = remaining_seconds - (day-1)*seconds_per_day
+    ! Calculate hour, minute, and second
+    hour = remaining_seconds / seconds_per_hour
+    remaining_seconds = remaining_seconds - hour * seconds_per_hour
+    minute = remaining_seconds / seconds_per_minute
+    second = remaining_seconds - minute * seconds_per_minute
+
+contains
+    logical function is_leap_year(year)
+        implicit none
+        integer, intent(in) :: year
+
+        is_leap_year = mod(year, 4) == 0 .and. (mod(year, 100) /= 0 .or. mod(year, 400) == 0)
+    end function is_leap_year
+
+    integer function month_days(month, year)
+        implicit none
+        integer, intent(in) :: month, year
+
+        integer :: days_in_month(12)
+        days_in_month = [31, 28 + merge(1, 0, is_leap), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+        month_days = days_in_month(month)
+    end function month_days
+end subroutine LIS_convert_seconds_to_date
 
 end module LIS_timeMgrMod

@@ -242,11 +242,18 @@ contains
 !EOP
 
     integer             :: m
+    integer             :: i 
 
     TRACE_ENTER("sf_run")
     do m=1,LIS_rc%nsf_model_types
        if(LIS_rc%sf_model_type_select(m).eq.LIS_rc%lsm_index) then 
           call LIS_lsm_run(n)
+          do i=1,LIS_rc%ndas
+          !if (LIS_rc%DAforSubLSM .eqv. .True.) then
+             if (LIS_rc%daalg(i) .eq. "PBS") then !  .or. LIS_rc%daalg(i) .eq. "PF") then
+                call LIS_lsm_diagnoseVarsforDA(n)
+             endif
+          enddo
        elseif(LIS_rc%sf_model_type_select(m).eq.LIS_rc%lake_index) then 
           call LIS_lakemodel_run(n)
        elseif(LIS_rc%sf_model_type_select(m).eq.LIS_rc%glacier_index) then 

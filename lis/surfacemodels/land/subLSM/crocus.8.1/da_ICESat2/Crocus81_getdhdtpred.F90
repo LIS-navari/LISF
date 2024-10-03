@@ -29,7 +29,8 @@ subroutine Crocus81_getdhdtpred(n, k, obs_pred)
 ! !ARGUMENTS: 
   integer, intent(in)    :: n
   integer, intent(in)    :: k
-  real                   :: obs_pred(LIS_rc%ngrid(n),LIS_rc%nensem(n))
+  !real                   :: obs_pred(LIS_rc%ngrid(n),LIS_rc%nensem(n))  bug
+  real                   :: obs_pred(LIS_rc%obs_ngrid(k),LIS_rc%nensem(n))
   real                   :: dh(LIS_rc%npatch(n,LIS_rc%lsm_index))
 
   integer                      :: patch_index
@@ -64,31 +65,32 @@ subroutine Crocus81_getdhdtpred(n, k, obs_pred)
 !EOP
 
 ! !DESCRIPTION:
-!  This routine computes the obspred ('Hx') term for assimilation
+!  This routine computes the obspred term for assimilation
 !  instances.
-
-!  integer                :: t
 
   do t=1,LIS_rc%npatch(n,LIS_rc%lsm_index)
      dh(t) = Crocus81pred_struc(n)%model_dh(t) !Crocus81pred_struc(n)%model_dh(2,t) - Crocus81pred_struc(n)%model_dh(1,t) 
   enddo
 print*,'getdhdtpred'
-  !Crocus81pred_struc(n)%model_dh(1,t) = 0.0
-  !Crocus81pred_struc(n)%model_dh(1,t) = Crocus81pred_struc(n)%model_dh(2,t)
-        write(LIS_logunit,fmt=24)'[INFO] Get obspred from dhdt_DAlog  @: ',LIS_rc%mo,'/',LIS_rc%da,'/', &
+
+        write(LIS_logunit,fmt=24)'[INFO] Get obspred from dhdt_DAlog @: ',LIS_rc%mo,'/',LIS_rc%da,'/', &
          LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
         24  format(a40,i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2)
 
-! MN: ICESat-2 ATL15 data was interpolated into the model grid (i.e., MAR 
-! forcing grid) using a Python code. The current version of the PS code in
-! LIS has not been fully evaluated and differs from the PS code used in the
-! ICESat-2 program. For these reasons, we interpolate the observations 
-! outside of LIS and modify the LIS code to perform the analysis without any interpolation. 
+! ICESat-2 ATL15 data was interpolated into the model grid (i.e., MAR forcing grid)
+! using a Python script. The current version of the Polar Stereographic (PS) code 
+! in LIS has not been fully evaluated and differs from the PS code used in the
+! ICESat-2 program. Therefore, we perform the interpolation outside of LIS and 
+! adjust the LIS code to carry out the analysis without any further interpolation.
 
 !  call LIS_convertPatchSpaceToObsEnsSpace(n,k,&
 !       LIS_rc%lsm_index, &
 !       dh,&
 !       obs_pred)
+
+! The following lines of code, adapted from the subroutine 
+! LIS_convertPatchSpaceToObsEnsSpace, convert the variable dhdt from the patch
+! space to the observation ensemble grid space without interpolation.
 
     patch_index = LIS_rc%lsm_index 
     ovar = LIS_rc%udef
@@ -126,6 +128,5 @@ print*,'getdhdtpred'
        enddo
     enddo
     obs_pred = ovar
- 
 end subroutine Crocus81_getdhdtpred
 

@@ -48,12 +48,13 @@ subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
    integer                :: t
    integer                :: status
    integer                :: N_state, N_ens, state_size, n_l
-   integer                :: n_e, i, ii, jj, jk, n_id, k
+   integer                :: n_e, i, ii, jj, jk, n_id, k, j
    real                   :: ran_face
    !real, allocatable      :: Pw_cumsum(:)
    !real, allocatable      :: new_particle_idx(:), ens_id_SIR(:)
    !real, allocatable      :: P_w_curr_ts(:)
-   real                   :: P_w_curr_ts(LIS_rc%nensem(n))
+   real                   :: count_inspect(LIS_rc%npatch(n, LIS_rc%lsm_index)/LIS_rc%nensem(n),6)
+   real                   :: P_w_curr_ts(LIS_rc%nensem(n)),P_w_new(LIS_rc%nensem(n))
    real                   :: Pw_cumsum(LIS_rc%nensem(n))
    real                   :: new_particle_idx(LIS_rc%nensem(n))
    real                   :: ens_id_SIR(LIS_rc%nensem(n))
@@ -79,19 +80,19 @@ subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
    REAL*8, allocatable    :: tmp_SNOWDZ(:, :)
    !REAL*8, allocatable    :: tmp_ALB(:,:)
    !REAL*8                 :: tmp_THRUFAL
-   REAL*8, allocatable   :: tmp_GRNDFLUX(:)
-   REAL, allocatable   :: tmp_SNDRIFT(:)
-   REAL, allocatable   :: tmp_RI_n(:)
+   REAL*8, allocatable    :: tmp_GRNDFLUX(:)
+   REAL, allocatable      :: tmp_SNDRIFT(:)
+   REAL, allocatable      :: tmp_RI_n(:)
    !REAL*8                 :: tmp_EMISNOW
-   REAL, allocatable   :: tmp_CDSNOW(:)
-   REAL, allocatable   :: tmp_USTARSNOW(:)
-   REAL, allocatable   :: tmp_CHSNOW(:)
-   REAL*8, allocatable   :: tmp_SNOWMAK_dz(:)
-   REAL*8, allocatable   :: tmp_TG(:)
-   REAL*8, allocatable   :: tmp_XWGI(:)
-   REAL*8, allocatable   :: tmp_XWG(:)
+   REAL, allocatable      :: tmp_CDSNOW(:)
+   REAL, allocatable      :: tmp_USTARSNOW(:)
+   REAL, allocatable      :: tmp_CHSNOW(:)
+   REAL*8, allocatable    :: tmp_SNOWMAK_dz(:)
+   REAL*8, allocatable    :: tmp_TG(:)
+   REAL*8, allocatable    :: tmp_XWGI(:)
+   REAL*8, allocatable    :: tmp_XWG(:)
    INTEGER                :: N_obs_in_tw
-   !integer                :: yr1, mo1, da1, hr1, mn1
+   integer                :: yr1, mo1, da1, hr1, mn1
    integer                :: yr2, mo2, da2, hr2, mn2
    integer                :: yr3, mo3, da3, hr3, mn3
    integer                :: yr4, mo4, da4, hr4, mn4
@@ -103,28 +104,39 @@ subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
    integer                :: remainder
    real*8                 :: currTime_sec, ATL15_StartTime_sec, simulation_start_time_sec
    real*8                 :: LIS_twStartTime_sec, LIS_twStopTime_sec, twObsTime2_sec
+   logical                :: all_equal
+   real                   :: const
+   real                   :: epsilon
+   real                   :: Neff(LIS_rc%npatch(n, LIS_rc%lsm_index)/LIS_rc%nensem(n))
+   real                   :: sum_w 
+   
+   external :: write_particle_weights
+   count_inspect = 0.0;
 
    call ESMF_StateGet(LIS_LSM_particle_weight, "ParticleWeight", ParticleWeightField, rc=status)
-   ! NOTE: "ParticleWeight" is hard coded in LIS_lsmMod.F90. LIS does not read that from attribute file.
+   ! NOTE: "ParticleWeight" is hard coded in LIS_lsmMod.F90. LIS does not read that from ithe attribute file.
    call LIS_verify(status)
 
    call ESMF_FieldGet(ParticleWeightField, localDE=0, farrayPtr=Pw, rc=status)
    call LIS_verify(status)
-
+   ! dh observatoin times
    !2018-10-01 22:30:00.00   2019-01-01 06:00:00.00   2019-04-02 13:30:00.00   2019-07-02 21:00:00.00
    !2019-10-02 04:30:00.00   2020-01-01 12:00:00.00   2020-04-01 19:30:00.00   2020-07-02 03:00:00.00
    !2020-10-01 10:30:00.00   2020-12-31 18:00:00.00   2021-04-02 01:30:00.00   2021-07-02 09:00:00.00
 
-   !              7,889,400 seconds        7,889,400 seconds       7,889,400 seconds
-
-   !CROCUS81_struc(n)%NumOfObsPerAssimWindow
+   !7,889,400 seconds        7,889,400 seconds       7,889,400 seconds
 
    call ESMF_ClockGet(LIS_clock, currTime=currTime, rc=status)
    call LIS_compute_time_since_millennium(LIS_rc%yr,LIS_rc%mo,LIS_rc%da,LIS_rc%hr,LIS_rc%mn,0,currTime_sec)
 
-! TODO: move ATL15_StartTime to lis.config
-! NOTE1: first dh obs occurs at 2018-10-01 22:30:00.00 that means the dh represents changes from 2018-07-02 03:00:00.00 to 2018-10-01 22:30:00.00. We will not use dh data look at Note2. 
-! Note2: first dhdt observation is at 2018-11-16 14:15. We need to read two dh from model then we read the 1st dhdh observation. To make sure the model dh is computed we read observation 1 hr after we compute the dh for model.   
+! TODO: Move ATL15_StartTime to lis.config
+! NOTE1: The first dh observation occurs at 2018-10-01 22:30:00.00, which indicates that the dh represents changes from 
+!         2018-07-02 03:00:00.00 to 2018-10-01 22:30:00.00. We will not use the dh data; refer to Note2.
+! NOTE2: The first dhdt observation is at 2018-11-16 14:15. To obtain the first dhdt observation, we need to read two 
+!         ice sheet heights from the model. We will read the dhdt observation 1? hour after computing the dh for the model.
+! NOTE3: ATL15_StartTime_sec refers to the first dh observation at 2018-10-01 22:30:00.00, while start_date_sec in 
+!         read_ATL15_GrISobs.F90 refers to the second dh observation at 2019-01-01 06:00:00.00.
+
    call ESMF_TimeSet(ATL15_StartTime, yy=2018, &
                      mm=10, &
                      dd=01, &
@@ -165,8 +177,9 @@ subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
    call ESMF_TimeintervalSet(tw, s=nint(LIS_rc%twInterval), rc=status)
    call ESMF_TimeintervalSet(obs_interval, s=nint(LIS_rc%obsInterval), rc=status)   ! s=7889400
 
-
- ! Moved this to read_ATL15_GrISobs.F90
+   !Note: reset timewindow when simulation start time is larger then ATL15_StartTime
+   !      and simulation reaches first ATL15 observation (done in read_ATL15_GrISobs.F90)
+! Moved the following to read_ATL15_GrISobs.F90
 #if 0
    ! reset timewindow when simulation reaches the ATL15_StartTime
    !if (currTime .eq. ATL15_StartTime) then ! .and. tw_reset_flag .eqv. .true. ) then
@@ -188,6 +201,7 @@ subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
 #endif
 
 ! For print1 
+print*,'1- _setparticleweight, twStartTime_sec , twStopTime_sec '
    call ESMF_TimeGet(LIS_twStartTime, yy = yr, &
              mm = mo, &
              dd = da, &
@@ -197,7 +211,9 @@ subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
              calendar = LIS_calendar, &
              rc = status)
    call LIS_compute_time_since_millennium(yr,mo,da,hr,mn,0,LIS_twStartTime_sec)
-   
+write(*,fmt=24)' [INFO] LIS_twStartTime : ',mo,'/',da,'/', &
+         yr,hr,':',mn,':',ss   
+
    call ESMF_TimeGet(LIS_twStopTime, yy = yr, &
              mm = mo, &
              dd = da, &
@@ -207,11 +223,9 @@ subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
              calendar = LIS_calendar, &
              rc = status)
       call LIS_compute_time_since_millennium(yr,mo,da,hr,mn,0,LIS_twStopTime_sec)
-print*,'1- _setparticleweight, twStartTime_sec , twStopTime_sec '
-print '(1x,f20.4, 2x,f20.4)', LIS_twStartTime_sec , LIS_twStopTime_sec
+write(*,fmt=24)' [INFO] LIS_twStopTime : ',mo,'/',da,'/', &
+         yr,hr,':',mn,':',ss 
 ! end for print1   
-
-
 
    !if ( (LIS_twStartTime .gt. (ATL15_StartTime - obs_interval/2)) .and. &
    !     (LIS_twStopTime  .gt.  ATL15_StartTime) ) then
@@ -219,8 +233,10 @@ print '(1x,f20.4, 2x,f20.4)', LIS_twStartTime_sec , LIS_twStopTime_sec
    !remainder = (currTime - ATL15_StartTime) - obs_interval*(floor((currTime - ATL15_StartTime)/obs_interval)) 
    !if ((currTime .ge. ATL15_StartTime) .and.  (remainder == 0)) then !  ((currTime - ATL15_StartTime)/obs_interval) == 0) then
    !if ((currTime .ge. ATL15_StartTime) .and.  mod(timeinterval1, obs_interval) == 0) then 
+
+   ! Start the DA processes when simulation reaches the second dh observation. 
    if ((currTime_sec .ge. ATL15_StartTime_sec) .and. mod((currTime_sec - ATL15_StartTime_sec), LIS_rc%obsInterval) == 0) then
-      N_obs_in_tw = floor((LIS_twStopTime - LIS_twStartTime)/obs_interval) + 1  ! Num. of dh obs
+      N_obs_in_tw = floor((LIS_twStopTime - LIS_twStartTime)/obs_interval) + 1  ! Num. of dh obs not dhdt
 
       if (N_obs_in_tw .ge. 2) then
          !if (LIS_twStartTime .le. ATL15_StartTime) then ! assume DA simulation starts around the ATL15_StartTime
@@ -228,7 +244,10 @@ print '(1x,f20.4, 2x,f20.4)', LIS_twStartTime_sec , LIS_twStopTime_sec
          !else
          !    twObsTime1 = ATL15_StartTime + tw   !- obs_interval
          !endif
-         twObsTime1 = LIS_twStartTime
+         twObsTime1 = LIS_twStartTime ! Note:since we reset the tw in read_ATL15_GrISobs.F90
+                                      !      then LIS_twStartTime will be equal to one of the dh observation times
+         call ESMF_TimeGet(twObsTime1, yy=yr1, mm=mo1, dd=da1, h=hr1, m=mn1, calendar=LIS_calendar, &
+                              rc=status)
 
          SELECT CASE (N_obs_in_tw)
          CASE (2)
@@ -281,28 +300,39 @@ print '(1x,f20.4, 2x,f20.4)', LIS_twStartTime_sec , LIS_twStopTime_sec
          if (.not. allocated(Crocus81pred_struc(n)%ens_id_SIR)) then
             allocate (Crocus81pred_struc(n)%ens_id_SIR(LIS_rc%npatch(n, LIS_rc%lsm_index)))
          end if
-
          allocate (Pw_combined(LIS_rc%npatch(n, LIS_rc%lsm_index)))
          allocate (Pw_norm(LIS_rc%npatch(n, LIS_rc%lsm_index)))
+
+         Pw_combined = 1./N_ens
 
          call LIS_compute_time_since_millennium(yr2,mo2,da2,hr2,mn2,0,twObsTime2_sec)
          !if (currTime .le. LIS_twStartTime) then
          if (currTime .eq. twObsTime2) then ! if (N_obs_in_tw .eq. 2) then
-            Crocus81pred_struc(n)%Pw_combined(:) = 0.0
+            Crocus81pred_struc(n)%Pw_combined(:) = 1./N_ens
             Crocus81pred_struc(n)%Pw_combined(:) = Pw
             Crocus81pred_struc(n)%ens_id_SIR(:) = 0
-            write (LIS_logunit, *) '[INFO] Set weights for 1st observation'
+            write (LIS_logunit, *) '[INFO] Set weights for 1st dhdt observation'
          else if ((currTime .eq. twObsTime3) .or. &
                   (currTime .eq. twObsTime4) .or. &
                   (currTime .eq. twObsTime5)) then
-            write (LIS_logunit, *) '[INFO] Computing the combined weights for new observation'
+            write (LIS_logunit, *) '[INFO] Computing the combined weights for new the observation'
             write (LIS_logunit,fmt=24) '[INFO] new observation @ : ',LIS_rc%mo,'/',LIS_rc%da,'/', &
                   LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
-            24  format(a23,i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2)
+            24  format(a30,i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2)
          !account for all observations in this time window,
          !by taking the product of the weights for
          !each ensemble member derived from all assimilated observations
             do i = 1, LIS_rc%npatch(n, LIS_rc%lsm_index)/LIS_rc%nensem(n)
+       ! write(*,fmt=25)' [INFO] timenow : ',LIS_rc%mo,'/',LIS_rc%da,'/', &
+       !  LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
+       ! write(*,fmt=25)' [INFO] twObsTime2 : ',mo2,'/',da2,'/', &
+       !  yr2,hr2,':',mn2,':',0
+       ! write(*,fmt=25)' [INFO] twObsTime3 : ',mo3,'/',da3,'/', &
+       !  yr3,hr3,':',mn3,':',0
+        25  format(a30,i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2)
+if ( ((sum(Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)))).gt. 2.) .or. (sum(Pw (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)))).gt.2. ) then
+print*,'###1 set PW sum P_comb ,  Pw',sum(Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))), sum(Pw (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)))
+endif
                  Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)) = &
                  Crocus81pred_struc(n)%Pw_combined(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))&
                  * Pw(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))
@@ -312,6 +342,9 @@ print '(1x,f20.4, 2x,f20.4)', LIS_twStartTime_sec , LIS_twStopTime_sec
                       Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)) / &
                   sum(Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)))
 
+if ( (sum(Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)))).gt. 2) then
+print*,'###2 set PW sum P_comb',sum(Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)))
+endif
                  Crocus81pred_struc(n)%Pw_combined(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))&
                  = Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)) 
             end do
@@ -352,64 +385,119 @@ print '(1x,f20.4, 2x,f20.4)', LIS_twStartTime_sec , LIS_twStopTime_sec
             do i = 1, LIS_rc%npatch(n, LIS_rc%lsm_index)/LIS_rc%nensem(n)
                P_w_curr_ts = Crocus81pred_struc(n)%Pw_combined(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))
 
-               !sequential importance resampling (SIR)
-               do n_e = 1, N_ens
-                  Pw_cumsum(n_e) = sum(P_w_curr_ts(1:n_e))
-               end do
+               ! initialize  
+               P_w_new = P_w_curr_ts
+               Neff(i) =  N_ens
+               do k = 1, N_ens
+                  ens_id_SIR(k) = k
+               end do               
 
-               do n_e = 1, N_ens
-                  !generate random number between 0-1 (random dice roll)
-                  call LIS_rand_func(1, ran_face)
-                  !select first insance of the random number
-                  !being exceeded by the posterior cumulative
-                  !sumation of the posterior PDF
+               epsilon = 1e-6
 
-                  !vector of 0's and 1's. 1's begin in the first
-                  !instance of ran_face exceeding the Pw_cumsum vector
-                  do jk = 1, N_ens
-                     if (Pw_cumsum(jk) .le. ran_face) then
-                        new_particle_idx(jk) = 0
-                     else if (Pw_cumsum(jk) .gt. ran_face) then
-                        new_particle_idx(jk) = 1
-                     end if
+               ! Check weights (P_w_curr_ts != 1/N_ens) and Neff < threshold apply SIR  
+               const = 1./N_ens
+               all_equal = all(abs(P_w_curr_ts - const) < epsilon)
+               count_inspect(i,4) = 1.0 ! assume weight does not chenage for this grid we later update that 
+               if (.not. all_equal) then 
+                  !effective particle population size. If Neff < 0.85*N then resample
+                  sum_w = 0.0
+                  do k = 1, N_ens
+                     sum_w = sum_w + P_w_curr_ts(k)**2
                   end do
+                  Neff(i) = 1/(sum_w); 
+                  if (Neff(i) < 0.85*N_ens) then ! TODO what is the best threshold value (0.85?) 
+                
+                     !sequential importance resampling (SIR)
+                     do n_e = 1, N_ens
+                        Pw_cumsum(n_e) = sum(P_w_curr_ts(1:n_e))
+                     end do
 
-                  !select the first instance of the logical statement
-                  !occuring (or the first non-zero instance) and resample
-                  !from this instance
-                  iii = 0
+                     do n_e = 1, N_ens
+                        !generate random number between 0-1 (random dice roll)
+                        call LIS_rand_func(1, ran_face)
+                        !select first insance of the random number
+                        !being exceeded by the posterior cumulative
+                        !sumation of the posterior PDF
 
-                  do ii = 1, N_ens
-                     current_p = new_particle_idx(ii)
-                     if (current_p .gt. 0 .AND. iii .eq. 0) then
-                        !do jj=1,N_state
-                        ! Note: We only assimilate elevation change. Since we update the ensemble weights all
-                        ! states get the same weight.
-                        ! Unlike other DA methods, We can not simultaneously assimilate different observations.
-                        ! Because the magnitude of (obs-state) affects the results of the likelihood function.
-                        ! Margulis has done this using CDF matching. He matched the magnitude of other states
-                        ! and observations to one of them using CDF matching.
-                        !updated_state(jj,n_e)=State_incr(jj,i)
-                        !ens_id_SIR(jj,n_e) = i
-                        ens_id_SIR(n_e) = ii
-                        !end do
-                        iii = iii + 1
-                     end if
-                  end do
+                        !vector of 0's and 1's. 1's begin in the first
+                        !instance of ran_face exceeding the Pw_cumsum vector
+                        do jk = 1, N_ens
+                           if (Pw_cumsum(jk) .le. ran_face) then
+                              new_particle_idx(jk) = 0
+                           else if (Pw_cumsum(jk) .gt. ran_face) then
+                              new_particle_idx(jk) = 1
+                           end if
+                        end do
 
-               end do ! N_ens
+                        !select the first instance of the logical statement
+                        !occuring (or the first non-zero instance) and resample
+                        !from this instance
+                        iii = 0
+
+                        do ii = 1, N_ens
+                           current_p = new_particle_idx(ii)
+                           if (current_p .gt. 0 .AND. iii .eq. 0) then
+                              !do jj=1,N_state
+                              ! Note: We only assimilate elevation change. Since we update the ensemble weights all
+                              ! states get the same weight.
+                              ! Unlike other DA methods, We can not simultaneously assimilate different observations.
+                              ! Because the magnitude of (obs-state) affects the results of the likelihood function.
+                              ! Margulis has done this using CDF matching. He matched the magnitude of other states
+                              ! and observations to one of them using CDF matching.
+                              !updated_state(jj,n_e)=State_incr(jj,i)
+                              !ens_id_SIR(jj,n_e) = i
+                              ens_id_SIR(n_e) = ii
+                              ! MN: for inspection check the new wights
+                              P_w_new(n_e) = P_w_curr_ts(ii)
+                              !end do
+                              iii = iii + 1
+                           end if
+                        end do
+
+                     end do ! N_ens
+                  endif ! Neff
+
+! MN: for inspection
+                  !count_inspect(i,1) = 0.0 
+                  do j = 1,N_ens
+                     if (P_w_new(j) .ge. P_w_curr_ts(j)) then
+                        count_inspect(i,1) = count_inspect(i,1)+1.0     
+                     endif
+                  enddo
+                  count_inspect(i,2) = sum(P_w_curr_ts)
+                  count_inspect(i,3) = sum(P_w_new)
+                  count_inspect(i,4) = 0.0
+                  if ((count_inspect(i,1) .eq. N_ens/2) .and. (count_inspect(i,3) .gt. count_inspect(i,2)) ) then
+                      count_inspect(i,5) = 1.0
+                  else if ( (count_inspect(i,1) .gt. N_ens/2)) then !  .ge. 10) .and. (count_inspect(i,3) .gt. count_inspect(i,2))) then       
+                      count_inspect(i,5) = 1.0
+                  else
+                      count_inspect(i,6) = 1.0
+                  endif
+! MN: end for inspection 
+
+
+               endif ! all_equal
                Crocus81pred_struc(n)%ens_id_SIR(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)) = ens_id_SIR
             end do ! i
+! MN: for inspection
+            print*, 'number of grid weight unchanged ',sum(count_inspect(:,4))   
+            print*, 'number of grid SIR works ',sum(count_inspect(:,5))
+            print*, 'number of grid SIR does not work ',sum(count_inspect(:,6))
+! MN: end for inspection
          end if 
          if (currTime_sec .eq. LIS_twStopTime_sec) then
          !if (currTime .eq. LIS_twStopTime) then
-            write(LIS_logunit,*)'[INFO] End of DA time window. Resetting the time window'
+            write(LIS_logunit,*)'[INFO] End of DA time window.'
             write(LIS_logunit,*)'[INFO] discard the un-survived ensembles and replace them'
             write(LIS_logunit,*)'[INFO] with survived ensembles using sequential importance'
-            write(LIS_logunit,*)'[INFO] resampling (SIR)'
+            write(LIS_logunit,*)'[INFO] resampling (SIR) if needed'
+            write(LIS_logunit,*)'[INFO] Write the particle weights into the output directory'
+            ! Write the particle weights into the output directory
+            call write_particle_weights(n)
+            !reset timewindow
             write (LIS_logunit,fmt=24) '[INFO] Resetting the time window @ : ',LIS_rc%mo,'/',LIS_rc%da,'/', &
                   LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
-            !reset timewondow
             call LIS_resetClockForPBSTimeWindow(LIS_rc)
 ! For print2 
    call ESMF_TimeGet(LIS_twStartTime, yy = yr, &
@@ -421,6 +509,8 @@ print '(1x,f20.4, 2x,f20.4)', LIS_twStartTime_sec , LIS_twStopTime_sec
              calendar = LIS_calendar, &
              rc = status)
    call LIS_compute_time_since_millennium(yr,mo,da,hr,mn,0,LIS_twStartTime_sec)
+write(*,fmt=24)' [INFO] New LIS_twStartTime : ',mo,'/',da,'/', &
+         yr,hr,':',mn,':',ss
 
    call ESMF_TimeGet(LIS_twStopTime, yy = yr, &
              mm = mo, &
@@ -431,8 +521,8 @@ print '(1x,f20.4, 2x,f20.4)', LIS_twStartTime_sec , LIS_twStopTime_sec
              calendar = LIS_calendar, &
              rc = status)
       call LIS_compute_time_since_millennium(yr,mo,da,hr,mn,0,LIS_twStopTime_sec)
-print*,'2- _setparticleweight, twStartTime_sec , twStopTime_sec '
-print '(1x,f20.4, 2x,f20.4)', LIS_twStartTime_sec , LIS_twStopTime_sec
+write(*,fmt=24)' [INFO] New LIS_twStopTime : ',mo,'/',da,'/', &
+         yr,hr,':',mn,':',ss
 ! end for print2
             !apply the update
 
@@ -459,67 +549,72 @@ print '(1x,f20.4, 2x,f20.4)', LIS_twStartTime_sec , LIS_twStopTime_sec
             allocate (tmp_XWG(LIS_rc%nensem(n)))
 
             do i = 1, LIS_rc%npatch(n, LIS_rc%lsm_index)/LIS_rc%nensem(n)
+!   if (i .eq. 483) then;
+!       print*, i
+!   endif
+               ! Check Neff for resampling. If it does not occur, skip this step.
+               if (Neff(i) < 0.85*N_ens) then ! TODO what is the best threshold value (0.85?) 
 
-               ! save state variables in temporary variables
-               do n_e = 1, N_ens
-                  do n_l = 1, CROCUS81_struc(n)%nsnow
-                     tmp_SNOWSWE(n_e, n_l)   = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWSWE(n_l)
-                     tmp_SNOWRHO(n_e, n_l)   = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWRHO(n_l)
-                     tmp_SNOWHEAT(n_e, n_l)  = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWHEAT(n_l)
-                     tmp_SNOWGRAN1(n_e, n_l) = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWGRAN1(n_l)
-                     tmp_SNOWGRAN2(n_e, n_l) = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWGRAN2(n_l)
-                     tmp_SNOWHIST(n_e, n_l)  = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWHIST(n_l)
-                     tmp_SNOWAGE(n_e, n_l)   = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWAGE(n_l)
-                     tmp_SNOWLIQ(n_e, n_l)   = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWLIQ(n_l)
-                     tmp_SNOWTEMP(n_e, n_l)  = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWTEMP(n_l)
-                     tmp_SNOWDZ(n_e, n_l)    = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWDZ(n_l)
+                  ! save state variables in temporary variables
+                  do n_e = 1, N_ens
+                     do n_l = 1, CROCUS81_struc(n)%nsnow
+                        tmp_SNOWSWE(n_e, n_l)   = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWSWE(n_l)
+                        tmp_SNOWRHO(n_e, n_l)   = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWRHO(n_l)
+                        tmp_SNOWHEAT(n_e, n_l)  = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWHEAT(n_l)
+                        tmp_SNOWGRAN1(n_e, n_l) = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWGRAN1(n_l)
+                        tmp_SNOWGRAN2(n_e, n_l) = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWGRAN2(n_l)
+                        tmp_SNOWHIST(n_e, n_l)  = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWHIST(n_l)
+                        tmp_SNOWAGE(n_e, n_l)   = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWAGE(n_l)
+                        tmp_SNOWLIQ(n_e, n_l)   = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWLIQ(n_l)
+                        tmp_SNOWTEMP(n_e, n_l)  = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWTEMP(n_l)
+                        tmp_SNOWDZ(n_e, n_l)    = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWDZ(n_l)
+                     end do
+                     tmp_SNOWALB(n_e)   = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWALB
+                     tmp_GRNDFLUX(n_e)  = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%GRNDFLUX
+                     tmp_SNDRIFT(n_e)   = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNDRIFT
+                     tmp_RI_n(n_e)      = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%RI_n
+                     tmp_CDSNOW(n_e)    = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%CDSNOW
+                     tmp_USTARSNOW(n_e) = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%USTARSNOW
+                     tmp_CHSNOW(n_e)    = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%CHSNOW
+                     tmp_SNOWMAK_dz(n_e) = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWMAK_dz
+                     tmp_TG(n_e)        = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%TG
+                     tmp_XWGI(n_e)      = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%XWGI
+                     tmp_XWG(n_e)       = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%XWG
                   end do
-                  tmp_SNOWALB(n_e)   = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWALB
-                  tmp_GRNDFLUX(n_e)  = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%GRNDFLUX
-                  tmp_SNDRIFT(n_e)   = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNDRIFT
-                  tmp_RI_n(n_e)      = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%RI_n
-                  tmp_CDSNOW(n_e)    = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%CDSNOW
-                  tmp_USTARSNOW(n_e) = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%USTARSNOW
-                  tmp_CHSNOW(n_e)    = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%CHSNOW
-                  tmp_SNOWMAK_dz(n_e) = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SNOWMAK_dz
-                  tmp_TG(n_e)        = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%TG
-                  tmp_XWGI(n_e)      = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%XWGI
-                  tmp_XWG(n_e)       = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%XWG
 
-               end do
+                 ! Now, discard the un-survived ensembles and replace them with survived ensembles
+                 ! using sequential importance resampling (SIR)
 
-               ! Now, discard the un-survived ensembles and replace them with survived ensembles
-               ! using sequential importance resampling (SIR)
-
-               ens_id_SIR = Crocus81pred_struc(n)%ens_id_SIR(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))
-               do n_e = 1, N_ens
-                  n_id = ens_id_SIR(n_e)
-                  k = (i - 1)*N_ens + n_e
-                  do n_l = 1, CROCUS81_struc(n)%nsnow
-                     CROCUS81_struc(n)%crocus81(k)%SNOWSWE(n_l)   = tmp_SNOWSWE(n_id, n_l)
-                     CROCUS81_struc(n)%crocus81(k)%SNOWRHO(n_l)   = tmp_SNOWRHO(n_id, n_l)
-                     CROCUS81_struc(n)%crocus81(k)%SNOWHEAT(n_l)  = tmp_SNOWHEAT(n_id, n_l)
-                     CROCUS81_struc(n)%crocus81(k)%SNOWGRAN1(n_l) = tmp_SNOWGRAN1(n_id, n_l)
-                     CROCUS81_struc(n)%crocus81(k)%SNOWGRAN2(n_l) = tmp_SNOWGRAN2(n_id, n_l)
-                     CROCUS81_struc(n)%crocus81(k)%SNOWHIST(n_l)  = tmp_SNOWHIST(n_id, n_l)
-                     CROCUS81_struc(n)%crocus81(k)%SNOWAGE(n_l)   = tmp_SNOWAGE(n_id, n_l)
-                     CROCUS81_struc(n)%crocus81(k)%SNOWLIQ(n_l)   = tmp_SNOWLIQ(n_id, n_l)
-                     CROCUS81_struc(n)%crocus81(k)%SNOWTEMP(n_l)  = tmp_SNOWTEMP(n_id, n_l)
-                     CROCUS81_struc(n)%crocus81(k)%SNOWDZ(n_l)    = tmp_SNOWDZ(n_id, n_l)
+                  ens_id_SIR = Crocus81pred_struc(n)%ens_id_SIR(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))
+                  do n_e = 1, N_ens
+                     n_id = ens_id_SIR(n_e)
+                     k = (i - 1)*N_ens + n_e
+                     do n_l = 1, CROCUS81_struc(n)%nsnow
+                        CROCUS81_struc(n)%crocus81(k)%SNOWSWE(n_l)   = tmp_SNOWSWE(n_id, n_l)
+                        CROCUS81_struc(n)%crocus81(k)%SNOWRHO(n_l)   = tmp_SNOWRHO(n_id, n_l)
+                        CROCUS81_struc(n)%crocus81(k)%SNOWHEAT(n_l)  = tmp_SNOWHEAT(n_id, n_l)
+                        CROCUS81_struc(n)%crocus81(k)%SNOWGRAN1(n_l) = tmp_SNOWGRAN1(n_id, n_l)
+                        CROCUS81_struc(n)%crocus81(k)%SNOWGRAN2(n_l) = tmp_SNOWGRAN2(n_id, n_l)
+                        CROCUS81_struc(n)%crocus81(k)%SNOWHIST(n_l)  = tmp_SNOWHIST(n_id, n_l)
+                        CROCUS81_struc(n)%crocus81(k)%SNOWAGE(n_l)   = tmp_SNOWAGE(n_id, n_l)
+                        CROCUS81_struc(n)%crocus81(k)%SNOWLIQ(n_l)   = tmp_SNOWLIQ(n_id, n_l)
+                        CROCUS81_struc(n)%crocus81(k)%SNOWTEMP(n_l)  = tmp_SNOWTEMP(n_id, n_l)
+                        CROCUS81_struc(n)%crocus81(k)%SNOWDZ(n_l)    = tmp_SNOWDZ(n_id, n_l)
+                     end do
+                       CROCUS81_struc(n)%crocus81(k)%SNOWALB   = tmp_SNOWALB(n_id)
+                       CROCUS81_struc(n)%crocus81(k)%GRNDFLUX  = tmp_GRNDFLUX(n_id)
+                       CROCUS81_struc(n)%crocus81(k)%SNDRIFT   = tmp_SNDRIFT(n_id)
+                       CROCUS81_struc(n)%crocus81(k)%RI_n      = tmp_RI_n(n_id)
+                       CROCUS81_struc(n)%crocus81(k)%CDSNOW    = tmp_CDSNOW(n_id)
+                       CROCUS81_struc(n)%crocus81(k)%USTARSNOW = tmp_USTARSNOW(n_id)
+                       CROCUS81_struc(n)%crocus81(k)%CHSNOW    = tmp_CHSNOW(n_id)
+                       CROCUS81_struc(n)%crocus81(k)%SNOWMAK_dz = tmp_SNOWMAK_dz(n_id)
+                       CROCUS81_struc(n)%crocus81(k)%TG        = tmp_TG(n_id)
+                       CROCUS81_struc(n)%crocus81(k)%XWGI      = tmp_XWGI(n_id)
+                       CROCUS81_struc(n)%crocus81(k)%XWG       = tmp_XWG(n_id)
                   end do
-                    CROCUS81_struc(n)%crocus81(k)%SNOWALB   = tmp_SNOWALB(n_id)
-                    CROCUS81_struc(n)%crocus81(k)%GRNDFLUX  = tmp_GRNDFLUX(n_id)
-                    CROCUS81_struc(n)%crocus81(k)%SNDRIFT   = tmp_SNDRIFT(n_id)
-                    CROCUS81_struc(n)%crocus81(k)%RI_n      = tmp_RI_n(n_id)
-                    CROCUS81_struc(n)%crocus81(k)%CDSNOW    = tmp_CDSNOW(n_id)
-                    CROCUS81_struc(n)%crocus81(k)%USTARSNOW = tmp_USTARSNOW(n_id)
-                    CROCUS81_struc(n)%crocus81(k)%CHSNOW    = tmp_CHSNOW(n_id)
-                    CROCUS81_struc(n)%crocus81(k)%SNOWMAK_dz = tmp_SNOWMAK_dz(n_id)
-                    CROCUS81_struc(n)%crocus81(k)%TG        = tmp_TG(n_id)
-                    CROCUS81_struc(n)%crocus81(k)%XWGI      = tmp_XWGI(n_id)
-                    CROCUS81_struc(n)%crocus81(k)%XWG       = tmp_XWG(n_id)
-               end do
-            end do
+               endif ! Neff
+            end do ! i  
             deallocate (tmp_SNOWSWE)
             deallocate (tmp_SNOWRHO)
             deallocate (tmp_SNOWHEAT)

@@ -953,7 +953,14 @@ contains
        else
           finish = .false.
        endif
-       
+    elseif ( LIS_rc%gridDesc(n,1) .eq. 5 ) then 
+       write(LIS_logunit,*) '[WARN] : LIS_isatAfinerResolution check ' // &
+                            '[WARN] is NOT supported'
+       write(LIS_logunit,*) '[WARN] for this map projection.'
+       write(LIS_logunit,*) '[WARN] However, for ICESat2 ATL15 DA, obs and model'       
+       write(LIS_logunit,*) '[WARN] are in the same grid'
+       write(LIS_logunit,*) '[WARN] Returning ".false.".'
+       finish = .false.
     else
        write(LIS_logunit,*) '[WARN] : LIS_isatAfinerResolution check ' // &
                             '[WARN] is NOT supported'

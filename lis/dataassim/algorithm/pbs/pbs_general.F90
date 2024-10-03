@@ -66,7 +66,7 @@ contains
     real, intent(in), dimension(N_obs,N_obs) :: Obs_cov        
     real, intent(inout), dimension(N_state,N_ens) :: State_incr
    ! integer, intent(out), dimension(N_state,N_ens) :: ens_id_SIR
-    real, intent(out), dimension(N_ens)            :: P_w_curr_ts ! Pw_norm_vec
+    real, intent(inout), dimension(N_ens)            :: P_w_curr_ts ! Pw_norm_vec
     ! optional inputs
     real, dimension(N_state), intent(in), optional :: State_lon, State_lat     
     real, intent(in), optional :: xcompact       ! [deg] longitude
@@ -166,7 +166,7 @@ contains
        if(Pw_sum.ne.0) then 
           Pw_raw(i,:)=Pw_raw(i,:)/Pw_sum
        else
-          Pw_raw(i,:) = 0.0
+          Pw_raw(i,:) = 0.0 ! should be 0 or 1.0/N_ens
        endif
     end do
     
@@ -198,6 +198,9 @@ contains
        do n_e=1,N_ens
           Pw_cumsum(n_e)=sum(Pw_norm_vec(1:n_e))
        end do
+       ! NOTE: For ATL15 data assimilation, the Sequential Importance Resampling (SIR) 
+       !       will be performed in Crocus81_setparticleweight.F90.
+       !       Therefore, the SIR in this code is redundant.
        ! pass to PBS_Mod
        P_w_curr_ts = Pw_norm_vec
        !write(LIS_logunit,*)' [INFO] Compute particles weight at PBS aigorithm'  

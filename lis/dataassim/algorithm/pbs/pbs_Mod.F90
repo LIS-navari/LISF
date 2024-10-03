@@ -299,15 +299,14 @@ contains
 !  Retrieve Obs_pred : model's estimate of the observations
 !----------------------------------------------------------------------------
        !Note1: For enksgrace LIS calls LIS_surfaceModel_diagnoseVarsForDA(n) 
-       !       is in smootherDA_runMod.F90
+       !       from smootherDA_runMod.F90.
        !Note2: For PF/PBS we call LIS_surfaceModel_diagnoseVarsForDA(n) 
        !       within the subroutine LIS_surfaceModel_run(n), after LIS_lsm_run(n).
        !       But we call the 
        !       Crocus81_getdhdtpred when we need to perform the DA.          
-       !allocate(Obs_pert(Nobs,N_ens))
        allocate(Obs_pred(Nobs,N_ens))      
        call LIS_surfaceModel_DAGetObsPred(n,k,Obs_pred)
-       print*, Nobs,N_ens, size(Obs_pred, 1), size(Obs_pred, 2)
+       !print*, Nobs,N_ens, size(Obs_pred, 1), size(Obs_pred, 2)
 !----------------------------------------------------------------------------
 !  Retrieve Obs_pert : observation perturbations
 !---------------------------------------------------------------------------- 
@@ -324,11 +323,8 @@ contains
 !----------------------------------------------------------------------------
 ! retrieve the state variables
 !----------------------------------------------------------------------------
-          print*, N_state,state_size
        allocate(stvar(N_state,state_size))
-          print*, N_state,state_size
        allocate(state_incr(N_state,state_size))
-          print*, N_state,state_size
        allocate(state_tmp(N_state,state_size))
        !allocate(ens_id_SIR(N_state,state_size))
        allocate(P_w_curr_ts(state_size))
@@ -346,24 +342,31 @@ contains
        call LIS_surfaceModel_getlatlons(n,k,state_size,lats,lons)
 
        state_incr = stvar
-       state_tmp  = stvar     
-! !ARGUMENTS:
+       state_tmp  = stvar
+       ! initialize the P_w_curr_ts with equal weights      
+       P_w_curr_ts = 1.0/LIS_rc%nensem(n)
+
        do i=1,state_size/LIS_rc%nensem(n)
 
           obspred_flag = .true. 
           tileid = (i-1)*LIS_rc%nensem(n)+1
-! TODO start (done 8.7.2024) does not work 
+! TODO start (done 8.7.2024) does not work. --> for now use LIS_surfaceModel_DAmapTileSpaceToObsSpace  
 ! The following call uses latlon_to_ij and ij_to_latlon, which have not been fully tested for PS projection yet.
-! Since both Obs and the model are in the same grid, we can bypass this call.
-! In the current call, we use tileid to get lat and lon, then row and col, and finally gid.
+! Note both Obs and the model are in the same grid. 
 ! We set st_id = gid and en_id = gid.
 ! We might be able to replace this call:
 !   
           call LIS_surfaceModel_DAmapTileSpaceToObsSpace(&
                n, k, &
                tileid, st_id, en_id)
+    !if (st_id .ge. 1)then
+    !print*,'pbs_Mod.F90 LIS_localPet, state_size, tileid,st_id, en_id '
+    !print*,LIS_localPet,state_size,tileid,st_id,en_id
+    !endif
+    if (st_id .gt. state_size)then
     print*,'pbs_Mod.F90 LIS_localPet, state_size, tileid,st_id, en_id '
-    print*,LIS_localPet,state_size,tileid,st_id,en_id
+    print*,'MN ************ Bad data',LIS_localPet,state_size, tileid,st_id,en_id 
+    endif
  ! with these lines:
  !         gid = LIS_domain(n)%gindex(&
  !              LIS_surface(n, LIS_rc%lsm_index)%tile(tileid)%col,&
@@ -430,7 +433,9 @@ contains
              !ens_id_SIR(:, ((i-1)*N_ens+1):((i-1)*N_ens+N_ens)) = 0.0
              P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens)) = 1.0/N_ens
           endif
-
+if (sum(P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens)))>2)then
+print*,'****pbs_Mod i,sum(P_w_current_ts) ', i, sum(P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens)))
+endif
           pbs_struc(n,k)%anlys_incr(:,(i-1)*N_ens+1:(i-1)*N_ens+N_ens) = &
                state_incr(:,(i-1)*N_ens+1:(i-1)*N_ens+N_ens)
 

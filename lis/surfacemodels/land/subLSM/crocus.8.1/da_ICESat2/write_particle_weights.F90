@@ -215,9 +215,9 @@
        write(xtime_twInterval, fmt='(I20)') nint(LIS_rc%twInterval)
 
        ! time field attributes
-       call LIS_verify(nf90_put_att(ftn,xtimeID,&
-            "Time_Now",trim(xtime_units)),&
-            'nf90_put_att for time now failed in write_particle_weights')
+       !call LIS_verify(nf90_put_att(ftn,xtimeID,&
+       !     "Time_Now",trim(xtime_units)),&
+       !     'nf90_put_att for time now failed in write_particle_weights')
        call LIS_verify(nf90_put_att(ftn,xtimeID,&
             "long_name","time"),&
             'nf90_put_att for long_name failed in write_particle_weights')
@@ -290,6 +290,7 @@
        deallocate(gtmp1_ens)
        ! Close the file.
        call LIS_verify(nf90_close(ftn), "Error in nf90_close in RAPID_routing_output")
+       write(LIS_logunit,*)'[INFO] Done writing particle weights'
    endif
 #endif
        998 FORMAT(1X,A18,4E14.3)

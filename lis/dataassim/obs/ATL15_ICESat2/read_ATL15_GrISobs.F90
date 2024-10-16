@@ -170,7 +170,8 @@ print '(1x,f20.4, 2x,f20.4, 2x,f10.2)', timenow_sec , start_date_sec , timenow_s
        !reset timewindow
       call LIS_resetClockForPBSTimeWindow(LIS_rc)
    end if
-! For print1 
+! For print1
+if(LIS_masterproc) then 
    call ESMF_TimeGet(LIS_twStartTime, yy = yr, &
              mm = mo, &
              dd = da, &
@@ -196,7 +197,7 @@ print '(" [INFO] read_ATL15 LIS_twStopTime " (i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2
 !print*, ' Read ATL15 twStartTime , twStopTime'
 !print '(1x,f20.4, 2x,f20.4)', LIS_twStartTime_sec , LIS_twStopTime_sec  
 ! end for print1   
- 
+endif 
   !alarmcheck = (mod(currentTime-startdate, 7889400.0).eq.0)
   alarmcheck = (mod(timenow_sec-start_date_sec, LIS_rc%obsInterval).eq.0)
 
@@ -212,7 +213,9 @@ print '(" [INFO] read_ATL15 LIS_twStopTime " (i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2
       call ESMF_AttributeSet(OBS_State,"File Status",&
             .true., rc=status)
       call LIS_verify(status)
-
+if(LIS_masterproc) then
+print*,'****[INFO] Reading ATL15_GrIS data****'
+endif
       write(LIS_logunit,*)  '[INFO] Reading ATL15_GrIS data ',trim(name)
 
 #if ( defined USE_NETCDF3 || defined USE_NETCDF4 )
@@ -293,6 +296,7 @@ print '(" [INFO] read_ATL15 LIS_twStopTime " (i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2
 
           do r=1,LIS_rc%obs_lnr(k)
              do c=1,LIS_rc%obs_lnc(k)
+!print*,'c,r,offset,dhdt ',c,r,offset,dhdt_local_grid(c,r,offset)
                 if(dhdt_local_grid(c,r,offset).gt.100) then ! dhdt:_FillValue = 3.402823e+38f ;
                    dhdt_local_grid(c,r,offset) = LIS_rc%udef
                 endif

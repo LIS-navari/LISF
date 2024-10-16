@@ -96,6 +96,7 @@ contains
      call LIS_compute_time_since_millennium(2018,10,01,22,0,0, start_date_sec)
      call LIS_compute_time_since_millennium(LIS_rc%syr,LIS_rc%smo,LIS_rc%sda,LIS_rc%shr,LIS_rc%smn,0, simulation_start_time_sec)
 
+if(LIS_masterproc) then
 print*,'DAlog timenow_sec start_date_sec diff'
 !print '(1x,f20.4, 2x,f20.4, 2x,f10.2)', timenow_sec , start_date_sec , timenow_sec-start_date_sec   
         write(*,fmt=25)' [INFO] timenow : ',LIS_rc%mo,'/',LIS_rc%da,'/', &
@@ -104,6 +105,7 @@ print*,'DAlog timenow_sec start_date_sec diff'
          2018,22,':',0,':',0
         write(*,fmt=25)' [INFO] simulation_start_time : ',LIS_rc%smo,'/',LIS_rc%sda,'/', &
          LIS_rc%syr,LIS_rc%shr,':',LIS_rc%smn,':',LIS_rc%sss
+endif
         25  format(a30,i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2)
 
      if (floor(mod(timenow_sec-start_date_sec, LIS_rc%obsInterval)).eq.0 .and. timenow.ge.start_date) then 
@@ -125,7 +127,9 @@ print*,'DAlog timenow_sec start_date_sec diff'
               d = 2
            endif
         endif
+if(LIS_masterproc) then
 print*,'DAlog d', d
+endif
         if (simulation_start_time .gt. start_date) then
            tmp = floor((simulation_start_time_sec - start_date_sec)/LIS_rc%obsInterval) + 1
            start_date_new_sec = start_date_sec + tmp * LIS_rc%obsInterval

@@ -19,7 +19,7 @@
 subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
 ! !USES:
    use ESMF
-   use LIS_coreMod, only: LIS_rc, LIS_domain, LIS_surface
+   use LIS_coreMod, only: LIS_rc, LIS_domain, LIS_surface, LIS_masterproc, LIS_localPet
    !use LIS_snowMod, only : LIS_snow_struc
    use LIS_logMod, only: LIS_logunit, LIS_verify, LIS_endrun
    use LIS_timeMgrMod
@@ -171,9 +171,9 @@ subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
       write (LIS_logunit, *) '[ERR] Program stopping.... '
       call LIS_endrun()
    end if
-
+if(LIS_masterproc) then
    print *, 'setparticleweight'
-
+endif
    call ESMF_TimeintervalSet(tw, s=nint(LIS_rc%twInterval), rc=status)
    call ESMF_TimeintervalSet(obs_interval, s=nint(LIS_rc%obsInterval), rc=status)   ! s=7889400
 
@@ -201,7 +201,9 @@ subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
 #endif
 
 ! For print1 
+if(LIS_masterproc) then
 print*,'1- _setparticleweight, twStartTime_sec , twStopTime_sec '
+endif
    call ESMF_TimeGet(LIS_twStartTime, yy = yr, &
              mm = mo, &
              dd = da, &
@@ -211,8 +213,10 @@ print*,'1- _setparticleweight, twStartTime_sec , twStopTime_sec '
              calendar = LIS_calendar, &
              rc = status)
    call LIS_compute_time_since_millennium(yr,mo,da,hr,mn,0,LIS_twStartTime_sec)
+if(LIS_masterproc) then
 write(*,fmt=24)' [INFO] LIS_twStartTime : ',mo,'/',da,'/', &
          yr,hr,':',mn,':',ss   
+endif
 
    call ESMF_TimeGet(LIS_twStopTime, yy = yr, &
              mm = mo, &
@@ -223,8 +227,10 @@ write(*,fmt=24)' [INFO] LIS_twStartTime : ',mo,'/',da,'/', &
              calendar = LIS_calendar, &
              rc = status)
       call LIS_compute_time_since_millennium(yr,mo,da,hr,mn,0,LIS_twStopTime_sec)
+if(LIS_masterproc) then
 write(*,fmt=24)' [INFO] LIS_twStopTime : ',mo,'/',da,'/', &
          yr,hr,':',mn,':',ss 
+endif
 ! end for print1   
 
    !if ( (LIS_twStartTime .gt. (ATL15_StartTime - obs_interval/2)) .and. &
@@ -481,14 +487,15 @@ endif
                Crocus81pred_struc(n)%ens_id_SIR(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)) = ens_id_SIR
             end do ! i
 ! MN: for inspection
-            print*, 'number of grid weight unchanged ',sum(count_inspect(:,4))   
-            print*, 'number of grid SIR works ',sum(count_inspect(:,5))
-            print*, 'number of grid SIR does not work ',sum(count_inspect(:,6))
+            print*, 'LIS_localPet, number of grid weight unchanged ',LIS_localPet, sum(count_inspect(:,4))
+            print*, 'number of grid SIR works ',LIS_localPet,sum(count_inspect(:,5))
+            print*, 'number of grid SIR does not work ',LIS_localPet,sum(count_inspect(:,6))
 ! MN: end for inspection
          end if 
+print*,'LIS_localPet,currTime_sec, LIS_twStopTime_sec',LIS_localPet,currTime_sec, LIS_twStopTime_sec 
          if (currTime_sec .eq. LIS_twStopTime_sec) then
          !if (currTime .eq. LIS_twStopTime) then
-            write(LIS_logunit,*)'[INFO] End of DA time window.'
+            write(LIS_logunit,*)'[INFO] End of DA time window.LIS_localPet', LIS_localPet
             write(LIS_logunit,*)'[INFO] discard the un-survived ensembles and replace them'
             write(LIS_logunit,*)'[INFO] with survived ensembles using sequential importance'
             write(LIS_logunit,*)'[INFO] resampling (SIR) if needed'
@@ -500,6 +507,7 @@ endif
                   LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
             call LIS_resetClockForPBSTimeWindow(LIS_rc)
 ! For print2 
+if(LIS_masterproc) then
    call ESMF_TimeGet(LIS_twStartTime, yy = yr, &
              mm = mo, &
              dd = da, &
@@ -523,6 +531,7 @@ write(*,fmt=24)' [INFO] New LIS_twStartTime : ',mo,'/',da,'/', &
       call LIS_compute_time_since_millennium(yr,mo,da,hr,mn,0,LIS_twStopTime_sec)
 write(*,fmt=24)' [INFO] New LIS_twStopTime : ',mo,'/',da,'/', &
          yr,hr,':',mn,':',ss
+endif
 ! end for print2
             !apply the update
 
@@ -554,7 +563,7 @@ write(*,fmt=24)' [INFO] New LIS_twStopTime : ',mo,'/',da,'/', &
 !   endif
                ! Check Neff for resampling. If it does not occur, skip this step.
                if (Neff(i) < 0.85*N_ens) then ! TODO what is the best threshold value (0.85?) 
-
+                  write(LIS_logunit,*)'[INFO] Neff < 0.85*N_ens use SIR for resampling'
                   ! save state variables in temporary variables
                   do n_e = 1, N_ens
                      do n_l = 1, CROCUS81_struc(n)%nsnow

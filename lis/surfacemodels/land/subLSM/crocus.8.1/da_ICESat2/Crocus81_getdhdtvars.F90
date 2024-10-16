@@ -22,7 +22,7 @@
 subroutine Crocus81_getdhdtvars(n, LSM_State)
 ! !USES:
   use ESMF
-  use LIS_coreMod, only : LIS_rc
+  use LIS_coreMod, only : LIS_rc,LIS_masterproc
   use LIS_logMod,  only : LIS_verify
   use noahmp401_lsmMod
   use Crocus81_lsmMod
@@ -61,7 +61,9 @@ subroutine Crocus81_getdhdtvars(n, LSM_State)
   !call LIS_verify(status)
   call ESMF_FieldGet(snodField,localDE=0,farrayPtr=snod,rc=status)
   call LIS_verify(status)
+if(LIS_masterproc) then
 print*,'getdhdtvars'
+endif
   do t=1,LIS_rc%npatch(n,LIS_rc%lsm_index)
      snod(t) = CROCUS81_struc(n)%crocus81(t)%SD_1D
   enddo

@@ -19,7 +19,7 @@ subroutine Crocus81_getdhdtpred(n, k, obs_pred)
 
 ! !USES:
   use ESMF
-  use LIS_coreMod, only : LIS_rc,LIS_surface
+  use LIS_coreMod, only : LIS_rc,LIS_surface,LIS_masterproc
   use LIS_logMod,  only : LIS_logunit
   use noahmp401_lsmMod
   use LIS_DAobservationsMod
@@ -71,8 +71,9 @@ subroutine Crocus81_getdhdtpred(n, k, obs_pred)
   do t=1,LIS_rc%npatch(n,LIS_rc%lsm_index)
      dh(t) = Crocus81pred_struc(n)%model_dh(t) !Crocus81pred_struc(n)%model_dh(2,t) - Crocus81pred_struc(n)%model_dh(1,t) 
   enddo
+if(LIS_masterproc) then
 print*,'getdhdtpred'
-
+endif
         write(LIS_logunit,fmt=24)'[INFO] Get obspred from dhdt_DAlog @: ',LIS_rc%mo,'/',LIS_rc%da,'/', &
          LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
         24  format(a40,i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2)

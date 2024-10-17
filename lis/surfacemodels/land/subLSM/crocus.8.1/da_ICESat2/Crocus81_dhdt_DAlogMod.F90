@@ -89,11 +89,11 @@ contains
      ! NOTE: first dh obs is @ 2018-10-01 22:30:00.00 that means the dh represents changes 
      !       from 2018-07-02 03:00:00.00 to 2018-10-01 22:30:00.00. However, the first dhdh 
      !       is @ 2018-11-16 14:15
-     call LIS_date2time(start_date,doy,gmt,2018,10,01,22,0,0)
+     call LIS_date2time(start_date,doy,gmt,2018,10,01,22,30,0)
 
 !print*,'DAlog timenow', timenow
      call LIS_compute_time_since_millennium(LIS_rc%yr, LIS_rc%mo, LIS_rc%da, LIS_rc%hr, LIS_rc%mn, 0, timenow_sec)
-     call LIS_compute_time_since_millennium(2018,10,01,22,0,0, start_date_sec)
+     call LIS_compute_time_since_millennium(2018,10,01,22,30,0, start_date_sec)
      call LIS_compute_time_since_millennium(LIS_rc%syr,LIS_rc%smo,LIS_rc%sda,LIS_rc%shr,LIS_rc%smn,0, simulation_start_time_sec)
 
 if(LIS_masterproc) then
@@ -102,7 +102,7 @@ print*,'DAlog timenow_sec start_date_sec diff'
         write(*,fmt=25)' [INFO] timenow : ',LIS_rc%mo,'/',LIS_rc%da,'/', &
          LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
         write(*,fmt=25)' [INFO] start_date : ',10,'/',1,'/', &
-         2018,22,':',0,':',0
+         2018,22,':',30,':',0
         write(*,fmt=25)' [INFO] simulation_start_time : ',LIS_rc%smo,'/',LIS_rc%sda,'/', &
          LIS_rc%syr,LIS_rc%shr,':',LIS_rc%smn,':',LIS_rc%sss
 endif
@@ -121,7 +121,7 @@ endif
         d = -1 
         if (simulation_start_time .le. start_date) then        
            if ((LIS_rc%yr.eq.2018).and.(LIS_rc%mo.eq.10).and.(LIS_rc%da.eq.1) &
-                .and.(LIS_rc%hr.eq.22).and.(LIS_rc%mn.eq.0)) then
+                .and.(LIS_rc%hr.eq.22).and.(LIS_rc%mn.eq.30)) then
               d = 1
            else 
               d = 2

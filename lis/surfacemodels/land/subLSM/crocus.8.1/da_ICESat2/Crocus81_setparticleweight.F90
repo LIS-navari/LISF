@@ -141,11 +141,11 @@ subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
                      mm=10, &
                      dd=01, &
                      h=22, &
-                     m=0, &
+                     m=30, &
                      s=0, &
                      calendar=LIS_calendar, &
                      rc=status)
-   call LIS_compute_time_since_millennium(2018,10,01,22,00,0, ATL15_StartTime_sec)   
+   call LIS_compute_time_since_millennium(2018,10,01,22,30,0, ATL15_StartTime_sec)   
 
    call ESMF_TimeSet(simulation_start_time, yy=LIS_rc%syr, &
                      mm=LIS_rc%smo, &
@@ -563,7 +563,7 @@ endif
 !   endif
                ! Check Neff for resampling. If it does not occur, skip this step.
                if (Neff(i) < 0.85*N_ens) then ! TODO what is the best threshold value (0.85?) 
-                  write(LIS_logunit,*)'[INFO] Neff < 0.85*N_ens use SIR for resampling'
+                  write(LIS_logunit,*)'[INFO] Neff < 0.85*N_ens use SIR for resampling for patch=', i
                   ! save state variables in temporary variables
                   do n_e = 1, N_ens
                      do n_l = 1, CROCUS81_struc(n)%nsnow

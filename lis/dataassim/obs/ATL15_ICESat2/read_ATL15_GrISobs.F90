@@ -146,26 +146,32 @@ subroutine read_ATL15_GrISobs(n,k, OBS_State, OBS_Pert_State)
 ! call LIS_date2time(start_date,doy,gmt,2019,01,01,6,0,0)
 ! set this to second dh obs (after 2nd dh obs, read first dhdt)   
 ! for testing code chnage this date for 2019,01,01,6,0,0 to 2018,10,01,23,0,0
-! TODO change to 2019,01,01,6,0,0 after test
-  call LIS_date2time(start_date,doy,gmt,2018,10,01,23,00,0)
-  call LIS_compute_time_since_millennium(2018,10,01,23,00,0, start_date_sec)
+! TODO change to 2019,01,01,6,0,0 after test --> chenged the code to use start_date = 2018,10,01,22,30,0
+  call LIS_date2time(start_date,doy,gmt,2018,10,01,22,30,0)
+  call LIS_compute_time_since_millennium(2018,10,01,22,30,0, start_date_sec)
+if(LIS_masterproc) then
 print*,'read_ATL15 timenow_sec , start_date_sec ,diff'
 print '(1x,f20.4, 2x,f20.4, 2x,f10.2)', timenow_sec , start_date_sec , timenow_sec-start_date_sec
         write(*,fmt=24)' [INFO] read_ATL15 timenow : ',LIS_rc%mo,'/',LIS_rc%da,'/', &
          LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
+endif
         24  format(a30,i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2)
 
    ! reset timewindow when simulation reaches the ATL15_StartTime
    ! then reset the tw in the Crocus81_setparticleweight.F90 af DA
-   if (timenow_sec .eq. (start_date_sec - LIS_rc%obsInterval)) then 
+   !if (timenow_sec .eq. (start_date_sec - LIS_rc%obsInterval)) then !chenged the code to use start_date = 2018,10,01,22,30,0
+   if (timenow_sec .eq. start_date_sec) then
       !reset timewindow
       call LIS_resetClockForPBSTimeWindow(LIS_rc)
    end if
 
    ! reset timewindow when simulation start time is larger then ATL15_StartTime and simulation reaches first ATL15 observation
    call LIS_compute_time_since_millennium(LIS_rc%syr,LIS_rc%smo,LIS_rc%sda,LIS_rc%shr,LIS_rc%smn,0,simulation_start_time_sec)
-   if ((simulation_start_time_sec .gt. (start_date_sec - LIS_rc%obsInterval)) .and. &
-       mod((timenow_sec - (start_date_sec - LIS_rc%obsInterval)) , LIS_rc%obsInterval) == 0 .and. &
+   !if ((simulation_start_time_sec .gt. (start_date_sec - LIS_rc%obsInterval)) .and. &
+   !    mod((timenow_sec - (start_date_sec - LIS_rc%obsInterval)) , LIS_rc%obsInterval) == 0 .and. &
+   !       ((timenow_sec - simulation_start_time_sec) .lt. LIS_rc%obsInterval)) then !chenged the code to use start_date = 2018,10,01,22,30,0
+   if ((simulation_start_time_sec .gt. start_date_sec) .and. &
+       mod((timenow_sec - start_date_sec) , LIS_rc%obsInterval) == 0 .and. &
           ((timenow_sec - simulation_start_time_sec) .lt. LIS_rc%obsInterval)) then
        !reset timewindow
       call LIS_resetClockForPBSTimeWindow(LIS_rc)
@@ -199,11 +205,11 @@ print '(" [INFO] read_ATL15 LIS_twStopTime " (i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2
 ! end for print1   
 endif 
   !alarmcheck = (mod(currentTime-startdate, 7889400.0).eq.0)
-  alarmcheck = (mod(timenow_sec-start_date_sec, LIS_rc%obsInterval).eq.0)
-
+  !alarmcheck = (mod(timenow_sec-start_date_sec, LIS_rc%obsInterval).eq.0)
+  alarmcheck = (mod(timenow_sec-(start_date_sec+LIS_rc%obsInterval), LIS_rc%obsInterval).eq.0) !chenged the code to use start_date = 2018,10,01,22,31,0
  !if(alarmCheck .and. currentTime.ge.start_date_tmp ) then
-  if(alarmCheck .and. (timenow .ge. start_date)) then ! _tmp ) then
-
+ !if(alarmCheck .and. (timenow .ge. start_date)) then ! _tmp ) then
+  if(alarmCheck .and. (timenow .gt. start_date)) then ! _tmp ) then !chenged the code to use start_date = 2018,10,01,22,31,0
       data_upd = .false.
 
       !if(LIS_rc%DAincrMode(n).eq.1) then  ! TODO what is this? hard codded to 1 in read_config
@@ -286,7 +292,8 @@ endif
 
       !offset = int((currentTime - startTime)/ATL15_GrIS_struc(n)%ts) + 1 ! nint
       !offset = floor((timenow - start_date)/7889400.0) + 1 ! nint
-      offset = floor((timenow_sec - start_date_sec)/LIS_rc%obsInterval) + 1 ! nint
+      !offset = floor((timenow_sec - start_date_sec)/LIS_rc%obsInterval) + 1 ! nint ! nint !chenged the code to use start_date = 2018,10,01,22,30,0
+      offset = floor((timenow_sec - start_date_sec)/LIS_rc%obsInterval)  ! nint
       ! we might be able to use obs_time insted of offset.   
 
       ! fnd: flag to indicate if there are valid observations in the local 
@@ -401,7 +408,8 @@ subroutine ATL15_GrIS_filename(name, ndir)
   implicit none
   character(len=*)  :: name
   character (len=*) :: ndir
-  name = trim(ndir)//'/ATL15_GL_0318_20km_003_01.nc'
+  name = trim(ndir) !//'/ATL15_GL_0318_20km_003_01.nc'
+  !name = trim(ndir)//'/ATL15_20km_MARgrid_corrected.nc
 end subroutine ATL15_GrIS_filename
 
 

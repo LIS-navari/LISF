@@ -105,7 +105,7 @@ subroutine Crocus81_main(n)
     REAL                 :: tmp_Z0HNAT             ! grid box average roughness length for heat [m]
     REAL*8, allocatable  :: tmp_ALB (:)             ! soil/vegetation albedo[-] (monthly value)
     LOGICAL              :: tmp_use_monthly_albedo_map ! if usemonalb == .true., then the alb value passed to lsmcrocus will be used 
-                                                       ! as the background snow-free albedo term.  ! if usemonalb == .false., then alb will be set to 0.2
+                                                       ! as the background snow-free albedo term.  ! if usemonalb == .false., then alb will be set to 0.6 (typical albedo value for glacier)
     REAL*8                 :: tmp_SOILCOND           ! soil thermal conductivity (W m-1 K-1) [W /(m K)]
     REAL                 :: tmp_D_G                ! !Assumed first soil layer thickness (m)
 !Used to calculate ground/snow heat flux   (D_G(:,1)) [m]
@@ -350,7 +350,11 @@ subroutine Crocus81_main(n)
             tmp_Z0NAT                               = CROCUS81_struc(n)%Z0NAT                           
             tmp_Z0EFF                               = CROCUS81_struc(n)%Z0EFF                           
             tmp_Z0HNAT                              = CROCUS81_struc(n)%Z0HNAT                          
-            tmp_ALB(:)                              = CROCUS81_struc(n)%crocus81(t)%ALB(:) ! reading from LDT output 
+            if(LIS_rc%usealbedomap(n) .ne. 'none') then
+               tmp_ALB(:)                              = CROCUS81_struc(n)%crocus81(t)%ALB(:) ! reading from LDT output 
+            else 
+               tmp_ALB(:)                              = 0.6 ! background albedo (snow/ice)  
+            endif
             tmp_use_monthly_albedo_map              = CROCUS81_struc(n)%use_monthly_albedo_map 
             tmp_SOILCOND                            = CROCUS81_struc(n)%crocus81(t)%SOILCOND 
             tmp_D_G                                 = CROCUS81_struc(n)%D_G                             

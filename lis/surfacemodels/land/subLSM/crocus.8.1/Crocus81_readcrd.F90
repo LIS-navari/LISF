@@ -218,7 +218,7 @@ subroutine Crocus81_readcrd()
 
 
     ! if usemonalb == .true., then the alb value passed to lsmcrocus will be used as the background snow-free albedo term.  
-    ! if usemonalb == .false., then alb will be set to 0.2 
+    ! if usemonalb == .false., then alb will be set to 0.6 (typical value over glacier) 
     call ESMF_ConfigFindLabel(LIS_config, "CROCUS81 use monthly albedo map:", rc = rc)
     do n=1, LIS_rc%nnest
         call ESMF_ConfigGetAttribute(LIS_config, CROCUS81_struc(n)%use_monthly_albedo_map, rc=rc)

@@ -45,7 +45,7 @@
 !   LDT NetCDF variable name for Soil porosity (m3 m-3)
 ! \item[use\_monthly\_albedo\_map]
 ! if usemonalb == .true., then the alb value passed to lsmcrocus will be used as the background snow-free albedo term.  
-! if usemonalb == .false., then alb will be set to 0.2 
+! if usemonalb == .false., then alb will be set to 0.6 (typical albedo value for glacier) 
 ! \item[ts]
 !   Crocus81 model time step in second
 ! \item[count]

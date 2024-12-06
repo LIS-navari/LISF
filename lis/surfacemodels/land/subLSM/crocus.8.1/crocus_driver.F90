@@ -327,7 +327,7 @@ SUBROUTINE crocus_driver(n, &
 !                                                     current time step (m)
    logical, intent(in) :: usemonalb  ! if usemonalb == .true., then the alb value passed to 
                !LDT will be used as the background snow-free albedo term.  
-               ! if usemonalb == .false., then alb will be sett to 0.2  
+               ! if usemonalb == .false., then alb will be sett to 0.6 (typical value for glacier)  
 
    ZP_LES3L = 0.0  ! 1
    ZP_LEL3L = 0.0  ! 1
@@ -768,7 +768,7 @@ CONTAINS
   if (usemonalb .eqv. .true. ) then
      ALBin(1) = crocus81_month_d(ALB, nowdate)
   else
-     ALBin(1) = 0.2 ! soil/vegetation albedo (ALB) set to 0.2 in the SURFEX-Crocus
+     ALBin(1) = 0.6 ! soil/vegetation albedo (ALB) set to 0.2 in the SURFEX-Crocus. Note: over land we use  monthly albedo climatology from LDT. Over Ice sheet if LDT does not provide albedo we set initial albedo to 0.6. 
   endif
 ! ***************************************************************************
 ! Compute variables

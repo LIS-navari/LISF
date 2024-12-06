@@ -67,6 +67,10 @@ contains
      real                     :: ran_face
      integer                  :: n_t
 
+    ! DESCRIPTION:
+    ! This subroutine computes the model's dh using elevation from 
+    ! the beginning and end of the observation interval.
+
      !2018-10-01 22:30:00.00   2019-01-01 06:00:00.00   2019-04-02 13:30:00.00   2019-07-02 21:00:00.00
      !2019-10-02 04:30:00.00   2020-01-01 12:00:00.00   2020-04-01 19:30:00.00   2020-07-02 03:00:00.00
      !2020-10-01 10:30:00.00   2020-12-31 18:00:00.00   2021-04-02 01:30:00.00   2021-07-02 09:00:00.00
@@ -96,16 +100,16 @@ contains
      call LIS_compute_time_since_millennium(2018,10,01,22,30,0, start_date_sec)
      call LIS_compute_time_since_millennium(LIS_rc%syr,LIS_rc%smo,LIS_rc%sda,LIS_rc%shr,LIS_rc%smn,0, simulation_start_time_sec)
 
-if(LIS_masterproc) then
-print*,'DAlog timenow_sec start_date_sec diff'
-!print '(1x,f20.4, 2x,f20.4, 2x,f10.2)', timenow_sec , start_date_sec , timenow_sec-start_date_sec   
-        write(*,fmt=25)' [INFO] timenow : ',LIS_rc%mo,'/',LIS_rc%da,'/', &
-         LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
-        write(*,fmt=25)' [INFO] start_date : ',10,'/',1,'/', &
-         2018,22,':',30,':',0
-        write(*,fmt=25)' [INFO] simulation_start_time : ',LIS_rc%smo,'/',LIS_rc%sda,'/', &
-         LIS_rc%syr,LIS_rc%shr,':',LIS_rc%smn,':',LIS_rc%sss
-endif
+!if(LIS_masterproc) then
+!print*,'DAlog timenow_sec start_date_sec diff'
+!!print '(1x,f20.4, 2x,f20.4, 2x,f10.2)', timenow_sec , start_date_sec , timenow_sec-start_date_sec   
+!        write(*,fmt=25)' [INFO] timenow : ',LIS_rc%mo,'/',LIS_rc%da,'/', &
+!         LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
+!        write(*,fmt=25)' [INFO] start_date : ',10,'/',1,'/', &
+!         2018,22,':',30,':',0
+!        write(*,fmt=25)' [INFO] simulation_start_time : ',LIS_rc%smo,'/',LIS_rc%sda,'/', &
+!         LIS_rc%syr,LIS_rc%shr,':',LIS_rc%smn,':',LIS_rc%sss
+!endif
         25  format(a30,i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2)
 
      if (floor(mod(timenow_sec-start_date_sec, LIS_rc%obsInterval)).eq.0 .and. timenow.ge.start_date) then 
@@ -143,10 +147,14 @@ endif
               d = 2
            endif
         endif
- 
+         
         write(LIS_logunit,fmt=24)' [INFO] logging obspred data (h1) for PBS-DA @: ',LIS_rc%mo,'/',LIS_rc%da,'/', &
          LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss 
         24  format(a50,i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2) 
+        if(LIS_masterproc) then
+           write(*,fmt=24)'[INFO] logging obspred data (h1) for PBS-DA @: ',LIS_rc%mo,'/',LIS_rc%da,'/', &
+                LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
+        endif
         !Crocus81pred_struc(n)%model_dh(:) = 0.0
         
         !Crocus81pred_struc(n)%model_h(2,:)
@@ -157,18 +165,25 @@ endif
         
         Crocus81pred_struc(n)%model_dh(:) = 0.0
         if (d .eq. 2) then 
-           !Crocus81pred_struc(n)%model_dh = &
-           !Crocus81pred_struc(n)%model_h(2,:) - Crocus81pred_struc(n)%model_h(1,:)
+           Crocus81pred_struc(n)%model_dh = &
+           Crocus81pred_struc(n)%model_h(2,:) - Crocus81pred_struc(n)%model_h(1,:)
 ! for test
-           ! for testing the algorithm set %model_dh to a large values
-           do n_t=1,LIS_rc%npatch(n,LIS_rc%lsm_index)
-           !generate random number between 0-1 (random dice roll)
-              call LIS_rand_func(1,ran_face)
-              Crocus81pred_struc(n)%model_dh(n_t) = 0.05*ran_face   
-           enddo
+           !! for testing the algorithm set %model_dh to a large values
+           !do n_t=1,LIS_rc%npatch(n,LIS_rc%lsm_index)
+           !!generate random number between 0-1 (random dice roll)
+             ! call LIS_rand_func(1,ran_face)
+             !! Crocus81pred_struc(n)%model_dh(n_t) = 0.05*ran_face  ! hourly  
+             !! Crocus81pred_struc(n)%model_dh(n_t) = 6*0.05*ran_face ! 6-hourly
+             ! Crocus81pred_struc(n)%model_dh(n_t) = 24*0.05*ran_face ! daily
+           !enddo
 ! end for test 
-           write(LIS_logunit,fmt=24)' [INFO] logging obspred data (h2) and dh=h2-h1 for PBS-DA @: ',LIS_rc%mo,'/',LIS_rc%da,'/', &
+           write(LIS_logunit,fmt=26)' [INFO] logging obspred data (h2) and dh=h2-h1 for PBS-DA @: ',LIS_rc%mo,'/',LIS_rc%da,'/', &
                  LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
+           26  format(a60,i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2)
+           if(LIS_masterproc) then 
+              write(*,fmt=26)' [INFO] logging obspred data (h2) and dh=h2-h1 for PBS-DA @: ',LIS_rc%mo,'/',LIS_rc%da,'/', &
+                              LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
+           endif
            Crocus81pred_struc(n)%model_h(1,:) = 0.0
            Crocus81pred_struc(n)%model_h(1,:) = Crocus81pred_struc(n)%model_h(2,:)
         endif 

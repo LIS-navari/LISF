@@ -3440,16 +3440,20 @@ contains
                 ! lat/lon field output will write in 1D 
                 if(LIS_rc%nlatlon_dimensions == '1D') then
                    if(nmodel_status.eq.1) then
-                      call LIS_verify(nf90_def_var(ftn,trim(short_name),&
+                      !call LIS_verify(nf90_def_var(ftn,trim(short_name),&  
+                      call LIS_verify(nf90_def_var(ftn,trim(dataEntry%short_name),&
                            nf90_float,&
                            dimids = dimID(2), varID=dataEntry%varId_def),&
-                           'nf90_def_var for '//trim(short_name)//&
+                           !'nf90_def_var for '//trim(short_name)//&  
+                           'nf90_def_var for '//trim(dataEntry%short_name)//&
                            'failed in defineNETCDFheadervar')                     
                    elseif(nmodel_status.eq.2) then
-                      call LIS_verify(nf90_def_var(ftn,trim(short_name),&
+                      !call LIS_verify(nf90_def_var(ftn,trim(short_name),&
+                      call LIS_verify(nf90_def_var(ftn,trim(dataEntry%short_name),&
                            nf90_float,&
                            dimids = dimID(1), varID=dataEntry%varId_def),&
-                           'nf90_def_var for '//trim(short_name)//&
+                           !'nf90_def_var for '//trim(short_name)//&
+                           'nf90_def_var for '//trim(dataEntry%short_name)//&
                            'failed in defineNETCDFheadervar')                     
                    else                
                       call LIS_verify(nf90_def_var(ftn,trim(dataEntry%short_name)//'_tavg',&
@@ -3460,10 +3464,12 @@ contains
                    endif
                 ! latlon field output will write in 2D
                 else
-                     call LIS_verify(nf90_def_var(ftn,trim(short_name),&
+                     !call LIS_verify(nf90_def_var(ftn,trim(short_name),&
+                     call LIS_verify(nf90_def_var(ftn,trim(dataEntry%short_name),&
                          nf90_float,&
                          dimids = dimID(1:2), varID=dataEntry%varID_def),&
-                         'nf90_def_var for '//trim(short_name)//&
+                         !'nf90_def_var for '//trim(short_name)//& 
+                         'nf90_def_var for '//trim(dataEntry%short_name)//&
                          'failed in defineNETCDFheadervar')
                 endif 
 

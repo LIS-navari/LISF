@@ -170,11 +170,12 @@ subroutine read_MAR(n, findex, order, yr, mon, da, hr, ferror)
 
    ! One file per year--use day of year to get to the time record
    !timestep = 24*(doy - 1) + (1 + hr) ??????? why  (1 + hr)
+   timestep = 24*(doy - 1) + hr  ! - 1  ! + 1
 
    ! One file per month-- get to the time record
    ! start hr in monthly and yearly file is 1 (not 0)
    ! hr 0-23;  
-   timestep = 24*(da - 1) + hr  ! - 1  ! + 1
+   !timestep = 24*(da - 1) + hr  ! - 1  ! + 1
 
    if(LIS_masterproc) then
       write(LIS_logunit,*)'[INFO] Order, timestep, doy, hr ::', order, timestep, doy, hr

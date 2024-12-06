@@ -492,7 +492,7 @@ endif
             print*, 'number of grid SIR does not work ',LIS_localPet,sum(count_inspect(:,6))
 ! MN: end for inspection
          end if 
-print*,'LIS_localPet,currTime_sec, LIS_twStopTime_sec',LIS_localPet,currTime_sec, LIS_twStopTime_sec 
+!print*,'LIS_localPet,currTime_sec, LIS_twStopTime_sec',LIS_localPet,currTime_sec, LIS_twStopTime_sec 
          if (currTime_sec .eq. LIS_twStopTime_sec) then
          !if (currTime .eq. LIS_twStopTime) then
             write(LIS_logunit,*)'[INFO] End of DA time window.LIS_localPet', LIS_localPet
@@ -505,6 +505,10 @@ print*,'LIS_localPet,currTime_sec, LIS_twStopTime_sec',LIS_localPet,currTime_sec
             !reset timewindow
             write (LIS_logunit,fmt=24) '[INFO] Resetting the time window @ : ',LIS_rc%mo,'/',LIS_rc%da,'/', &
                   LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
+            if(LIS_masterproc) then
+                write(*,fmt=24)'[INFO] Resetting the time window @ : ',LIS_rc%mo,'/',LIS_rc%da,'/', &
+                   LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss 
+            endif 
             call LIS_resetClockForPBSTimeWindow(LIS_rc)
 ! For print2 
 if(LIS_masterproc) then

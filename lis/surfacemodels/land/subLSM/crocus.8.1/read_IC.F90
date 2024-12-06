@@ -61,10 +61,13 @@ subroutine read_IC(n)
      ts=0
      call LIS_tick(timenow,doy,gmt,yy,mm,dd,h,m,s,real(ts))
 
+    ! One file per year--use day of year to get to the time record
+    timestep = 24*(doy - 1) + h  ! - 1  ! + 1
+
     ! One file per month-- get to the time record
     ! start hr in monthly and yearly file is 1 (not 0)
     ! hr 0-23;  
-    timestep = 24*(dd - 1) + h  ! for forcing we use timestep = 24*(da - 1) + hr
+    !timestep = 24*(dd - 1) + h  ! for forcing we use timestep = 24*(da - 1) + hr
                                 ! e.g., start hr = 5 LIS forcing reader reads timestep 5  and 6
                                 ! read_IC reads inital condition from timestep 5 
     if(LIS_masterproc) then
@@ -308,7 +311,18 @@ subroutine read_IC_from_MAR(n,filename, timestep) ! TODO
  ! Close netCDF file.
  call LIS_verify(nf90_close(ncid))
 #endif
-
+! Extend the bottom layer by approximately 30m to prevent reinitializing the model. 
+! While this is not the ideal solution, a similar approach has been used in the MAR and Community Firn Models.
+! Note: 
+! In MAR bottom layer is layer=1 and top layer is layer=21
+! First method: set the hight of bottom layer to 35 meters
+  do nrow=1,LIS_rc%lnr(n)
+     do ncol=1,LIS_rc%lnc(n)
+        if (tmp2Cro(ncol,nrow,1,1) .GE. 0.000001) then ! 
+            tmp2Cro(ncol,nrow,1,1) = 35.0  
+        endif
+     enddo
+  enddo   
 !-----------------------------------------------------------------------    
 ! Calculate  LWC, SWE, SnowHeat content
 !-----------------------------------------------------------------------

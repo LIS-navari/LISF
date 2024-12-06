@@ -149,12 +149,12 @@ subroutine read_ATL15_GrISobs(n,k, OBS_State, OBS_Pert_State)
 ! TODO change to 2019,01,01,6,0,0 after test --> chenged the code to use start_date = 2018,10,01,22,30,0
   call LIS_date2time(start_date,doy,gmt,2018,10,01,22,30,0)
   call LIS_compute_time_since_millennium(2018,10,01,22,30,0, start_date_sec)
-if(LIS_masterproc) then
-print*,'read_ATL15 timenow_sec , start_date_sec ,diff'
-print '(1x,f20.4, 2x,f20.4, 2x,f10.2)', timenow_sec , start_date_sec , timenow_sec-start_date_sec
-        write(*,fmt=24)' [INFO] read_ATL15 timenow : ',LIS_rc%mo,'/',LIS_rc%da,'/', &
-         LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
-endif
+!if(LIS_masterproc) then
+!print*,'read_ATL15 timenow_sec , start_date_sec ,diff'
+!print '(1x,f20.4, 2x,f20.4, 2x,f10.2)', timenow_sec , start_date_sec , timenow_sec-start_date_sec
+!        write(*,fmt=24)' [INFO] read_ATL15 timenow : ',LIS_rc%mo,'/',LIS_rc%da,'/', &
+!         LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
+!endif
         24  format(a30,i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2)
 
    ! reset timewindow when simulation reaches the ATL15_StartTime
@@ -187,8 +187,8 @@ if(LIS_masterproc) then
              calendar = LIS_calendar, &
              rc = status)
    call LIS_compute_time_since_millennium(yr,mo,da,hr,mn,0,LIS_twStartTime_sec)
-print '(" [INFO] read_ATL15 LIS_twStartTime " (i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2))',&          
-         mo,'/',da,'/', yr,hr,':',mn,':',ss
+!print '(" [INFO] read_ATL15 LIS_twStartTime " (i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2))',&          
+!         mo,'/',da,'/', yr,hr,':',mn,':',ss
    call ESMF_TimeGet(LIS_twStopTime, yy = yr, &
              mm = mo, &
              dd = da, &
@@ -198,8 +198,8 @@ print '(" [INFO] read_ATL15 LIS_twStartTime " (i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.
              calendar = LIS_calendar, &
              rc = status)
       call LIS_compute_time_since_millennium(yr,mo,da,hr,mn,0,LIS_twStopTime_sec)
-print '(" [INFO] read_ATL15 LIS_twStopTime " (i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2))',&     
-         mo,'/',da,'/', yr,hr,':',mn,':',ss
+!print '(" [INFO] read_ATL15 LIS_twStopTime " (i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2))',&     
+!         mo,'/',da,'/', yr,hr,':',mn,':',ss
 !print*, ' Read ATL15 twStartTime , twStopTime'
 !print '(1x,f20.4, 2x,f20.4)', LIS_twStartTime_sec , LIS_twStopTime_sec  
 ! end for print1   
@@ -277,7 +277,14 @@ endif
              LIS_nse_obs_halo_ind(n,LIS_localPet+1),:)
 
      !dhdt_local_grid = dhdt_local_grid / 4  ! "meters years^-1." to meter/3monthly 
-     dhdt_local_grid = dhdt_local_grid / (4*91.25*24) !  hourly   
+     !dhdt_local_grid = dhdt_local_grid / (4*91.25*24) !  hourly   
+     !dhdt_local_grid = dhdt_local_grid / (4*91.25*4) !  6-hourly 
+     !dhdt_local_grid = dhdt_local_grid / (4*91.25) !  daily 
+     !dhdt_local_grid = dhdt_local_grid / (12) !  monthly 
+     dhdt_local_grid = dhdt_local_grid / (31536000.0/LIS_rc%obsInterval) ! (yr(ss)/LIS_rc%obsInterval)
+     ! Example:
+     ! if LIS_rc%obsInterval=7889400ss (91.3125da)  --> yr(ss)/LIS_rc%obsInterval = 4   --> dhdt_local_grid [meter/3monthly]
+     ! if LIS_rc%obsInterval=86400ss   (1da)        --> yr(ss)/LIS_rc%obsInterval = 365 --> dhdt_local_grid [meter/day]
 !-------------------------------------------------------------------------
 !  Extract data for the current time
 !-------------------------------------------------------------------------     

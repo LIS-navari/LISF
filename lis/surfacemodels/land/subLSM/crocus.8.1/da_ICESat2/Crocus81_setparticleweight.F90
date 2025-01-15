@@ -91,6 +91,7 @@ subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
    REAL*8, allocatable    :: tmp_TG(:)
    REAL*8, allocatable    :: tmp_XWGI(:)
    REAL*8, allocatable    :: tmp_XWG(:)
+   REAL*8, allocatable    :: tmp_SD_1D(:)
    INTEGER                :: N_obs_in_tw
    integer                :: yr1, mo1, da1, hr1, mn1
    integer                :: yr2, mo2, da2, hr2, mn2
@@ -560,6 +561,7 @@ endif
             allocate (tmp_TG(LIS_rc%nensem(n)))
             allocate (tmp_XWGI(LIS_rc%nensem(n)))
             allocate (tmp_XWG(LIS_rc%nensem(n)))
+            allocate (tmp_SD_1D(LIS_rc%nensem(n)))
 
             do i = 1, LIS_rc%npatch(n, LIS_rc%lsm_index)/LIS_rc%nensem(n)
 !   if (i .eq. 483) then;
@@ -593,6 +595,7 @@ endif
                      tmp_TG(n_e)        = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%TG
                      tmp_XWGI(n_e)      = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%XWGI
                      tmp_XWG(n_e)       = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%XWG
+                     tmp_SD_1D(n_e)     = CROCUS81_struc(n)%crocus81((i - 1)*N_ens + n_e)%SD_1D
                   end do
 
                  ! Now, discard the un-survived ensembles and replace them with survived ensembles
@@ -625,6 +628,8 @@ endif
                        CROCUS81_struc(n)%crocus81(k)%TG        = tmp_TG(n_id)
                        CROCUS81_struc(n)%crocus81(k)%XWGI      = tmp_XWGI(n_id)
                        CROCUS81_struc(n)%crocus81(k)%XWG       = tmp_XWG(n_id)
+                       ! overwrite the dh log from Crocus81_dhdt_DAlog
+                       Crocus81pred_struc(n)%model_h(1,k)      = tmp_SD_1D(n_id)
                   end do
                endif ! Neff
             end do ! i  
@@ -649,6 +654,7 @@ endif
             deallocate (tmp_TG)
             deallocate (tmp_XWGI)
             deallocate (tmp_XWG)
+            deallocate (tmp_SD_1D)
             deallocate (Crocus81pred_struc(n)%Pw_combined)
             deallocate (Crocus81pred_struc(n)%ens_id_SIR)
             deallocate (Pw_combined)

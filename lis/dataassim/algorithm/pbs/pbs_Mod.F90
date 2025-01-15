@@ -249,6 +249,7 @@ contains
     !real,    dimension(LIS_rc%nensem(n))                   :: P_w_curr_ts ! Pw_norm_vec
     !integer,      allocatable         :: ens_id_SIR
     real,         allocatable         :: P_w_curr_ts(:) ! Pw_norm_vec    
+   real                   :: epsilon
 !----------------------------------------------------------------------------
 !  Check if the observation state is updated or not. If it is updated,
 !  the data is then assimilated. 
@@ -377,7 +378,10 @@ contains
 !          st_id = gid
 !          en_id = gid
 ! TODO end
-
+!epsilon = 1e-4
+!if (abs(lats(tileid) - 63.07344)<epsilon .and. abs(lons(tileid) - (-43.07023)) <epsilon )then
+!print*,'st_id, en_id', st_id, en_id
+endif
           if(st_id.lt.0.or.en_id.lt.0) then 
              assim = .false. 
           else
@@ -418,6 +422,9 @@ contains
              call assemble_obs_cov(LIS_rc%nobtypes(k), N_selected_obs, &
                   obs_param,obs_da,Obs_cov)
           endif
+!if (abs(lats(tileid) - 63.07344)<epsilon .and. abs(lons(tileid) - (-43.07023)) <epsilon )then
+!print*,'assim obspred_flag', assim , obspred_flag
+!endif
           if(assim.and.obspred_flag) then   
              call pbs_analysis(gid,N_state,N_selected_obs, N_ens, &
                   obs_da,                                         & 
@@ -433,6 +440,11 @@ contains
              !ens_id_SIR(:, ((i-1)*N_ens+1):((i-1)*N_ens+N_ens)) = 0.0
              P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens)) = 1.0/N_ens
           endif
+
+!if (abs(lats(tileid) - 63.07344)<epsilon .and. abs(lons(tileid) - (-43.07023)) <epsilon )then
+!print*,'obs_da , obspred_da, Pw', obs_da , obspred_da ,P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens))
+!endif
+
 if (sum(P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens)))>2)then
 print*,'****pbs_Mod i,sum(P_w_current_ts) ', i, sum(P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens)))
 endif

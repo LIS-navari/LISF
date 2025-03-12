@@ -539,6 +539,8 @@ module LIS_PRIV_rcMod
 !  \item[nperts]
 !  logic to specify whether to assimilate observation into LSM or SubLSM
 !  \DAforSubLSM
+!  logic to specify whether to use sequential importance resampling for Particle Batch Smoother (PBS)
+!  \item[use_SIR]
 !  Number of perturbation instances
 !  \item[daalg]
 !  Choice of data assimilation algorithm
@@ -896,7 +898,7 @@ module LIS_PRIV_rcMod
      integer                :: nperts
      character*50, allocatable  :: daalg(:)
      logical                :: DAforSubLSM     
-
+     logical , allocatable  :: use_SIR(:)
      integer, allocatable       :: useANNinDA(:)
      character*100, allocatable :: ANNdaFile(:)
 

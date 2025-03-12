@@ -23,13 +23,13 @@
 !   Spatial Coverage: N:90S:59E:180W:-180 (Greenland)  
 
 ! Based on data, the temporal coverage are as follows:
-!   First and second observations for fo dh are @ 2018-10-01 22:30 and 2019-01-01 06:00
-!   First observation for dhdt is @ 2018-11-16 14:15 ( in the middle of the 1st and 2st dh obervation times)   
+!   First and second observations for dh are @ 2019-01-01 06:00 and 2019-04-02 13:30
+!   First observation for dhdt is @ 2019-02-15 21:45 ( in the middle of the 1st and 2st dh obervation times)   
 !   Time interval is 91.3125 days or 7889400 seconds
 
 ! !REVISION HISTORY: 
 !  13 Dec 2023    Mahdi Navari;   Initial Specification
-! 
+!   3 Feb 2025     Mahdi Navari;   Editted for new version of ATl15 start date    
 module ATL15_GrISobs_module
 ! !USES: 
   use ESMF
@@ -286,7 +286,7 @@ contains
 ! The data will be read and kept in memory at the beginning of the simulation
 !--------------------------------------------------------------------------------    
 ! ATL15 time "days since 2018-01-01". 
-! First observation for dhdt is @ 2018-11-16 14:15 ( in the middle of the 1st and 2st dh obervation times)   
+! First observation for dhdt is @ 2019-02-15 21:45 ( in the middle of the 1st and 2st dh obervation times)   
 
 
      !call ESMF_TimeSet(startTime, yy=2018,&

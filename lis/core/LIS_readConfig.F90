@@ -727,6 +727,7 @@ subroutine LIS_readConfig()
 !  ninsts = max(ninsts_state, ninsts_obs)
 
   allocate(LIS_rc%daalg(LIS_rc%ndas))
+  allocate(LIS_rc%use_SIR(LIS_rc%ndas))
   allocate(LIS_rc%biasalg(LIS_rc%ndas))
   allocate(LIS_rc%biasrst(LIS_rc%ndas))
   allocate(LIS_rc%biasrstInterval(LIS_rc%ndas))
@@ -908,6 +909,14 @@ subroutine LIS_readConfig()
      call ESMF_ConfigGetAttribute(LIS_config,LIS_rc%daalg(i),rc=rc)
      call LIS_verify(rc,'Data assimilation algorithm: not defined')
   enddo
+  
+  do i=1,LIS_rc%ndas 
+     if (LIS_rc%daalg(i) .eq. "PBS") then 
+     call ESMF_ConfigFindLabel(LIS_config, "Use sequential importance resampling for PBS:",rc=rc)    
+     call ESMF_ConfigGetAttribute(LIS_config,LIS_rc%use_SIR(i),rc=rc)
+     call LIS_verify(rc,'Use sequential importance resampling for PBS: not defined')    
+     endif
+  enddo 
 
   call ESMF_ConfigFindLabel(LIS_config,"Data assimilation set:",rc=rc)
   do i=1,ninsts

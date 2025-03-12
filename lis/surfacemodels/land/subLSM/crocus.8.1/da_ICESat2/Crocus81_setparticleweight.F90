@@ -121,7 +121,7 @@ subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
    call ESMF_FieldGet(ParticleWeightField, localDE=0, farrayPtr=Pw, rc=status)
    call LIS_verify(status)
    ! dh observatoin times
-   !2018-10-01 22:30:00.00   2019-01-01 06:00:00.00   2019-04-02 13:30:00.00   2019-07-02 21:00:00.00
+   !2019-01-01 06:00:00.00   2019-04-02 13:30:00.00   2019-07-02 21:00:00.00
    !2019-10-02 04:30:00.00   2020-01-01 12:00:00.00   2020-04-01 19:30:00.00   2020-07-02 03:00:00.00
    !2020-10-01 10:30:00.00   2020-12-31 18:00:00.00   2021-04-02 01:30:00.00   2021-07-02 09:00:00.00
 
@@ -131,22 +131,22 @@ subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
    call LIS_compute_time_since_millennium(LIS_rc%yr,LIS_rc%mo,LIS_rc%da,LIS_rc%hr,LIS_rc%mn,0,currTime_sec)
 
 ! TODO: Move ATL15_StartTime to lis.config
-! NOTE1: The first dh observation occurs at 2018-10-01 22:30:00.00, which indicates that the dh represents changes from 
-!         2018-07-02 03:00:00.00 to 2018-10-01 22:30:00.00. We will not use the dh data; refer to Note2.
-! NOTE2: The first dhdt observation is at 2018-11-16 14:15. To obtain the first dhdt observation, we need to read two 
+! NOTE1: The first dh observation occurs at 2019-01-01 06:00:00.00, which indicates that the dh represents changes from 
+!        2018-10-01 22:30:00.00 to 2019-01-01 06:00:00. We will not use the dh data; refer to Note2.
+! NOTE2: The first dhdt observation is at 2010-02-15 21:45. To obtain the first dhdt observation, we need to read two 
 !         ice sheet heights from the model. We will read the dhdt observation 1? hour after computing the dh for the model.
-! NOTE3: ATL15_StartTime_sec refers to the first dh observation at 2018-10-01 22:30:00.00, while start_date_sec in 
-!         read_ATL15_GrISobs.F90 refers to the second dh observation at 2019-01-01 06:00:00.00.
+! NOTE3: ATL15_StartTime_sec refers to the first dh observation at 2019-01-01 06:00:00.00, while start_date_sec in 
+!         read_ATL15_GrISobs.F90 refers to the second dh observation at 2019-04-02 13:30:00.00.
 
-   call ESMF_TimeSet(ATL15_StartTime, yy=2018, &
-                     mm=10, &
+   call ESMF_TimeSet(ATL15_StartTime, yy=2019, &
+                     mm=01, &
                      dd=01, &
-                     h=22, &
-                     m=30, &
+                     h=06, &
+                     m=00, &
                      s=0, &
                      calendar=LIS_calendar, &
                      rc=status)
-   call LIS_compute_time_since_millennium(2018,10,01,22,30,0, ATL15_StartTime_sec)   
+   call LIS_compute_time_since_millennium(2019,01,01,06,00,0, ATL15_StartTime_sec)   
 
    call ESMF_TimeSet(simulation_start_time, yy=LIS_rc%syr, &
                      mm=LIS_rc%smo, &
@@ -313,6 +313,13 @@ endif
          Pw_combined = 1./N_ens
 
          call LIS_compute_time_since_millennium(yr2,mo2,da2,hr2,mn2,0,twObsTime2_sec)
+if(LIS_masterproc) then
+         write(*,fmt=25)' [INFO] currTime : ',LIS_rc%mo,'/',LIS_rc%da,'/', &
+         LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
+         write(*,fmt=25)' [INFO] twObsTime2 : ',mo2,'/',da2,'/', &
+         yr2,hr2,':',mn2,':',0
+endif
+
          !if (currTime .le. LIS_twStartTime) then
          if (currTime .eq. twObsTime2) then ! if (N_obs_in_tw .eq. 2) then
             Crocus81pred_struc(n)%Pw_combined(:) = 1./N_ens
@@ -411,8 +418,10 @@ endif
                   do k = 1, N_ens
                      sum_w = sum_w + P_w_curr_ts(k)**2
                   end do
-                  Neff(i) = 1/(sum_w); 
-                  if (Neff(i) < 0.85*N_ens) then ! TODO what is the best threshold value (0.85?) 
+                  Neff(i) = 1/(sum_w);
+                  ! TODO  temporarily added to assimilate only Oct  
+                  if ((LIS_rc%mo .eq. 10) ) then
+                  if ((Neff(i) < 0.85*N_ens) .and. (LIS_rc%use_SIR(1) .eq. .TRUE.) ) then ! TODO what is the best threshold value (0.85?) 
                 
                      !sequential importance resampling (SIR)
                      do n_e = 1, N_ens
@@ -463,7 +472,7 @@ endif
 
                      end do ! N_ens
                   endif ! Neff
-
+                  endif ! temporarily added to assimilate only Oct 
 ! MN: for inspection
                   !count_inspect(i,1) = 0.0 
                   do j = 1,N_ens
@@ -488,9 +497,9 @@ endif
                Crocus81pred_struc(n)%ens_id_SIR(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)) = ens_id_SIR
             end do ! i
 ! MN: for inspection
-            print*, 'LIS_localPet, number of grid weight unchanged ',LIS_localPet, sum(count_inspect(:,4))
-            print*, 'number of grid SIR works ',LIS_localPet,sum(count_inspect(:,5))
-            print*, 'number of grid SIR does not work ',LIS_localPet,sum(count_inspect(:,6))
+            !print*, 'LIS_localPet, number of grid weight unchanged ',LIS_localPet, sum(count_inspect(:,4))
+            !print*, 'number of grid SIR works ',LIS_localPet,sum(count_inspect(:,5))
+            !print*, 'number of grid SIR does not work ',LIS_localPet,sum(count_inspect(:,6))
 ! MN: end for inspection
          end if 
 !print*,'LIS_localPet,currTime_sec, LIS_twStopTime_sec',LIS_localPet,currTime_sec, LIS_twStopTime_sec 
@@ -500,9 +509,14 @@ endif
             write(LIS_logunit,*)'[INFO] discard the un-survived ensembles and replace them'
             write(LIS_logunit,*)'[INFO] with survived ensembles using sequential importance'
             write(LIS_logunit,*)'[INFO] resampling (SIR) if needed'
+
+            ! TODO  temporarily added if statement to assimilate only Oct obs  
+            if (LIS_rc%mo .eq. 10) then
             write(LIS_logunit,*)'[INFO] Write the particle weights into the output directory'
             ! Write the particle weights into the output directory
             call write_particle_weights(n)
+            endif           
+
             !reset timewindow
             write (LIS_logunit,fmt=24) '[INFO] Resetting the time window @ : ',LIS_rc%mo,'/',LIS_rc%da,'/', &
                   LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss

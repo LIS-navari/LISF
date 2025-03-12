@@ -14,6 +14,8 @@
 !
 ! !REVISION HISTORY: 
 !  13 Dec 2023    Mahdi Navari;   Initial Specification
+!   3 Feb 2025    Mahdi Navari;   Editted for new version of ATl15 start date
+!   4 Feb 2025    Mahdi Navari;   Bug fix, dhdt_local_grid can be both positive and negative 
 !
 ! !INTERFACE: 
 subroutine read_ATL15_GrISobs(n,k, OBS_State, OBS_Pert_State)
@@ -90,6 +92,9 @@ subroutine read_ATL15_GrISobs(n,k, OBS_State, OBS_Pert_State)
   real*8              :: start_date_sec, simulation_start_time_sec, timenow_sec, start_date_new_sec
   real*8              :: LIS_twStartTime_sec, LIS_twStopTime_sec
   integer             :: yr, mo, da, hr, mn, ss, ms
+   real                   :: epsilon
+   integer                :: row, col
+   real                   :: lat, lon 
 
   call ESMF_AttributeGet(OBS_State,"Data Directory",&
        ATL15_GrISobsdir, rc=status)
@@ -116,17 +121,17 @@ subroutine read_ATL15_GrISobs(n,k, OBS_State, OBS_Pert_State)
   endif
 
 ! dh  observations
-     !2018-10-01 22:30:00.00   2019-01-01 06:00:00.00   2019-04-02 13:30:00.00   2019-07-02 21:00:00.00
+     !2019-01-01 06:00:00.00   2019-04-02 13:30:00.00   2019-07-02 21:00:00.00
      !2019-10-02 04:30:00.00   2020-01-01 12:00:00.00   2020-04-01 19:30:00.00   2020-07-02 03:00:00.00
      !2020-10-01 10:30:00.00   2020-12-31 18:00:00.00   2021-04-02 01:30:00.00   2021-07-02 09:00:00.00
 
 
 ! TODO add a condition to check the CROCUS81_struc(n)%ts == 15mn otherwise the model bypass the alarmCheck
-!      we do not need to add condition. Changed the start_date to 2018,11,16,14,0,0
+!      we do not need to add condition. 
 
 ! ATL15 time "days since 2018-01-01".
-! First and second observations for fo dh are @ 2018-10-01 22:30 and 2019-01-01 06:00
-! First observation for dhdt is @ 2018-11-16 14:15 ( in the middle of the 1st and 2st dh obervation times)
+! First and second observations for dh are @ 2019-01-01 06:00 and 2019-04-01 13:30
+! First observation for dhdt is @ 2019-02-15 21:45 ( in the middle of the 1st and 2st dh obervation times)
 ! Time interval is 91.3125 days or 7889400 seconds
 
   yy = LIS_rc%yr
@@ -145,10 +150,8 @@ subroutine read_ATL15_GrISobs(n,k, OBS_State, OBS_Pert_State)
 
 ! call LIS_date2time(start_date,doy,gmt,2019,01,01,6,0,0)
 ! set this to second dh obs (after 2nd dh obs, read first dhdt)   
-! for testing code chnage this date for 2019,01,01,6,0,0 to 2018,10,01,23,0,0
-! TODO change to 2019,01,01,6,0,0 after test --> chenged the code to use start_date = 2018,10,01,22,30,0
-  call LIS_date2time(start_date,doy,gmt,2018,10,01,22,30,0)
-  call LIS_compute_time_since_millennium(2018,10,01,22,30,0, start_date_sec)
+  call LIS_date2time(start_date,doy,gmt,2019,01,01,06,00,0)
+  call LIS_compute_time_since_millennium(2019,01,01,06,00,0, start_date_sec)
 !if(LIS_masterproc) then
 !print*,'read_ATL15 timenow_sec , start_date_sec ,diff'
 !print '(1x,f20.4, 2x,f20.4, 2x,f10.2)', timenow_sec , start_date_sec , timenow_sec-start_date_sec
@@ -159,7 +162,7 @@ subroutine read_ATL15_GrISobs(n,k, OBS_State, OBS_Pert_State)
 
    ! reset timewindow when simulation reaches the ATL15_StartTime
    ! then reset the tw in the Crocus81_setparticleweight.F90 af DA
-   !if (timenow_sec .eq. (start_date_sec - LIS_rc%obsInterval)) then !chenged the code to use start_date = 2018,10,01,22,30,0
+   !if (timenow_sec .eq. (start_date_sec - LIS_rc%obsInterval)) then !chenged the code to use start_date = 2019,1,01,06,00,0
    if (timenow_sec .eq. start_date_sec) then
       !reset timewindow
       call LIS_resetClockForPBSTimeWindow(LIS_rc)
@@ -169,7 +172,7 @@ subroutine read_ATL15_GrISobs(n,k, OBS_State, OBS_Pert_State)
    call LIS_compute_time_since_millennium(LIS_rc%syr,LIS_rc%smo,LIS_rc%sda,LIS_rc%shr,LIS_rc%smn,0,simulation_start_time_sec)
    !if ((simulation_start_time_sec .gt. (start_date_sec - LIS_rc%obsInterval)) .and. &
    !    mod((timenow_sec - (start_date_sec - LIS_rc%obsInterval)) , LIS_rc%obsInterval) == 0 .and. &
-   !       ((timenow_sec - simulation_start_time_sec) .lt. LIS_rc%obsInterval)) then !chenged the code to use start_date = 2018,10,01,22,30,0
+   !       ((timenow_sec - simulation_start_time_sec) .lt. LIS_rc%obsInterval)) then !chenged the code to use start_date = 2019,1,01,06,0,0
    if ((simulation_start_time_sec .gt. start_date_sec) .and. &
        mod((timenow_sec - start_date_sec) , LIS_rc%obsInterval) == 0 .and. &
           ((timenow_sec - simulation_start_time_sec) .lt. LIS_rc%obsInterval)) then
@@ -206,10 +209,14 @@ if(LIS_masterproc) then
 endif 
   !alarmcheck = (mod(currentTime-startdate, 7889400.0).eq.0)
   !alarmcheck = (mod(timenow_sec-start_date_sec, LIS_rc%obsInterval).eq.0)
-  alarmcheck = (mod(timenow_sec-(start_date_sec+LIS_rc%obsInterval), LIS_rc%obsInterval).eq.0) !chenged the code to use start_date = 2018,10,01,22,31,0
- !if(alarmCheck .and. currentTime.ge.start_date_tmp ) then
- !if(alarmCheck .and. (timenow .ge. start_date)) then ! _tmp ) then
-  if(alarmCheck .and. (timenow .gt. start_date)) then ! _tmp ) then !chenged the code to use start_date = 2018,10,01,22,31,0
+  alarmcheck = (mod(timenow_sec-(start_date_sec+LIS_rc%obsInterval), LIS_rc%obsInterval).eq.0) !chenged the code to use start_date = 2019,1,01,06,00,0
+ !!if(alarmCheck .and. currentTime.ge.start_date_tmp ) then
+ !!if(alarmCheck .and. (timenow .ge. start_date)) then ! _tmp ) then
+
+ if(alarmCheck .and. (timenow .gt. start_date)) then ! _tmp ) then !chenged the code to use start_date = 2019,1,01,06,00,0
+ ! Only assimilate Oct obs % DOSE NOT WORK using the following line
+ !if(alarmCheck .and. (timenow .gt. start_date) .and. (LIS_rc%mo .eq. 10) ) then ! _tmp ) then !chenged the code to use start_date = 2019,1,01,06,00,0
+
       data_upd = .false.
 
       !if(LIS_rc%DAincrMode(n).eq.1) then  ! TODO what is this? hard codded to 1 in read_config
@@ -299,7 +306,7 @@ endif
 
       !offset = int((currentTime - startTime)/ATL15_GrIS_struc(n)%ts) + 1 ! nint
       !offset = floor((timenow - start_date)/7889400.0) + 1 ! nint
-      !offset = floor((timenow_sec - start_date_sec)/LIS_rc%obsInterval) + 1 ! nint ! nint !chenged the code to use start_date = 2018,10,01,22,30,0
+      !offset = floor((timenow_sec - start_date_sec)/LIS_rc%obsInterval) + 1 ! nint ! nint !chenged the code to use start_date = 2019,01,01,06,00,0
       offset = floor((timenow_sec - start_date_sec)/LIS_rc%obsInterval)  ! nint
       ! we might be able to use obs_time insted of offset.   
 
@@ -332,10 +339,13 @@ endif
           else
              do r=1,LIS_rc%obs_lnr(k)
                 do c=1,LIS_rc%obs_lnc(k)
-                   if(LIS_obs_domain(n,k)%gindex(c,r).ne.-1) then
-                      if(dhdt_local_grid(c,r,offset).gt.0.0) then
-                         obsl(LIS_obs_domain(n,k)%gindex(c,r)) = dhdt_local_grid(c,r,offset)
+                      if (LIS_obs_domain(n,k)%gindex(c,r) .eq. 1021) then
+                         print*,' r,c', r,c
                       end if
+                   if(LIS_obs_domain(n,k)%gindex(c,r).ne.-1) then
+                      !if(dhdt_local_grid(c,r,offset).gt.0.0) then
+                         obsl(LIS_obs_domain(n,k)%gindex(c,r)) = dhdt_local_grid(c,r,offset)
+                      !end if
                    endif
                 end do
              end do
@@ -367,6 +377,19 @@ endif
 
           if(data_upd) then
              do t=1,LIS_rc%obs_ngrid(k)
+! chcek obs del
+col = LIS_obs_domain(n,k)%col(t)
+row = LIS_obs_domain(n,k)%row(t)
+lon = LIS_obs_domain(n,k)%lon(&
+            col+(row-1)*LIS_rc%obs_lnc(k))
+lat = LIS_obs_domain(n,k)%lat(&
+            col+(row-1)*LIS_rc%obs_lnc(k))
+! check obs del
+epsilon = 1e-4
+if (abs(lat - 67.05882)<epsilon .and. abs(lon - (-50.01326)) <epsilon )then
+print*,'t col row obsl(t)', t, col , row, obsl(t) 
+endif
+
                 gid(t) = t
                 if(obsl(t).ne.-9999.0) then
                    assimflag(t) = 1

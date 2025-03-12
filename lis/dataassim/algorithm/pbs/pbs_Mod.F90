@@ -20,6 +20,9 @@ module pbs_Mod
 !
 ! !REVISION HISTORY:
 !  13 Dec 2023    Mahdi Navari; Initial implementation
+!   1 Feb 2025    Mahdi Navari; Update the code for assimilation of total hieght, 
+!                               move generateObservations after LIS_surfaceModel_DAGetObsPred
+!                               because we need to update the obs by adding mean of model estimate to obs.
 ! 
 ! !USES: 
   use ESMF
@@ -293,8 +296,10 @@ contains
        Nobs = Nobjs*N_obs_size
        allocate(Observations(Nobs))
 
-       call generateObservations(n, k, Nobjs, Nobs, LIS_OBS_State(n,k), &
-            LIS_OBS_Pert_State(n,k),Observations)
+! move this call after LIS_surfaceModel_DAGetObsPred because we need to update the 
+! obs by adding mean of model estimate to obs.
+!       call generateObservations(n, k, Nobjs, Nobs, LIS_OBS_State(n,k), &
+!            LIS_OBS_Pert_State(n,k),Observations)
 
 !----------------------------------------------------------------------------
 !  Retrieve Obs_pred : model's estimate of the observations
@@ -308,6 +313,10 @@ contains
        allocate(Obs_pred(Nobs,N_ens))      
        call LIS_surfaceModel_DAGetObsPred(n,k,Obs_pred)
        !print*, Nobs,N_ens, size(Obs_pred, 1), size(Obs_pred, 2)
+
+       call generateObservations(n, k, Nobjs, Nobs, LIS_OBS_State(n,k), &
+            LIS_OBS_Pert_State(n,k),Observations)
+
 !----------------------------------------------------------------------------
 !  Retrieve Obs_pert : observation perturbations
 !---------------------------------------------------------------------------- 
@@ -378,9 +387,9 @@ contains
 !          st_id = gid
 !          en_id = gid
 ! TODO end
-!epsilon = 1e-4
-!if (abs(lats(tileid) - 63.07344)<epsilon .and. abs(lons(tileid) - (-43.07023)) <epsilon )then
-!print*,'st_id, en_id', st_id, en_id
+epsilon = 1e-4
+if (abs(lats(tileid) - 67.05882)<epsilon .and. abs(lons(tileid) - (-50.01326)) <epsilon )then
+print*,'st_id, en_id', st_id, en_id
 endif
           if(st_id.lt.0.or.en_id.lt.0) then 
              assim = .false. 
@@ -423,8 +432,9 @@ endif
                   obs_param,obs_da,Obs_cov)
           endif
 !if (abs(lats(tileid) - 63.07344)<epsilon .and. abs(lons(tileid) - (-43.07023)) <epsilon )then
-!print*,'assim obspred_flag', assim , obspred_flag
-!endif
+if (abs(lats(tileid) - 67.05882)<epsilon .and. abs(lons(tileid) - (-50.01326)) <epsilon )then
+print*,'assim obspred_flag', assim , obspred_flag
+endif
           if(assim.and.obspred_flag) then   
              call pbs_analysis(gid,N_state,N_selected_obs, N_ens, &
                   obs_da,                                         & 
@@ -442,8 +452,9 @@ endif
           endif
 
 !if (abs(lats(tileid) - 63.07344)<epsilon .and. abs(lons(tileid) - (-43.07023)) <epsilon )then
-!print*,'obs_da , obspred_da, Pw', obs_da , obspred_da ,P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens))
-!endif
+if (abs(lats(tileid) - 67.05882)<epsilon .and. abs(lons(tileid) - (-50.01326)) <epsilon )then
+print*,'obs_da , obspert_da , obspred_da, Pw', obs_da , obspert_da, obspred_da ,P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens))
+endif
 
 if (sum(P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens)))>2)then
 print*,'****pbs_Mod i,sum(P_w_current_ts) ', i, sum(P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens)))

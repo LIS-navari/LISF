@@ -10,6 +10,7 @@
 !
 ! 09 Jan 2024: Mahdi Navari; Initial Specification
 ! 17 Sep 2024: Mahdi Navari; bug fix
+! 16 Jan 2025: Mahdi Navari ;Updated for the height assimilation. 
 
 module Crocus81_dhdt_DAlogMod
 
@@ -71,7 +72,7 @@ contains
     ! This subroutine computes the model's dh using elevation from 
     ! the beginning and end of the observation interval.
 
-     !2018-10-01 22:30:00.00   2019-01-01 06:00:00.00   2019-04-02 13:30:00.00   2019-07-02 21:00:00.00
+     !2019-01-01 06:00:00.00   2019-04-02 13:30:00.00   2019-07-02 21:00:00.00
      !2019-10-02 04:30:00.00   2020-01-01 12:00:00.00   2020-04-01 19:30:00.00   2020-07-02 03:00:00.00
      !2020-10-01 10:30:00.00   2020-12-31 18:00:00.00   2021-04-02 01:30:00.00   2021-07-02 09:00:00.00
      !CROCUS81_struc(n)%NumOfObsPerAssimWindow
@@ -90,14 +91,14 @@ contains
      call LIS_date2time(timenow,doy,gmt,yy,mm,dd,h,m,s)
      call LIS_date2time(simulation_start_time,doy,gmt,LIS_rc%syr,LIS_rc%smo,LIS_rc%sda,LIS_rc%shr,LIS_rc%smn,s)   
     
-     ! NOTE: first dh obs is @ 2018-10-01 22:30:00.00 that means the dh represents changes 
-     !       from 2018-07-02 03:00:00.00 to 2018-10-01 22:30:00.00. However, the first dhdh 
-     !       is @ 2018-11-16 14:15
-     call LIS_date2time(start_date,doy,gmt,2018,10,01,22,30,0)
+     ! NOTE: first dh obs is @ 2019-01-01 06:00:00.00 that means the dh represents changes 
+     !       from 2018-10-01 22:30:00.00 to 2019-01-01 06:00:00.00. However, the first dhdh 
+     !       is @ 2019-02-15 21:45
+     call LIS_date2time(start_date,doy,gmt,2019,01,01,06,00,0)
 
 !print*,'DAlog timenow', timenow
      call LIS_compute_time_since_millennium(LIS_rc%yr, LIS_rc%mo, LIS_rc%da, LIS_rc%hr, LIS_rc%mn, 0, timenow_sec)
-     call LIS_compute_time_since_millennium(2018,10,01,22,30,0, start_date_sec)
+     call LIS_compute_time_since_millennium(2019,01,01,06,00,0, start_date_sec)
      call LIS_compute_time_since_millennium(LIS_rc%syr,LIS_rc%smo,LIS_rc%sda,LIS_rc%shr,LIS_rc%smn,0, simulation_start_time_sec)
 
 !if(LIS_masterproc) then
@@ -115,7 +116,7 @@ contains
      if (floor(mod(timenow_sec-start_date_sec, LIS_rc%obsInterval)).eq.0 .and. timenow.ge.start_date) then 
         if(.not.allocated(Crocus81pred_struc)) then
            allocate(Crocus81pred_struc(LIS_rc%nnest))
-           allocate(Crocus81pred_struc(n)%model_h(2,&
+           allocate(Crocus81pred_struc(n)%model_h(3,&
                     LIS_rc%npatch(n,LIS_rc%lsm_index)))
            allocate(Crocus81pred_struc(n)%model_dh(&
                     LIS_rc%npatch(n,LIS_rc%lsm_index)))
@@ -124,8 +125,8 @@ contains
 
         d = -1 
         if (simulation_start_time .le. start_date) then        
-           if ((LIS_rc%yr.eq.2018).and.(LIS_rc%mo.eq.10).and.(LIS_rc%da.eq.1) &
-                .and.(LIS_rc%hr.eq.22).and.(LIS_rc%mn.eq.30)) then
+           if ((LIS_rc%yr.eq.2019).and.(LIS_rc%mo.eq.1).and.(LIS_rc%da.eq.1) &
+                .and.(LIS_rc%hr.eq.06).and.(LIS_rc%mn.eq.00)) then
               d = 1
            else 
               d = 2
@@ -184,6 +185,7 @@ endif
               write(*,fmt=26)' [INFO] logging obspred data (h2) and dh=h2-h1 for PBS-DA @: ',LIS_rc%mo,'/',LIS_rc%da,'/', &
                               LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
            endif
+           Crocus81pred_struc(n)%model_h(3,:) = Crocus81pred_struc(n)%model_h(1,:) ! will be reset in the next time window
            Crocus81pred_struc(n)%model_h(1,:) = 0.0
            Crocus81pred_struc(n)%model_h(1,:) = Crocus81pred_struc(n)%model_h(2,:)
         endif 

@@ -218,9 +218,9 @@
        !call LIS_verify(nf90_put_att(ftn,xtimeID,&
        !     "Time_Now",trim(xtime_units)),&
        !     'nf90_put_att for time now failed in write_particle_weights')
-       call LIS_verify(nf90_put_att(ftn,xtimeID,&
-            "long_name","time"),&
-            'nf90_put_att for long_name failed in write_particle_weights')
+       !call LIS_verify(nf90_put_att(ftn,xtimeID,&
+       !     "long_name","time"),&
+       !     'nf90_put_att for long_name failed in write_particle_weights')
        call LIS_verify(nf90_put_att(ftn,xtimeID,&
             "time_window_length (sec)",trim(adjustl(xtime_twInterval))),&
             'nf90_put_att for time window length failed in write_particle_weights')

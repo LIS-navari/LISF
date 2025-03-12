@@ -19,7 +19,7 @@
 !
 ! !REVISION HISTORY:
 !  8 Nov 2023: Mahdi Navari; Initial version
-!
+!  25 Feb 2025: Bottom layer extented to prevent meltout 
 subroutine read_IC(n)
 
 ! !USES: 

@@ -13,6 +13,8 @@
 !
 ! !REVISION HISTORY:
 !  22 Aug 2023: Mahdi Navari; Initial Specification 
+!  21 Feb 2025: Mahdi Navari; The unit in the metadata is incorrect. 
+!               The correct unit is mmWE/hr (Xavier email 21.02.2025). 
 !
 ! !INTERFACE:
 subroutine timeinterp_MAR(n, findex)
@@ -182,9 +184,8 @@ subroutine timeinterp_MAR(n, findex)
     ! UU  (m/s)     m/s     uwind   <--> LIS_forc%metdata1(5,:)
     ! VV  (m/s)     m/s     vwind   <--> LIS_forc%metdata1(6,:)
     ! SP  (hpa)     pa      psurf   <--> LIS_forc%metdata1(7,:)
-    ! RF  (mmWE/day)kg/m2s  (railfall)  <--> LIS_forc%metdata1(8,:)    
-    ! SF  (mmWE/day)kg/m2s  (snowfall)  <--> LIS_forc%metdata1(9,:)
-
+    ! RF  (mmWE/h)kg/m2s  (railfall)  <--> LIS_forc%metdata1(8,:) The unit in the metadata is incorrect. The correct unit is mmWE/hr (Xavier email 21.02.2025).    
+    ! SF  (mmWE/h)kg/m2s  (snowfall)  <--> LIS_forc%metdata1(9,:) The unit in the metadata is incorrect. The correct unit is mmWE/hr (Xavier email 21.02.2025). 
 
   call ESMF_FieldGet(swdField,localDE=0,farrayPtr=swd,rc=status)
   call LIS_verify(status)
@@ -255,7 +256,8 @@ subroutine timeinterp_MAR(n, findex)
      index1 = LIS_domain(n)%tile(t)%index
         !rainf(t) = MAR_struc(n)%metdata2(8,index1) - MAR_struc(n)%metdata1(8,index1)
         rainf(t) = MAR_struc(n)%metdata1(8,index1)
-        rainf(t) = rainf(t)/(60*60*24) ! (mmWE/day) --*1/(60*60*24)--> kg/m2s   ! mmWE/day  !/(60.0*60.0)
+        !rainf(t) = rainf(t)/(60*60*24) ! (mmWE/day) --*1/(60*60*24)--> kg/m2s   ! mmWE/day  !/(60.0*60.0)
+        rainf(t) = rainf(t)/(60*60) ! (mmWE/hr) --*1/(60*60)--> kg/m2s 
         rainf(t) = max(rainf(t),0.0) ! added to eliminate round-off errors      
   enddo          
         
@@ -265,7 +267,8 @@ subroutine timeinterp_MAR(n, findex)
      index1 = LIS_domain(n)%tile(t)%index
         !snowf(t) = MAR_struc(n)%metdata2(9,index1) - MAR_struc(n)%metdata1(9,index1)
         snowf(t) = MAR_struc(n)%metdata1(9,index1)
-        snowf(t) = snowf(t)/(60*60*24)! (mmWE/day) --*1/(60*60*24)--> kg/m2s   ! mmWE/day  !/(60.0*60.0)
+        !snowf(t) = snowf(t)/(60*60*24)! (mmWE/day) --*1/(60*60*24)--> kg/m2s   ! mmWE/day  !/(60.0*60.0)
+        snowf(t) = snowf(t)/(60*60)! (mmWE/hr) --*1/(60*60)--> kg/m2s 
         snowf(t) = max(snowf(t),0.0) ! added to eliminate round-off errors      
   enddo
 

@@ -728,6 +728,7 @@ subroutine LIS_readConfig()
 
   allocate(LIS_rc%daalg(LIS_rc%ndas))
   allocate(LIS_rc%use_SIR(LIS_rc%ndas))
+  allocate(LIS_rc%reset_model_estimate(LIS_rc%ndas))
   allocate(LIS_rc%biasalg(LIS_rc%ndas))
   allocate(LIS_rc%biasrst(LIS_rc%ndas))
   allocate(LIS_rc%biasrstInterval(LIS_rc%ndas))
@@ -915,6 +916,10 @@ subroutine LIS_readConfig()
      call ESMF_ConfigFindLabel(LIS_config, "Use sequential importance resampling for PBS:",rc=rc)    
      call ESMF_ConfigGetAttribute(LIS_config,LIS_rc%use_SIR(i),rc=rc)
      call LIS_verify(rc,'Use sequential importance resampling for PBS: not defined')    
+
+     call ESMF_ConfigFindLabel(LIS_config, "Reset the model value to add it to the absolute value of observations:",rc=rc)
+     call ESMF_ConfigGetAttribute(LIS_config,LIS_rc%reset_model_estimate(i),rc=rc)
+     call LIS_verify(rc,'Reset the model value to add it to the absolute value of observations: not defined')
      endif
   enddo 
 

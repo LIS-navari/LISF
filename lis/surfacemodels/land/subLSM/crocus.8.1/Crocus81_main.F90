@@ -21,6 +21,7 @@
 !   9 Dec 2020: Mahdi Navari; edited to take into account the Crocus slope correction
 !   19 Jan 2021: Mahdi Navari, edited to properly initialize precipitation 
 !   21 Jan 2021: Mahdi Navari, edited to properly assign values for TG, XWG, and XWGI for the stand-alone version
+!   Apr 14 2025: Mahdi Navari, editted to output sublimation flux. Sublimation computed using PLES3L/XLVTT (XLVTT = 2.5008E+6)  ! W/m2 --> kg m-2 s-1) 
 !
 ! !INTERFACE:
 subroutine Crocus81_main(n)
@@ -163,8 +164,11 @@ subroutine Crocus81_main(n)
     REAL                 :: FPICE
     character*3        :: fnest ! MN Bug in toolkit (added to this code)
     real*8    :: tmp
-
-    
+    REAL*8               :: tmp_EVAP              !total evaporative flux (kg/m2/s)
+    REAL*8               :: tmp_sublim            !evaporation(sublimation) heat flux from snow. unit: (W/m2)
+   
+! NOTE: In Crocus, we assume that the latent heat flux only affects ice (i.e. there is only sublimation, but no evaporation of liquid water). PEVAP and PLEL3L will always be 0. The sublimation flux can be computed by PLES3L/XLVTT (Matthieu email 4/11/25)
+ 
     allocate( tmp_SNOWSWE( CROCUS81_struc(n)%nsnow ) )
     allocate( tmp_SNOWRHO( CROCUS81_struc(n)%nsnow ) )
     allocate( tmp_SNOWHEAT( CROCUS81_struc(n)%nsnow ) )
@@ -548,8 +552,9 @@ endif
                                tmp_POROSITY          ,&  ! IN    - Soil porosity (m3 m-3) [m3/m3]
                                tmp_XWGI              ,&  ! IN    - soil volumetric frozen water content
                                tmp_XWG                ,&  ! IN    - soil volumetric liquid water content
-                               tmp_use_monthly_albedo_map)! ,& ! IN    - Boolean option to partition total precipitation into snowfall and rainfall using Jordan 1991 
-    
+                               tmp_use_monthly_albedo_map ,&! ,& ! IN    - Boolean option to partition total precipitation into snowfall and rainfall using Jordan 1991 
+                               tmp_EVAP ,& 
+                               tmp_sublim )!              
             ! save state variables from local variables to global variables
             CROCUS81_struc(n)%crocus81(t)%SNOWSWE(:)    = tmp_SNOWSWE(:)   
             CROCUS81_struc(n)%crocus81(t)%SNOWRHO(:)    = tmp_SNOWRHO(:)   
@@ -581,8 +586,8 @@ endif
             tmp = 0.0
             tmp = sum(tmp_SNOWSWE)
             CROCUS81_struc(n)%crocus81(t)%SWE_1D       = tmp
-           
-
+            CROCUS81_struc(n)%crocus81(t)%EVAP         = tmp_EVAP
+            CROCUS81_struc(n)%crocus81(t)%sublim       = tmp_sublim/2.5008E+6  ! W/m2 --> kg m-2 s-1 (LAFAYSSE Matthieu email 4/11/2025)
 ! TODO   ! Slope correction --> NOTE: the correction should be apply when we write the output
             ! As a convention, only vertical incoming and outgoing fluxes are 
             ! provided to and from the Crcous model; the correction of these terms
@@ -710,6 +715,14 @@ endif
             ![ 24] output variable: SWE_1D (unit=kg/m2). *** Total SWE, temporally added                                         
             call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SWE, value = CROCUS81_struc(n)%crocus81(t)%SWE_1D, &              
                                                 vlevel=1, unit="kg m-2", direction="-", surface_type = LIS_rc%lsm_index)      
+
+            ![ 25] output variable: evap (unit=kg/m2/s). ***  total evaporation 
+            call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_EVAPSNOW, value = CROCUS81_struc(n)%crocus81(t)%EVAP, &
+                                              vlevel=1, unit="kg m-2 s-1", direction="-", surface_type = LIS_rc%lsm_index)
+
+            ![ 26] output variable: sublimation (unit=kg/m2/s). ***  snow sublimation 
+            call LIS_diagnoseSurfaceOutputVar(n, t, LIS_MOC_SUBSNOW, value = CROCUS81_struc(n)%crocus81(t)%sublim, &
+                                              vlevel=1, unit="kg m-2 s-1", direction="-", surface_type = LIS_rc%lsm_index)
 
             ! reset forcing variables to zeros
             CROCUS81_struc(n)%crocus81(t)%PPS = 0.0

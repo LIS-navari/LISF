@@ -445,15 +445,22 @@ endif
                   !ens_id_SIR(:, ((i-1)*N_ens+1):((i-1)*N_ens+N_ens)),&
                   P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens)),&
                   state_lon, state_lat,xcompact,ycompact)
+
+if (abs(lats(tileid) - 67.05882)<epsilon .and. abs(lons(tileid) - (-50.01326)) <epsilon )then
+print*,'1 *** obspred_flag obs_da , obspred_da, Pw', obspred_flag, obs_da , obspred_da ,P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens))
+endif
           else
              state_incr(:,(i-1)*N_ens+1:(i-1)*N_ens+N_ens) = 0.0            
              !ens_id_SIR(:, ((i-1)*N_ens+1):((i-1)*N_ens+N_ens)) = 0.0
              P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens)) = 1.0/N_ens
+if (abs(lats(tileid) - 67.05882)<epsilon .and. abs(lons(tileid) - (-50.01326)) <epsilon )then
+print*,'2 **** obspred_flag obs_da , obspred_da, Pw', obspred_flag, obs_da , obspred_da ,P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens))
+endif 
           endif
 
 !if (abs(lats(tileid) - 63.07344)<epsilon .and. abs(lons(tileid) - (-43.07023)) <epsilon )then
 if (abs(lats(tileid) - 67.05882)<epsilon .and. abs(lons(tileid) - (-50.01326)) <epsilon )then
-print*,'obs_da , obspert_da , obspred_da, Pw', obs_da , obspert_da, obspred_da ,P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens))
+print*,'3 **** obs_da , obspert_da , obspred_da, Pw', obs_da , obspert_da, obspred_da ,P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens))
 endif
 
 if (sum(P_w_curr_ts(((i-1)*N_ens+1):((i-1)*N_ens+N_ens)))>2)then

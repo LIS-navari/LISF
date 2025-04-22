@@ -124,7 +124,7 @@ contains
     real                                 :: IDX
     real                                 :: iii
     real                                 :: Pw_sum
-    
+    real   :: epsilon
     ! ------------------------------------------------------------------
     ! find out whether Hadamard product should be applied
 
@@ -169,7 +169,13 @@ contains
           Pw_raw(i,:) = 0.0 ! should be 0 or 1.0/N_ens
        endif
     end do
-    
+   
+epsilon = 1e-4
+if (any(abs(State_lat - 67.05882) < epsilon) .and. any(abs(State_lon - (-50.01326)) < epsilon)) then
+!if (abs(State_lat - 67.05882)<epsilon .and. abs(State_lon - (-50.01326)) <epsilon )then
+print*,'pbs_general1 #### Pw_raw', Pw_raw
+endif
+ 
     !account for all observations in this time step, similar to 
     !smoothing technique by taking the product of the weights for
     !each ensemble member derived from all assimilated observations 
@@ -180,7 +186,10 @@ contains
           Pw_combined(1,:)=Pw_combined(1,:)*Pw_raw(ij,:)
        endif
     end do
-    
+if (any(abs(State_lat - 67.05882) < epsilon) .and. any(abs(State_lon - (-50.01326)) < epsilon)) then
+!if (abs(State_lat - 67.05882)<epsilon .and. abs(State_lon - (-50.01326)) <epsilon )then
+   print*,'pbs_general2 #### Pw_combined', Pw_combined
+endif
 
     !normalize into probability "weights" that account for all observations
     if(sum(Pw_combined(1,:)).ne.0) then 
@@ -244,7 +253,11 @@ contains
     else
        State_incr = 0 
     endif
-    
+if (any(abs(State_lat - 67.05882) < epsilon) .and. any(abs(State_lon - (-50.01326)) < epsilon)) then    
+!if (abs(State_lat - 67.05882)<epsilon .and. abs(State_lon - (-50.01326)) <epsilon )then
+print*,'pbs_general3 #### P_w_curr_ts', P_w_curr_ts
+endif
+
   end subroutine pbs_analysis
 
 !BOP

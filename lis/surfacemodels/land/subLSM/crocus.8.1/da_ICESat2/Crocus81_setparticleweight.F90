@@ -13,7 +13,8 @@
 !
 ! !REVISION HISTORY:
 ! 19 Jan: Mahdi Navari; Initial Specification
-!
+! 20 Mar 2025: Mahdi Navari ; updated to reset Crocus81pred_struc(n)%model_h(3,t) at LIS_twStopTime
+! 21 Mar 2025: Mahdi Navari ; updated to prevent Pw_combined from becoming zero. This applies to PBS (not used in PF).
 !
 ! !INTERFACE:
 subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
@@ -55,7 +56,7 @@ subroutine Crocus81_setparticleweight(n, LIS_LSM_particle_weight)
    !real, allocatable      :: P_w_curr_ts(:)
    real                   :: count_inspect(LIS_rc%npatch(n, LIS_rc%lsm_index)/LIS_rc%nensem(n),6)
    real                   :: P_w_curr_ts(LIS_rc%nensem(n)),P_w_new(LIS_rc%nensem(n))
-   real                   :: Pw_cumsum(LIS_rc%nensem(n))
+   real                   :: Pw_cumsum(LIS_rc%nensem(n)),Pw_tmp1(LIS_rc%nensem(n)) , Pw_tmp2(LIS_rc%nensem(n))
    real                   :: new_particle_idx(LIS_rc%nensem(n))
    real                   :: ens_id_SIR(LIS_rc%nensem(n))
    real                   :: current_p
@@ -347,9 +348,48 @@ endif
 if ( ((sum(Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)))).gt. 2.) .or. (sum(Pw (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)))).gt.2. ) then
 print*,'###1 set PW sum P_comb ,  Pw',sum(Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))), sum(Pw (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)))
 endif
-                 Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)) = &
-                 Crocus81pred_struc(n)%Pw_combined(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))&
-                 * Pw(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))
+
+! for debug
+                 !Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)) = &
+                 !Crocus81pred_struc(n)%Pw_combined(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))&
+                 !* Pw(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))
+                 !if ( (sum(Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)))).eq. 0.0 &
+                 !          .or. sum(Pw(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))).eq.0.0 ) then
+                 !!endif    
+                 !print*,'###2 sum P_comb,i, P_com, i, Pw',sum(Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))),&
+                 ! i, Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)) ,&
+                 ! i, Pw(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))
+                 !endif
+! end for debug
+
+!                This step added to prevent Pw_combined become zero. This is for PBS (PF does not use this) 
+                 !epsilon = 1e-3
+                 epsilon = 1e-5
+                 Pw_tmp1 = Crocus81pred_struc(n)%Pw_combined(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))
+                 Pw_tmp2 = Pw(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))
+                 do jj = 1,LIS_rc%nensem(n)
+                      if ( Pw_tmp1(jj).lt.epsilon )then               
+                         !Pw_tmp1(jj) = 1.0/(5.0*LIS_rc%nensem(n)) ! redistribute 20% of the weights 
+                         !Pw_tmp1(jj) = 1.0/(10.0*LIS_rc%nensem(n)) ! redistribute 10% of the weights 
+                         Pw_tmp1(jj) = 1.0/(100.0*LIS_rc%nensem(n)) ! redistribute 1% of the weights 
+                      endif
+                      if ( Pw_tmp2(jj).lt.epsilon )then
+                         !Pw_tmp2(jj) = 1.0/(5.0*LIS_rc%nensem(n)) ! redistribute 20% of the weights 
+                         !Pw_tmp2(jj) = 1.0/(10.0*LIS_rc%nensem(n)) ! redistribute 10% of the weights 
+                         Pw_tmp2(jj) = 1.0/(100.0*LIS_rc%nensem(n)) ! redistribute 10% of the weights 
+                      endif
+                 enddo
+                 !Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)) = &
+                 !Crocus81pred_struc(n)%Pw_combined(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))&
+                 !* Pw(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))
+                 Pw_tmp1 = Pw_tmp1/sum(Pw_tmp1)
+                 Pw_tmp2 = Pw_tmp2/sum(Pw_tmp2)
+                 Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)) = Pw_tmp1 * Pw_tmp2
+
+if ( (sum(Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)))).eq. 0.0) then
+     !endif    
+print*,'###3 sum P_comb, P_com, i',sum(Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))), Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)) , i
+endif
             
                  !normalize into probability "weights" that account for all observations    
                  Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)) = &
@@ -357,7 +397,7 @@ endif
                   sum(Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)))
 
 if ( (sum(Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)))).gt. 2) then
-print*,'###2 set PW sum P_comb',sum(Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)))
+print*,'###4 set PW sum P_comb',sum(Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)))
 endif
                  Crocus81pred_struc(n)%Pw_combined(((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens))&
                  = Pw_combined (((i - 1)*N_ens + 1):((i - 1)*N_ens + N_ens)) 
@@ -420,7 +460,8 @@ endif
                   end do
                   Neff(i) = 1/(sum_w);
                   ! TODO  temporarily added to assimilate only Oct  
-                  if ((LIS_rc%mo .eq. 10) ) then
+                  !       Do we need to add this here? or the one below if enough? 
+                  !if ((LIS_rc%mo .eq. 10) ) then
                   if ((Neff(i) < 0.85*N_ens) .and. (LIS_rc%use_SIR(1) .eq. .TRUE.) ) then ! TODO what is the best threshold value (0.85?) 
                 
                      !sequential importance resampling (SIR)
@@ -472,7 +513,7 @@ endif
 
                      end do ! N_ens
                   endif ! Neff
-                  endif ! temporarily added to assimilate only Oct 
+                  !endif ! temporarily added to assimilate only Oct 
 ! MN: for inspection
                   !count_inspect(i,1) = 0.0 
                   do j = 1,N_ens
@@ -511,12 +552,25 @@ endif
             write(LIS_logunit,*)'[INFO] resampling (SIR) if needed'
 
             ! TODO  temporarily added if statement to assimilate only Oct obs  
-            if (LIS_rc%mo .eq. 10) then
+            !if (LIS_rc%mo .eq. 10) then
             write(LIS_logunit,*)'[INFO] Write the particle weights into the output directory'
             ! Write the particle weights into the output directory
             call write_particle_weights(n)
-            endif           
+            !endif           
 
+            ! The model SD_1D will be added to the absolute observation value at the beginning of the DA time window  
+            ! in Crocus81_getdhdt_perd and will be reset for each time window in Crocus81_setparticleweight if needed.  
+            ! If using cumulative observation values, the model values from the beginning of the simulation  
+            ! must be added to each observation, ensuring that the model and observation values are identical at the start.  
+            ! If using cumulative observation values for each time window,  
+            ! Crocus81pred_struc(n)%model_h(3,t) must be reset at the beginning of the time window  
+            ! and added to each observation within that window.  
+            !reset Crocus81pred_struc(n)%model_h(3,t)
+            if (LIS_rc%reset_model_estimate(1) .eq. .true. ) then 
+               do t=1,LIS_rc%npatch(n,LIS_rc%lsm_index)
+                  Crocus81pred_struc(n)%model_h(3,t) = CROCUS81_struc(n)%crocus81(t)%SD_1D
+               enddo
+            endif 
             !reset timewindow
             write (LIS_logunit,fmt=24) '[INFO] Resetting the time window @ : ',LIS_rc%mo,'/',LIS_rc%da,'/', &
                   LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
@@ -582,7 +636,7 @@ endif
 !       print*, i
 !   endif
                ! Check Neff for resampling. If it does not occur, skip this step.
-               if (Neff(i) < 0.85*N_ens) then ! TODO what is the best threshold value (0.85?) 
+               if (Neff(i) < 0.85*N_ens .and. (LIS_rc%use_SIR(1) .eq. .TRUE.) ) then ! TODO what is the best threshold value (0.85?) 
                   write(LIS_logunit,*)'[INFO] Neff < 0.85*N_ens use SIR for resampling for patch=', i
                   ! save state variables in temporary variables
                   do n_e = 1, N_ens
@@ -642,7 +696,7 @@ endif
                        CROCUS81_struc(n)%crocus81(k)%TG        = tmp_TG(n_id)
                        CROCUS81_struc(n)%crocus81(k)%XWGI      = tmp_XWGI(n_id)
                        CROCUS81_struc(n)%crocus81(k)%XWG       = tmp_XWG(n_id)
-                       ! overwrite the dh log from Crocus81_dhdt_DAlog
+                       ! overwrite the dh log from Crocus81_dhdt_DAlog (following line is for assimilation of dh not h)
                        Crocus81pred_struc(n)%model_h(1,k)      = tmp_SD_1D(n_id)
                   end do
                endif ! Neff

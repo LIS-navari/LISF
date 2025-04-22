@@ -13,6 +13,7 @@
 !
 ! !REVISION HISTORY:
 ! July 17 2019 Mahdi Navari started for implementing Crocus
+! Apr 14 2025: Mahdi Navari, editted to output sublimation flux. Sublimation computed using PLES3L/XLVTT (XLVTT = 2.5008E+6)  ! W/m2 --> kg m-2 s-1) 
 ! !INTERFACE:!
 !
 SUBROUTINE crocus_driver(n, &
@@ -108,7 +109,10 @@ SUBROUTINE crocus_driver(n, &
                          POROSITY          , & ! IN    - Soil porosity (m3 m-3) [m3/m3]
                          XWGI              ,&  ! IN    - soil volumetric frozen water content
                          XWG               ,&  ! IN    - soil volumetric liquid water content
-                         usemonalb )
+                         usemonalb         ,&
+                         EVAP              ,&  ! total evaporative flux (kg/m2/s)
+                         LES3L )               ! evaporation heat flux from snow (W/m2)! PEVAP and PLEL3L will always be 0.
+                                               ! The sublimation flux can be computed by PLES3L/XLVTT (LAFAYSSE Matthieu email: Apr 11 2025)
 
    USE LIS_coreMod, only: LIS_rc
    USE  Crocus81_lsmMod , only: CROCUS81_struc
@@ -236,6 +240,8 @@ SUBROUTINE crocus_driver(n, &
 !                         SNOWHMASS  = heat content change due to mass
 !                              changes in snowpack (J/m2): for budget calculations only.
    REAL*8, INTENT(OUT)     :: QS
+   REAL*8, INTENT(OUT)     :: EVAP ! total evaporative flux (kg/m2/s)
+   REAL*8, INTENT(OUT)     :: LES3L ! evaporation heat flux from snow (W/m2)
 !                          QS = surface humidity
    REAL, INTENT(IN)        :: PERMSNOWFRAC
 !                          PPERMSNOWFRAC  = fraction of permanet snow/ice
@@ -302,9 +308,8 @@ SUBROUTINE crocus_driver(n, &
    REAL*8 :: ZP_HSNOW
    REAL*8 :: ZP_GFLUXSNOW   ! it has not been initialized  in the CALL_MODEL
    REAL*8 :: ZP_HPSNOW
-   REAL*8 :: ZP_LES3L
+!   REAL*8 :: ZP_LES3L
    REAL*8 :: ZP_LEL3L
-   REAL*8 :: ZP_EVAP
    REAL*8 :: ZP_EVAPCOR  ! it has not been initialized  in the CALL_MODEL
 
 ! ***************************************************************************
@@ -329,9 +334,9 @@ SUBROUTINE crocus_driver(n, &
                !LDT will be used as the background snow-free albedo term.  
                ! if usemonalb == .false., then alb will be sett to 0.6 (typical value for glacier)  
 
-   ZP_LES3L = 0.0  ! 1
+   LES3L = 0.0  ! 1
    ZP_LEL3L = 0.0  ! 1
-   ZP_EVAP = 0.0  ! 1
+   EVAP = 0.0  ! 1
    ZP_RNSNOW = 0 ! 1
    ZP_HSNOW = 0 ! 1
    ZP_HPSNOW = 0 ! 1
@@ -365,9 +370,9 @@ SUBROUTINE crocus_driver(n, &
 ! MN: TODO For now set these variables to ZERO and UNDIFF
 ! TODO look at snow3L_isba.F90 for details
 
-      ZP_LES3L = 0.0
+      LES3L = 0.0
       ZP_LEL3L = 0.0
-      ZP_EVAP = 0.0
+      EVAP = 0.0
       !THRUFAL = 0.0
       THRUFAL = MAX(0.0, sum(SNOWSWE)/PTSTEP + SRSNOW + RRSNOW) ! kg m-2 s-1   ! - PEVAP(:)*ZPSN(:)
       SNOWALB = LIS_rc%udef !XUNDEF
@@ -496,9 +501,9 @@ CONTAINS
       REAL*8, DIMENSION(1:KSIZE1) :: ZP_HSNOWout! REAL, DIMENSION(1:KSIZE1) :: ZP_HSNOWout   ! ZP_HSNOW  = sensible heat flux from snow (W/m2)
       REAL*8, DIMENSION(1:KSIZE1) :: ZP_GFLUXSNOWout   ! ZP_GFLUXSNOW  = net heat flux from snow (W/m2)
       REAL*8, DIMENSION(1:KSIZE1) :: ZP_HPSNOWout   ! ZP_HPSNOW = heat release from rainfall (W/m2)
-      REAL*8, DIMENSION(1:KSIZE1) :: ZP_LES3Lout           ! ZP_LES3L  = sublimation (W/m2)
+      REAL*8, DIMENSION(1:KSIZE1) :: LES3Lout           ! ZP_LES3L  = sublimation (W/m2)
       REAL*8, DIMENSION(1:KSIZE1) :: ZP_LEL3Lout   ! ZP_LEL3L  = evaporation heat flux from snow (W/m2)
-      REAL*8, DIMENSION(1:KSIZE1) :: ZP_EVAPout   ! ZP_EVAP = total evaporative flux (kg/m2/s)
+      REAL*8, DIMENSION(1:KSIZE1) :: EVAPout   ! EVAP = total evaporative flux (kg/m2/s)
       REAL*8, DIMENSION(1:KSIZE1) :: SNDRIFTout   ! SNDRIFT  = blowing snow sublimation (kg/m2/s)
       REAL*8, DIMENSION(1:KSIZE1) :: RI_nout          ! RI_n = Ridcharson number
       REAL*8, DIMENSION(1:KSIZE1) :: EMISNOWout   ! EMISNOW  = snow surface emissivity
@@ -637,9 +642,9 @@ CONTAINS
       ZP_HSNOWout(:) = 0
       ZP_GFLUXSNOWout(:) = 0
       ZP_HPSNOWout(:) = 0
-      ZP_LES3Lout(:) = 0
+      LES3Lout(:) = 0
       ZP_LEL3Lout(:) = 0
-      ZP_EVAPout(:) = 0
+      EVAPout(:) = 0
       SNDRIFTout(:) = 0
       RI_nout(:) = 0.2            ! snow3L_isba   --> PRI(:)  = XUNDEF  ,   it has not been initialized in the CALL_MODEL
       EMISNOWout(:) = 0.99  ! see ini_surf_csts.F90  NOTE:  snow makeing is not active, so we can use EMISNOWout(:) = 0.99
@@ -718,6 +723,7 @@ CONTAINS
       THRUFALout(1) = THRUFAL
       ZP_GSFCSNOWout(1) = ZP_GSFCSNOW
       ZP_EVAPCORout(1) = ZP_EVAPCOR
+      EVAPout(1) =  EVAP
       ZP_GFLXCORout(1) = 0 ! this is a local variable and set to zero after CALL to 'snowcor'
       GRNDFLUXinout(1) = 0 ! GRNDFLUX   , update: it is 0 in the SURFEX-Crocus
       ZP_SWNETSNOWout(1) = 0 ! ZP_SWNETSNOW        update: it is 0 in the SURFEX-Crocus
@@ -727,9 +733,8 @@ CONTAINS
       ZP_HSNOWout(1) = 0 ! ZP_HSNOW   update: it is 0 in the SURFEX-Crocus
       ZP_GFLUXSNOWout(1) = 0 ! ZP_GFLUXSNOW      , update: it is 0 in the SURFEX-Crocus
       ZP_HPSNOWout(1) = 0 ! ZP_HPSNOW
-      ZP_LES3Lout(1) = 0 ! ZP_LES3L    update: it is 0 in the SURFEX-Crocus
+      LES3Lout(1) = LES3L   ! update: it is 0 in the SURFEX-Crocus
       ZP_LEL3Lout(1) = 0 !ZP_LEL3L
-      ZP_EVAPout(1) = 0 ! ZP_EVAP
       SNDRIFTout(1) = 0 ! SNDRIFT  , update: it is not initialized in the scow3L_isba.F90 but, it is initialized to 0 in the snowcro.F90
       RI_nout(1) = 0 !                    , update: it is 0 in the SURFEX-Crocus
       EMISNOWout(1) = EMISNOW
@@ -1048,9 +1053,9 @@ endif
                    ZP_HSNOWout, &
                    ZP_GFLUXSNOWout, &
                    ZP_HPSNOWout, &
-                   ZP_LES3Lout, &
+                   LES3Lout, &
                    ZP_LEL3Lout, &
-                   ZP_EVAPout, &
+                   EVAPout, &
                    SNDRIFTout, &
                    RI_nout, &
                    EMISNOWout, &
@@ -1123,9 +1128,9 @@ endif
       ZP_HSNOW = ZP_HSNOWout(1)
       ZP_GFLUXSNOW = ZP_GFLUXSNOWout(1)
       ZP_HPSNOW = ZP_HPSNOWout(1)
-      ZP_LES3L = ZP_LES3Lout(1)
+      LES3L = LES3Lout(1)
       ZP_LEL3L = ZP_LEL3Lout(1)
-      ZP_EVAP = ZP_EVAPout(1)
+      EVAP = EVAPout(1)
       SNDRIFT = SNDRIFTout(1)
       RI_n = RI_nout(1)
       EMISNOW = EMISNOWout(1)

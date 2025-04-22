@@ -11,6 +11,7 @@
 ! 09 Jan 2024: Mahdi Navari; Initial Specification
 ! 17 Sep 2024: Mahdi Navari; bug fix
 ! 16 Jan 2025: Mahdi Navari ;Updated for the height assimilation. 
+! 20 Mar 2025: Mahdi Navari ; updated for seting Crocus81pred_struc(n)%model_h(3,t) at d=1
 
 module Crocus81_dhdt_DAlogMod
 
@@ -40,7 +41,7 @@ contains
   subroutine Crocus81_dhdt_DAlog(n)
 
      ! USES:
-     use LIS_coreMod, only : LIS_rc,LIS_surface
+     use LIS_coreMod, only : LIS_rc,LIS_surface,LIS_masterproc
      use LIS_timeMgrMod
      use Crocus81_lsmMod
      use LIS_logMod, only : LIS_logunit, LIS_verify
@@ -128,6 +129,16 @@ contains
            if ((LIS_rc%yr.eq.2019).and.(LIS_rc%mo.eq.1).and.(LIS_rc%da.eq.1) &
                 .and.(LIS_rc%hr.eq.06).and.(LIS_rc%mn.eq.00)) then
               d = 1
+            ! NOTE: The model SD_1D will be added to the absolute observation value at the beginning of the DA time window  
+            ! in Crocus81_getdhdt_perd and will be reset for each time window in Crocus81_setparticleweight if needed.  
+            ! If using cumulative observation values, the model values from the beginning of the simulation  
+            ! must be added to each observation, ensuring that the model and observation values are identical at the start.  
+            ! If using cumulative observation values for each time window,  
+            ! Crocus81pred_struc(n)%model_h(3,t) must be reset at the beginning of the time window  
+            ! and added to each observation within that window.  
+              do t=1,LIS_rc%npatch(n,LIS_rc%lsm_index)
+                 Crocus81pred_struc(n)%model_h(3,t) = CROCUS81_struc(n)%crocus81(t)%SD_1D
+              enddo
            else 
               d = 2
            endif
@@ -141,9 +152,13 @@ endif
            !start_date_new = start_date + tmp * LIS_rc%obsInterval 
            call LIS_convert_seconds_to_date(start_date_new_sec,yr1,mo1,da1,hr1,mn1,ss1)
            !call LIS_time2date(start_date_new,doy1,gmt1,yr1,mo1,da1,hr1,mn1) 
-           if ((LIS_rc%yr.eq.yr1).and.(LIS_rc%mo.eq.mo1).and.(LIS_rc%da.eq.hr1) &
+           if ((LIS_rc%yr.eq.yr1).and.(LIS_rc%mo.eq.mo1).and.(LIS_rc%da.eq.da1) &
                 .and.(LIS_rc%hr.eq.hr1).and.(LIS_rc%mn.eq.mn1)) then
               d = 1
+              ! see NOTE above
+              do t=1,LIS_rc%npatch(n,LIS_rc%lsm_index)
+                 Crocus81pred_struc(n)%model_h(3,t) = CROCUS81_struc(n)%crocus81(t)%SD_1D
+              enddo
            else
               d = 2
            endif
@@ -153,7 +168,7 @@ endif
          LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss 
         24  format(a50,i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2) 
         if(LIS_masterproc) then
-           write(*,fmt=24)'[INFO] logging obspred data (h1) for PBS-DA @: ',LIS_rc%mo,'/',LIS_rc%da,'/', &
+           write(*,fmt=24)'[INFO ] logging obspred data (h1) for PBS-DA @: ',LIS_rc%mo,'/',LIS_rc%da,'/', &
                 LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
         endif
         !Crocus81pred_struc(n)%model_dh(:) = 0.0
@@ -182,10 +197,10 @@ endif
                  LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
            26  format(a60,i2.2,a1,i2.2,a1,i4,1x,i2.2,a1,i2.2,a1,i2.2)
            if(LIS_masterproc) then 
-              write(*,fmt=26)' [INFO] logging obspred data (h2) and dh=h2-h1 for PBS-DA @: ',LIS_rc%mo,'/',LIS_rc%da,'/', &
+              write(*,fmt=26)' [INFO ] logging obspred data (h2) and dh=h2-h1 for PBS-DA @: ',LIS_rc%mo,'/',LIS_rc%da,'/', &
                               LIS_rc%yr,LIS_rc%hr,':',LIS_rc%mn,':',LIS_rc%ss
            endif
-           Crocus81pred_struc(n)%model_h(3,:) = Crocus81pred_struc(n)%model_h(1,:) ! will be reset in the next time window
+           !Crocus81pred_struc(n)%model_h(3,:) = Crocus81pred_struc(n)%model_h(1,:) ! will be reset in the next time window
            Crocus81pred_struc(n)%model_h(1,:) = 0.0
            Crocus81pred_struc(n)%model_h(1,:) = Crocus81pred_struc(n)%model_h(2,:)
         endif 

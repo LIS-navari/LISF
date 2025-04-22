@@ -541,6 +541,8 @@ module LIS_PRIV_rcMod
 !  \DAforSubLSM
 !  logic to specify whether to use sequential importance resampling for Particle Batch Smoother (PBS)
 !  \item[use_SIR]
+!  logic to specify whether to reset model estimates that will be added to the absolute observation value at the beginning of the DA time window
+!  \item[reset_model_estimate]
 !  Number of perturbation instances
 !  \item[daalg]
 !  Choice of data assimilation algorithm
@@ -899,6 +901,7 @@ module LIS_PRIV_rcMod
      character*50, allocatable  :: daalg(:)
      logical                :: DAforSubLSM     
      logical , allocatable  :: use_SIR(:)
+     logical , allocatable  :: reset_model_estimate(:)
      integer, allocatable       :: useANNinDA(:)
      character*100, allocatable :: ANNdaFile(:)
 

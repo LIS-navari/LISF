@@ -311,7 +311,7 @@ subroutine read_IC_from_MAR(n,filename, timestep) ! TODO
  ! Close netCDF file.
  call LIS_verify(nf90_close(ncid))
 #endif
-! Extend the bottom layer by approximately 30m to prevent reinitializing the model. 
+! Extend the bottom layer by approximately 35m to prevent reinitializing the model. 
 ! While this is not the ideal solution, a similar approach has been used in the MAR and Community Firn Models.
 ! Note: 
 ! In MAR bottom layer is layer=1 and top layer is layer=21
@@ -319,7 +319,7 @@ subroutine read_IC_from_MAR(n,filename, timestep) ! TODO
   do nrow=1,LIS_rc%lnr(n)
      do ncol=1,LIS_rc%lnc(n)
         if (tmp2Cro(ncol,nrow,1,1) .GE. 0.000001) then ! 
-            tmp2Cro(ncol,nrow,1,1) = 35.0  
+            tmp2Cro(ncol,nrow,1,1) = 50 !it works with 50.0 not 90.0m  
         endif
      enddo
   enddo   

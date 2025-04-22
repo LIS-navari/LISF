@@ -199,12 +199,19 @@ module Crocus81_module
 !   \item[SWE\_1D]
 !     Total SWE, temporally added. unit: kg/m2
 !   \end{description}
+!   \item[EVAP]
+!     EVAP, total evaporative flux. unit: (kg/m2/s) 
+!   \end{description}   
+!   \item[sublim]
+!     sublim, evaporation heat flux from snow. unit: (W/m2) NOTE:The sublimation flux can be computed by PLES3L/XLVTT (snowcro.F90) 
+!   \end{description}  
 !
 ! !REVISION HISTORY:
 !  This module is generated with the Model Implementation Toolkit developed
 !  by Shugong Wang for the NASA Land Information System Version 7. The initial 
 !  specification of the module is defined by Sujay Kumar. 
 !  10/18/19: Mahdi Navari, Shugong Wang Initial implementation for LIS 7 and Crocus81
+!  Apr 14 2025: Mahdi Navari, editted to output sublimation flux. 
 !
 !EOP
     implicit none
@@ -272,5 +279,7 @@ module Crocus81_module
         real               :: QS
         real               :: SD_1D
         real               :: SWE_1D
+        real               :: EVAP
+        real               :: sublim
     end type crocus81dec
 end module Crocus81_module
